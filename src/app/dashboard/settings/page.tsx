@@ -113,8 +113,8 @@ export default function SettingsPage() {
 
           setUserInfo({
             email: user.email || '',
-            businessName: (business as { name: string })?.name || '',
-            role: (member as { role: string })?.role || 'member',
+            businessName: business ? (business as any).name : '',
+            role: member ? (member as any).role : 'member',
           })
         }
       } catch (error) {
