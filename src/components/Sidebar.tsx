@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import ThemeToggle from '@/components/ThemeToggle'
 import {
   MessageSquare,
   Package,
@@ -18,14 +19,14 @@ import {
 } from 'lucide-react'
 
 const navigation = [
-  { name: 'Inbox', href: '/dashboard/inbox', icon: MessageSquare },
-  { name: 'Entities', href: '/dashboard/entities', icon: Package },
-  { name: 'Contacts', href: '/dashboard/contacts', icon: Users },
-  { name: 'Files', href: '/dashboard/files', icon: FileText },
-  { name: 'Automation', href: '/dashboard/automation', icon: Zap },
-  { name: 'AI Center', href: '/dashboard/ai', icon: Brain },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { name: 'กล่องข้อความ', href: '/dashboard/inbox', icon: MessageSquare },
+  { name: 'งาน/ดีล', href: '/dashboard/entities', icon: Package },
+  { name: 'ผู้ติดต่อ', href: '/dashboard/contacts', icon: Users },
+  { name: 'ไฟล์', href: '/dashboard/files', icon: FileText },
+  { name: 'อัตโนมัติ', href: '/dashboard/automation', icon: Zap },
+  { name: 'ศูนย์ AI', href: '/dashboard/ai', icon: Brain },
+  { name: 'สถิติ', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'ตั้งค่า', href: '/dashboard/settings', icon: Settings },
 ]
 
 export default function Sidebar() {
@@ -48,15 +49,20 @@ export default function Sidebar() {
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700">
         {!collapsed && (
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            Anajak Chat
+            อาณาจักรแชท
           </h1>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-        >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+        <div className="flex items-center gap-2">
+          {!collapsed && <ThemeToggle />}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+            title={collapsed ? 'ขยายเมนู' : 'ย่อเมนู'}
+            aria-label={collapsed ? 'ขยายเมนู' : 'ย่อเมนู'}
+          >
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}
