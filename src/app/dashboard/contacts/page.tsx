@@ -1,164 +1,203 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Search, Plus, Mail, Phone, Tag } from 'lucide-react'
-import { Database } from '@/types/database.types'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase'
 
-type Contact = Database['public']['Tables']['contacts']['Row']
+interface Contact {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  avatar?: string
+  tags?: string[]
+  created_at: string
+  metadata?: any
+}
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const supabase = createClient()
 
   useEffect(() => {
     loadContacts()
   }, [])
 
-  useEffect(() => {
-    if (searchQuery) {
-      setFilteredContacts(
-        contacts.filter(
-          (contact) =>
-            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            contact.phone?.includes(searchQuery)
-        )
-      )
-    } else {
-      setFilteredContacts(contacts)
-    }
-  }, [searchQuery, contacts])
-
   const loadContacts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('contacts')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
-      if (error) throw error
+      const response = await fetch('/api/user/business', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
 
-      setContacts(data || [])
-      setFilteredContacts(data || [])
+      if (response.ok) {
+        const { business_id } = await response.json()
+        const { data } = await supabase
+          .from('contacts')
+          .select('*')
+          .eq('business_id', business_id)
+          .order('created_at', { ascending: false })
+
+        if (data) setContacts(data)
+      }
     } catch (error) {
-      console.error('Error loading contacts:', error)
+      console.error('Error:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    contact.phone?.includes(searchTerm)
+  )
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })
+  }
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">กำลังโหลดผู้ติดต่อ...</p>
+      <div className="p-6 lg:p-8 pt-16 lg:pt-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-32 bg-[var(--bg-tertiary)] rounded" />
+          <div className="h-12 bg-[var(--bg-tertiary)] rounded-lg" />
+          <div className="space-y-2">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-16 bg-[var(--bg-tertiary)] rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="p-6 lg:p-8 pt-16 lg:pt-8">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contacts</h1>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors">
-            <Plus size={20} />
-            เพิ่มผู้ติดต่อ
-          </button>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+            รายชื่อลูกค้า
+          </h1>
+          <p className="text-[var(--text-secondary)] mt-1">
+            {contacts.length} รายชื่อ
+          </p>
         </div>
+      </div>
 
-        <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder="ค้นหาผู้ติดต่อ..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-          />
-        </div>
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="ค้นหาชื่อ, อีเมล หรือเบอร์โทร..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full lg:w-80 px-4 py-2.5 rounded-lg text-sm"
+        />
       </div>
 
       {/* Contact List */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {filteredContacts.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              <div className="mb-4">👤</div>
-              <p className="text-lg">ไม่พบผู้ติดต่อ</p>
-              <p className="text-sm mt-2">ลองค้นหาด้วยคำอื่นหรือเพิ่มผู้ติดต่อใหม่</p>
-            </div>
+      {filteredContacts.length === 0 ? (
+        <div className="card p-12 text-center">
+          <div className="text-5xl mb-4">👥</div>
+          <h3 className="text-lg font-medium text-[var(--text-primary)] mb-2">
+            {searchTerm ? 'ไม่พบผลลัพธ์' : 'ยังไม่มีรายชื่อลูกค้า'}
+          </h3>
+          <p className="text-[var(--text-secondary)]">
+            {searchTerm ? 'ลองค้นหาด้วยคำอื่น' : 'ลูกค้าจะปรากฏที่นี่เมื่อมีคนติดต่อเข้ามา'}
+          </p>
+        </div>
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-default bg-[var(--bg-secondary)]">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--text-secondary)]">
+                    ลูกค้า
+                  </th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--text-secondary)] hidden md:table-cell">
+                    ช่องทาง
+                  </th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--text-secondary)] hidden lg:table-cell">
+                    วันที่เพิ่ม
+                  </th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-[var(--text-secondary)]">
+                    แท็ก
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredContacts.map((contact) => (
+                  <tr 
+                    key={contact.id}
+                    className="border-b border-default hover:bg-[var(--bg-hover)] transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center flex-shrink-0 text-lg">
+                          {contact.avatar ? (
+                            <img 
+                              src={contact.avatar} 
+                              alt="" 
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          ) : (
+                            contact.name.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-[var(--text-primary)]">
+                            {contact.name}
+                          </div>
+                          {contact.email && (
+                            <div className="text-sm text-[var(--text-muted)]">
+                              {contact.email}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className="text-sm text-[var(--text-secondary)]">
+                        {contact.metadata?.line_user_id ? '💬 LINE' : '📧 อื่นๆ'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <span className="text-sm text-[var(--text-secondary)]">
+                        {formatDate(contact.created_at)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1 flex-wrap">
+                        {contact.tags?.map((tag, i) => (
+                          <span 
+                            key={i}
+                            className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                          >
+                            {tag}
+                          </span>
+                        )) || (
+                          <span className="text-xs text-[var(--text-muted)]">-</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredContacts.map((contact) => (
-              <div
-                key={contact.id}
-                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                {/* Avatar & Name */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-lg font-semibold">
-                    {contact.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                      {contact.name || 'Unknown'}
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Contact Info */}
-                <div className="space-y-2">
-                  {contact.email && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Mail size={14} className="flex-shrink-0" />
-                      <span className="truncate">{contact.email}</span>
-                    </div>
-                  )}
-                  {contact.phone && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Phone size={14} className="flex-shrink-0" />
-                      <span className="truncate">{contact.phone}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Tags */}
-                {contact.tags && contact.tags.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                    <div className="flex flex-wrap gap-1">
-                      {contact.tags.slice(0, 3).map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {contact.tags.length > 3 && (
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full">
-                          +{contact.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
-

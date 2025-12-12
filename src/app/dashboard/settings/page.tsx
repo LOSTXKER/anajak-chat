@@ -1,255 +1,173 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Building, Users, Zap, Brain, Bell, Shield } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase'
+import Link from 'next/link'
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('business')
+  const [user, setUser] = useState<any>(null)
   const [business, setBusiness] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
-    loadBusiness()
+    loadData()
   }, [])
 
-  const loadBusiness = async () => {
+  const loadData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
 
-      const { data: membership } = await supabase
-        .from('business_members')
-        .select('business_id, businesses(*)')
-        .eq('user_id', user.id)
-        .single()
+      setUser(session.user)
 
-      if (membership) {
-        setBusiness(membership)
+      const response = await fetch('/api/user/business', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+
+      if (response.ok) {
+        const { business_id } = await response.json()
+        const { data } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('id', business_id)
+          .single()
+        
+        if (data) setBusiness(data)
       }
     } catch (error) {
-      console.error('Error loading business:', error)
+      console.error('Error:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const tabs = [
-    { id: 'business', name: 'ข้อมูลธุรกิจ', icon: Building, path: '/dashboard/settings' },
-    { id: 'team', name: 'ทีม', icon: Users, path: '/dashboard/settings' },
-    { id: 'channels', name: 'ช่องทาง', icon: Zap, path: '/dashboard/settings/channels' },
-    { id: 'ai', name: 'AI Settings', icon: Brain, path: '/dashboard/settings' },
-    { id: 'notifications', name: 'การแจ้งเตือน', icon: Bell, path: '/dashboard/settings' },
-    { id: 'security', name: 'ความปลอดภัย', icon: Shield, path: '/dashboard/settings' },
+  const settingsSections = [
+    {
+      title: 'ช่องทางการติดต่อ',
+      description: 'เชื่อมต่อ LINE, Facebook และช่องทางอื่นๆ',
+      href: '/dashboard/settings/channels',
+      icon: '📱',
+    },
+    {
+      title: 'ข้อมูลธุรกิจ',
+      description: 'แก้ไขชื่อ โลโก้ และข้อมูลติดต่อ',
+      href: '#',
+      icon: '🏢',
+      disabled: true,
+    },
+    {
+      title: 'ทีมงาน',
+      description: 'จัดการสมาชิกและสิทธิ์การใช้งาน',
+      href: '#',
+      icon: '👥',
+      disabled: true,
+    },
+    {
+      title: 'การแจ้งเตือน',
+      description: 'ตั้งค่าการแจ้งเตือนข้อความใหม่',
+      href: '#',
+      icon: '🔔',
+      disabled: true,
+    },
   ]
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">กำลังโหลดการตั้งค่า...</p>
+      <div className="p-6 lg:p-8 pt-16 lg:pt-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 w-32 bg-[var(--bg-tertiary)] rounded" />
+          <div className="h-24 bg-[var(--bg-tertiary)] rounded-xl" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full flex bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar */}
-      <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Settings</h1>
-        </div>
-        <nav className="p-4 space-y-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const isChannels = tab.id === 'channels'
-            
-            if (isChannels) {
-              return (
-                <a
-                  key={tab.id}
-                  href={tab.path}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Icon size={20} />
-                  <span>{tab.name}</span>
-                </a>
-              )
-            }
-            
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                <Icon size={20} />
-                <span>{tab.name}</span>
-              </button>
-            )
-          })}
-        </nav>
+    <div className="p-6 lg:p-8 pt-16 lg:pt-8 max-w-3xl">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+          ตั้งค่า
+        </h1>
+        <p className="text-[var(--text-secondary)] mt-1">
+          จัดการบัญชีและการตั้งค่าระบบ
+        </p>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-4xl">
-          {activeTab === 'business' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  ข้อมูลธุรกิจ
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  จัดการข้อมูลพื้นฐานของธุรกิจของคุณ
-                </p>
-              </div>
+      {/* Account Info */}
+      <div className="card p-5 mb-6">
+        <h2 className="font-medium text-[var(--text-primary)] mb-4">
+          ข้อมูลบัญชี
+        </h2>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between py-2 border-b border-default">
+            <span className="text-sm text-[var(--text-secondary)]">อีเมล</span>
+            <span className="text-sm text-[var(--text-primary)]">{user?.email}</span>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-default">
+            <span className="text-sm text-[var(--text-secondary)]">ชื่อธุรกิจ</span>
+            <span className="text-sm text-[var(--text-primary)]">{business?.name || '-'}</span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm text-[var(--text-secondary)]">แพ็กเกจ</span>
+            <span className="text-sm text-[var(--accent-primary)] font-medium">ฟรี</span>
+          </div>
+        </div>
+      </div>
 
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ชื่อธุรกิจ
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={business?.businesses?.name}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Slug
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={business?.businesses?.slug}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                  บันทึกการเปลี่ยนแปลง
-                </button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'team' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">ทีม</h2>
-                <p className="text-gray-600 dark:text-gray-400">จัดการสมาชิกในทีมของคุณ</p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <p className="text-gray-600 dark:text-gray-400 text-center py-8">
-                  Team management feature coming soon...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'channels' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">ช่องทาง</h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  เชื่อมต่อช่องทางการสื่อสารต่างๆ
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {['Facebook', 'Instagram', 'LINE', 'TikTok', 'Shopee', 'Email'].map(
-                  (channel) => (
-                    <div
-                      key={channel}
-                      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6"
-                    >
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        {channel}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        ไม่ได้เชื่อมต่อ
-                      </p>
-                      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors">
-                        เชื่อมต่อ
-                      </button>
-                    </div>
-                  )
+      {/* Settings Sections */}
+      <div className="space-y-3">
+        {settingsSections.map((section) => (
+          <Link
+            key={section.title}
+            href={section.disabled ? '#' : section.href}
+            className={`
+              card p-4 flex items-center gap-4 transition-all
+              ${section.disabled 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:shadow-soft hover:scale-[1.01]'
+              }
+            `}
+            onClick={(e) => section.disabled && e.preventDefault()}
+          >
+            <span className="text-2xl">{section.icon}</span>
+            <div className="flex-1">
+              <h3 className="font-medium text-[var(--text-primary)]">
+                {section.title}
+                {section.disabled && (
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-muted)]">
+                    เร็วๆ นี้
+                  </span>
                 )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'ai' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  AI Settings
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">ตั้งค่า AI สำหรับธุรกิจของคุณ</p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    AI Model
-                  </label>
-                  <select className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                    <option>GPT-4</option>
-                    <option>GPT-3.5 Turbo</option>
-                    <option>Claude 3</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tone & Style
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="อธิบายโทนและสไตล์การพูดของธุรกิจ..."
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Enable AI Assist</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      เปิดใช้งานการช่วยเหลือจาก AI
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                  บันทึกการตั้งค่า
-                </button>
-              </div>
-            </div>
-          )}
-
-          {(activeTab === 'notifications' || activeTab === 'security') && (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <p className="text-gray-600 dark:text-gray-400 text-center py-8">
-                Feature coming soon...
+              </h3>
+              <p className="text-sm text-[var(--text-secondary)]">
+                {section.description}
               </p>
             </div>
-          )}
-        </div>
+            <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        ))}
+      </div>
+
+      {/* Danger Zone */}
+      <div className="mt-8 card p-5 border-red-200 dark:border-red-900/50">
+        <h2 className="font-medium text-red-600 dark:text-red-400 mb-2">
+          โซนอันตราย
+        </h2>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          การดำเนินการเหล่านี้ไม่สามารถย้อนกลับได้
+        </p>
+        <button
+          disabled
+          className="px-4 py-2 text-sm border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 
+            rounded-lg opacity-50 cursor-not-allowed"
+        >
+          ลบบัญชี
+        </button>
       </div>
     </div>
   )
 }
-

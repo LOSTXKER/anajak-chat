@@ -2,117 +2,117 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const router = useRouter()
+  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
+    setError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      if (error) throw error
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          setError('กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ')
+        } else if (error.message.includes('Invalid login credentials')) {
+          setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+        } else {
+          setError(error.message)
+        }
+        return
+      }
 
-      if (data.user) {
-        router.push('/dashboard')
-      }
-    } catch (err: any) {
-      const errorMessage = err.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ'
-      
-      // Better error messages
-      if (errorMessage.includes('Email not confirmed')) {
-        setError('กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ ตรวจสอบอีเมลของคุณ')
-      } else if (errorMessage.includes('Invalid login credentials')) {
-        setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
-      } else {
-        setError(errorMessage)
-      }
+      router.push('/dashboard')
+    } catch {
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              เข้าสู่ระบบ
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Anajak Chat Platform
-            </p>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-secondary)]">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--accent-primary)] mb-4">
+            <span className="text-white font-bold text-2xl">A</span>
           </div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+            เข้าสู่ระบบ
+          </h1>
+          <p className="text-[var(--text-secondary)] mt-1">
+            ยินดีต้อนรับกลับ!
+          </p>
+        </div>
 
+        {/* Form */}
+        <form onSubmit={handleLogin} className="card p-6 space-y-4">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                อีเมล
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="your@email.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                รหัสผ่าน
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              ยังไม่มีบัญชี?{' '}
-              <a href="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
-                ลงทะเบียน
-              </a>
-            </p>
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+              อีเมล
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              className="w-full px-4 py-2.5 rounded-lg text-sm"
+            />
           </div>
-        </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+              รหัสผ่าน
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              className="w-full px-4 py-2.5 rounded-lg text-sm"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 bg-[var(--accent-primary)] text-white rounded-lg
+              font-medium text-sm disabled:opacity-50 hover:bg-[var(--accent-hover)] transition-colors"
+          >
+            {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+          </button>
+        </form>
+
+        {/* Register Link */}
+        <p className="text-center mt-6 text-sm text-[var(--text-secondary)]">
+          ยังไม่มีบัญชี?{' '}
+          <Link href="/register" className="text-[var(--accent-primary)] font-medium hover:underline">
+            สมัครสมาชิก
+          </Link>
+        </p>
       </div>
     </div>
   )
 }
-

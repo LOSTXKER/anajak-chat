@@ -1,13 +1,10 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import Script from 'next/script'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 export const metadata: Metadata = {
-  title: 'Anajak Chat - Multi-Business Communication Platform',
-  description: 'Business Communication OS for multiple businesses',
+  title: 'Anajak Chat - แพลตฟอร์มแชทธุรกิจ',
+  description: 'ระบบจัดการแชทครบวงจรสำหรับธุรกิจ',
 }
 
 export default function RootLayout({
@@ -18,13 +15,18 @@ export default function RootLayout({
   return (
     <html lang="th" suppressHydrationWarning>
       <head>
-        <meta name="color-scheme" content="light dark" />
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(function(){try{var t=localStorage.getItem('theme');var d=t? t==='dark' : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; if(d){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`}
-        </Script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" 
+          rel="stylesheet" 
+        />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className="antialiased">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   )
 }
-

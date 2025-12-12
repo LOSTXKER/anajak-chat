@@ -2,173 +2,174 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [businessName, setBusinessName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
-
-    if (password !== confirmPassword) {
-      setError('รหัสผ่านไม่ตรงกัน')
-      setLoading(false)
-      return
-    }
+    setError('')
 
     try {
-      // Sign up the user
+      // Register user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            business_name: businessName,
-          },
-        },
       })
 
-      if (authError) throw authError
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          setError('อีเมลนี้มีบัญชีอยู่แล้ว กรุณาเข้าสู่ระบบ')
+        } else {
+          setError(authError.message)
+        }
+        return
+      }
 
       if (authData.user) {
-        // Check if email confirmation is required
-        if (authData.session) {
-          // Email confirmed or confirmation disabled - create business
-          const slug = businessName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-          const { data: businessId, error: businessError } = await supabase
-            .rpc('create_business_with_owner', {
-              business_name: businessName,
-              business_slug: slug,
-              user_id: authData.user.id,
-            } as any)
+        // Create business
+        const slug = businessName.toLowerCase().replace(/[^a-z0-9ก-๙]+/g, '-')
+        const { error: businessError } = await supabase
+          .rpc('create_business_with_owner', {
+            business_name: businessName,
+            business_slug: slug,
+            user_id: authData.user.id,
+          } as any)
 
-          if (businessError) throw businessError
-
-          router.push('/dashboard')
-        } else {
-          // Email confirmation required - show message
-          setError(null)
-          alert('✅ ลงทะเบียนสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี')
-          router.push('/login')
+        if (businessError) {
+          console.error('Business creation error:', businessError)
         }
+
+        setSuccess(true)
       }
-    } catch (err: any) {
-      setError(err.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
+    } catch {
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              ลงทะเบียน
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-secondary)]">
+        <div className="w-full max-w-sm text-center">
+          <div className="card p-8">
+            <div className="text-5xl mb-4">✉️</div>
+            <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+              ตรวจสอบอีเมลของคุณ
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              สร้างบัญชีใหม่กับ Anajak Chat
+            <p className="text-[var(--text-secondary)] text-sm mb-6">
+              เราส่งลิงก์ยืนยันไปที่<br />
+              <span className="font-medium text-[var(--text-primary)]">{email}</span>
             </p>
+            <Link 
+              href="/login"
+              className="inline-block w-full py-2.5 bg-[var(--accent-primary)] text-white rounded-lg
+                font-medium text-sm hover:bg-[var(--accent-hover)] transition-colors"
+            >
+              ไปหน้าเข้าสู่ระบบ
+            </Link>
           </div>
+        </div>
+      </div>
+    )
+  }
 
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-secondary)]">
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--accent-primary)] mb-4">
+            <span className="text-white font-bold text-2xl">A</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">
+            สร้างบัญชี
+          </h1>
+          <p className="text-[var(--text-secondary)] mt-1">
+            เริ่มต้นใช้งานฟรี
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleRegister} className="card p-6 space-y-4">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-6">
-            <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ชื่อธุรกิจ
-              </label>
-              <input
-                id="businessName"
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="ชื่อธุรกิจของคุณ"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                อีเมล
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="your@email.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                รหัสผ่าน
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ยืนยันรหัสผ่าน
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'กำลังลงทะเบียน...' : 'ลงทะเบียน'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              มีบัญชีอยู่แล้ว?{' '}
-              <a href="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
-                เข้าสู่ระบบ
-              </a>
-            </p>
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+              ชื่อธุรกิจ
+            </label>
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="ชื่อร้านหรือธุรกิจของคุณ"
+              required
+              className="w-full px-4 py-2.5 rounded-lg text-sm"
+            />
           </div>
-        </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+              อีเมล
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              className="w-full px-4 py-2.5 rounded-lg text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[var(--text-primary)] mb-1.5">
+              รหัสผ่าน
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="อย่างน้อย 6 ตัวอักษร"
+              required
+              minLength={6}
+              className="w-full px-4 py-2.5 rounded-lg text-sm"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 bg-[var(--accent-primary)] text-white rounded-lg
+              font-medium text-sm disabled:opacity-50 hover:bg-[var(--accent-hover)] transition-colors"
+          >
+            {loading ? 'กำลังสร้างบัญชี...' : 'สร้างบัญชี'}
+          </button>
+        </form>
+
+        {/* Login Link */}
+        <p className="text-center mt-6 text-sm text-[var(--text-secondary)]">
+          มีบัญชีอยู่แล้ว?{' '}
+          <Link href="/login" className="text-[var(--accent-primary)] font-medium hover:underline">
+            เข้าสู่ระบบ
+          </Link>
+        </p>
       </div>
     </div>
   )
 }
-
