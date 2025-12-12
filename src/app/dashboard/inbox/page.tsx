@@ -1,161 +1,143 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase'
-
-interface Contact {
-  id: string
-  name: string
-  avatar?: string
-}
-
-interface Channel {
-  id: string
-  type: string
-  name: string
-}
+import { supabase } from '@/lib/supabase'
 
 interface Conversation {
   id: string
   status: string
-  business_id: string
-  last_message_at: string | null
+  channel: string
   created_at: string
-  contact: Contact
-  channel: Channel
+  last_message_at: string
+  contact?: {
+    id: string
+    name: string
+    metadata?: {
+      line_user_id?: string
+      profile_picture?: string
+    }
+  }
+  messages?: Array<{
+    id: string
+    content: string
+    direction: string
+    created_at: string
+  }>
 }
 
 interface Message {
   id: string
   content: string
-  sender_type: string
+  direction: string
   created_at: string
-  is_internal?: boolean
+  sender_type: string
 }
 
 export default function InboxPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const supabase = createClient()
+  const [businessId, setBusinessId] = useState<string | null>(null)
+  const [filter, setFilter] = useState<'all' | 'open' | 'resolved'>('all')
+
+  const loadConversations = useCallback(async (bizId: string) => {
+    try {
+      let query = supabase
+        .from('conversations')
+        .select(`
+          id, status, channel, created_at, last_message_at,
+          contact:contacts(id, name, metadata)
+        `)
+        .eq('business_id', bizId)
+        .order('last_message_at', { ascending: false })
+
+      if (filter !== 'all') {
+        query = query.eq('status', filter)
+      }
+
+      const { data } = await query
+      setConversations((data as Conversation[]) || [])
+    } catch (error) {
+      console.error('Error loading conversations:', error)
+    }
+  }, [filter])
 
   useEffect(() => {
-    loadConversations()
-
-    // Real-time subscription
-    const channel = supabase
-      .channel('conversations')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
-        loadConversations()
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        if (selectedConversation && payload.new.conversation_id === selectedConversation.id) {
-          setMessages(prev => [...prev, payload.new as Message])
+    const init = async () => {
+      try {
+        const token = (await supabase.auth.getSession()).data.session?.access_token
+        if (!token) {
+          window.location.href = '/login'
+          return
         }
-      })
-      .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [selectedConversation])
+        const res = await fetch('/api/user/business', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const data = await res.json()
 
-  const loadConversations = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      const response = await fetch('/api/user/business', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      })
-
-      if (!response.ok) return
-
-      const { business_id } = await response.json()
-
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`*, contact:contacts(*), channel:channels(*)`)
-        .eq('business_id', business_id)
-        .order('last_message_at', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-
-      if (!error && data) {
-        setConversations(data as Conversation[])
+        if (data.businessId) {
+          setBusinessId(data.businessId)
+          await loadConversations(data.businessId)
+        }
+      } catch (error) {
+        console.error('Error:', error)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+    init()
+  }, [loadConversations])
 
-  const loadMessages = useCallback(async () => {
-    if (!selectedConversation) return
+  useEffect(() => {
+    if (businessId) {
+      loadConversations(businessId)
+    }
+  }, [filter, businessId, loadConversations])
 
+  const loadMessages = async (conversationId: string) => {
     const { data } = await supabase
       .from('messages')
       .select('*')
-      .eq('conversation_id', selectedConversation.id)
+      .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true })
+    
+    setMessages((data as Message[]) || [])
+  }
 
-    if (data) setMessages(data as Message[])
-  }, [selectedConversation, supabase])
-
-  useEffect(() => {
-    if (selectedConversation) loadMessages()
-  }, [selectedConversation, loadMessages])
+  const selectConversation = async (conv: Conversation) => {
+    setSelectedConv(conv)
+    await loadMessages(conv.id)
+  }
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || sending) return
+    if (!newMessage.trim() || !selectedConv || sending) return
 
     setSending(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) return
-
-      // Check if LINE channel
-      const isLine = selectedConversation.channel?.type === 'line'
-
-      if (isLine) {
-        const response = await fetch('/api/line/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            conversationId: selectedConversation.id,
-            message: newMessage,
-            userId: session.user.id
-          })
+      const token = (await supabase.auth.getSession()).data.session?.access_token
+      
+      const res = await fetch('/api/line/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          conversationId: selectedConv.id,
+          message: newMessage
         })
+      })
 
-        if (!response.ok) throw new Error('ส่งข้อความไม่สำเร็จ')
-      } else {
-        await (supabase.from('messages') as any).insert({
-          conversation_id: selectedConversation.id,
-          business_id: selectedConversation.business_id,
-          sender_type: 'agent',
-          sender_id: session.user.id,
-          content: newMessage,
-          content_type: 'text',
-          is_internal: false
-        })
-
-        await (supabase.from('conversations') as any)
-          .update({ last_message_at: new Date().toISOString() })
-          .eq('id', selectedConversation.id)
+      if (res.ok) {
+        setNewMessage('')
+        await loadMessages(selectedConv.id)
       }
-
-      setNewMessage('')
-      loadMessages()
     } catch (error) {
-      console.error('Error sending:', error)
-      alert('ส่งข้อความไม่สำเร็จ')
+      console.error('Error sending message:', error)
     } finally {
       setSending(false)
     }
@@ -164,194 +146,151 @@ export default function InboxPage() {
   const formatTime = (date: string) => {
     const d = new Date(date)
     const now = new Date()
-    const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays === 0) {
-      return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
-    } else if (diffDays === 1) {
-      return 'เมื่อวาน'
-    } else if (diffDays < 7) {
-      return d.toLocaleDateString('th-TH', { weekday: 'short' })
-    }
-    return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
-  }
+    const diff = now.getTime() - d.getTime()
+    const mins = Math.floor(diff / 60000)
+    const hours = Math.floor(mins / 60)
+    const days = Math.floor(hours / 24)
 
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, string> = {
-      open: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      claimed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      resolved: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-    }
-    const labels: Record<string, string> = {
-      open: 'เปิด',
-      claimed: 'รับแล้ว',
-      resolved: 'เสร็จสิ้น',
-    }
-    return (
-      <span className={`text-xs px-2 py-0.5 rounded-full ${styles[status] || styles.open}`}>
-        {labels[status] || status}
-      </span>
-    )
-  }
-
-  const getChannelIcon = (type: string) => {
-    if (type === 'line') return '💬'
-    if (type === 'facebook') return '📘'
-    return '💌'
+    if (mins < 1) return 'เมื่อกี้'
+    if (mins < 60) return `${mins} นาที`
+    if (hours < 24) return `${hours} ชม.`
+    return `${days} วัน`
   }
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen flex pt-14 lg:pt-0">
-      {/* Conversation List */}
-      <div className={`
-        w-full lg:w-80 border-r border-default bg-[var(--bg-primary)]
-        ${selectedConversation ? 'hidden lg:block' : 'block'}
-      `}>
+    <div className="h-screen flex overflow-hidden bg-[var(--bg-secondary)]">
+      {/* Sidebar - Conversation List */}
+      <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 bg-[var(--bg-primary)] border-r border-[var(--border-color)] flex flex-col
+        ${selectedConv ? 'hidden md:flex' : 'flex'}`}>
         {/* Header */}
-        <div className="p-4 border-b border-default">
-          <h1 className="text-lg font-semibold text-[var(--text-primary)]">
-            กล่องข้อความ
-          </h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {conversations.length} การสนทนา
-          </p>
+        <div className="p-4 border-b border-[var(--border-color)]">
+          <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-3">กล่องข้อความ</h1>
+          <div className="flex gap-2">
+            {(['all', 'open', 'resolved'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all-200
+                  ${filter === f 
+                    ? 'bg-[var(--accent-primary)] text-white' 
+                    : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
+                  }`}
+              >
+                {f === 'all' ? 'ทั้งหมด' : f === 'open' ? 'เปิด' : 'ปิด'}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* List */}
-        <div className="overflow-y-auto h-[calc(100vh-88px)] lg:h-[calc(100vh-88px)]">
+        {/* Conversation List */}
+        <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
             <div className="p-8 text-center">
-              <div className="text-4xl mb-3">📭</div>
-              <p className="text-[var(--text-secondary)]">ยังไม่มีการสนทนา</p>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center">
+                <svg className="w-8 h-8 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H6.911a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661z" />
+                </svg>
+              </div>
+              <p className="text-[var(--text-muted)]">ยังไม่มีข้อความ</p>
             </div>
           ) : (
-            conversations.map((conv) => (
-              <button
-                key={conv.id}
-                onClick={() => setSelectedConversation(conv)}
-                className={`
-                  w-full p-4 text-left border-b border-default transition-colors
-                  ${selectedConversation?.id === conv.id 
-                    ? 'bg-[var(--bg-active)]' 
-                    : 'hover:bg-[var(--bg-hover)]'
-                  }
-                `}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center flex-shrink-0 text-lg">
-                    {conv.contact?.avatar ? (
-                      <img 
-                        src={conv.contact.avatar} 
-                        alt="" 
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      getChannelIcon(conv.channel?.type)
+            <div className="divide-y divide-[var(--border-light)]">
+              {conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => selectConversation(conv)}
+                  className={`w-full p-4 text-left transition-all-200 flex items-center gap-3
+                    ${selectedConv?.id === conv.id 
+                      ? 'bg-[var(--bg-active)]' 
+                      : 'hover:bg-[var(--bg-hover)]'
+                    }`}
+                >
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-medium">
+                      {conv.contact?.name?.charAt(0) || '?'}
+                    </div>
+                    {conv.status === 'open' && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-[var(--bg-primary)]"></div>
                     )}
                   </div>
-
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-[var(--text-primary)] truncate">
-                        {conv.contact?.name || 'ไม่ระบุชื่อ'}
+                        {conv.contact?.name || 'ไม่ทราบชื่อ'}
                       </span>
                       <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
-                        {formatTime(conv.last_message_at || conv.created_at)}
+                        {formatTime(conv.last_message_at)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusBadge(conv.status)}
-                      <span className="text-xs text-[var(--text-muted)]">
-                        {conv.channel?.type === 'line' ? 'LINE' : conv.channel?.name}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-sm text-[var(--text-secondary)] truncate flex-1">
+                        {conv.channel === 'line' ? 'LINE' : conv.channel}
                       </span>
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conv.status === 'open' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
                     </div>
                   </div>
-                </div>
-              </button>
-            ))
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
 
       {/* Chat Area */}
-      <div className={`
-        flex-1 flex flex-col bg-[var(--bg-secondary)]
-        ${selectedConversation ? 'block' : 'hidden lg:flex'}
-      `}>
-        {selectedConversation ? (
+      <div className={`flex-1 flex flex-col ${!selectedConv ? 'hidden md:flex' : 'flex'}`}>
+        {selectedConv ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 bg-[var(--bg-primary)] border-b border-default flex items-center gap-3">
-              {/* Back Button (Mobile) */}
-              <button
-                onClick={() => setSelectedConversation(null)}
-                className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-[var(--bg-hover)]"
+            <div className="h-16 px-4 flex items-center gap-3 border-b border-[var(--border-color)] bg-[var(--bg-primary)]">
+              <button 
+                onClick={() => setSelectedConv(null)}
+                className="md:hidden p-2 -ml-2 rounded-lg hover:bg-[var(--bg-hover)]"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
               </button>
-
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-lg">
-                {selectedConversation.contact?.avatar ? (
-                  <img 
-                    src={selectedConversation.contact.avatar} 
-                    alt="" 
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  getChannelIcon(selectedConversation.channel?.type)
-                )}
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-medium">
+                {selectedConv.contact?.name?.charAt(0) || '?'}
               </div>
-
-              {/* Info */}
               <div className="flex-1">
                 <h2 className="font-medium text-[var(--text-primary)]">
-                  {selectedConversation.contact?.name || 'ไม่ระบุชื่อ'}
+                  {selectedConv.contact?.name || 'ไม่ทราบชื่อ'}
                 </h2>
-                <div className="flex items-center gap-2 text-sm">
-                  {getStatusBadge(selectedConversation.status)}
-                  <span className="text-[var(--text-muted)]">
-                    {selectedConversation.channel?.type === 'line' ? 'LINE' : selectedConversation.channel?.name}
-                  </span>
-                </div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {selectedConv.channel === 'line' ? 'LINE' : selectedConv.channel}
+                </p>
               </div>
+              <span className={`badge ${selectedConv.status === 'open' ? 'badge-green' : 'badge-gray'}`}>
+                {selectedConv.status === 'open' ? 'เปิด' : 'ปิด'}
+              </span>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[var(--bg-secondary)]">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
-                  className={`flex ${msg.sender_type === 'contact' ? 'justify-start' : 'justify-end'}`}
+                  className={`flex ${msg.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`
-                    max-w-[80%] lg:max-w-[60%] px-4 py-2.5 rounded-2xl
-                    ${msg.sender_type === 'contact'
-                      ? 'bg-[var(--bg-primary)] text-[var(--text-primary)] rounded-bl-md'
-                      : msg.sender_type === 'bot'
-                        ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-br-md'
-                        : 'bg-[var(--accent-primary)] text-white rounded-br-md'
-                    }
-                  `}>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${
-                      msg.sender_type === 'agent' ? 'text-white/70' : 'text-[var(--text-muted)]'
+                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                    msg.direction === 'outgoing'
+                      ? 'bg-[var(--accent-primary)] text-white rounded-br-md'
+                      : 'bg-[var(--bg-primary)] text-[var(--text-primary)] rounded-bl-md shadow-sm'
+                  }`}>
+                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    <p className={`text-[11px] mt-1 ${
+                      msg.direction === 'outgoing' ? 'text-white/70' : 'text-[var(--text-muted)]'
                     }`}>
-                      {formatTime(msg.created_at)}
-                      {msg.sender_type === 'bot' && ' • บอท'}
-                      {msg.sender_type === 'agent' && ' • คุณ'}
+                      {new Date(msg.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>
@@ -359,34 +298,43 @@ export default function InboxPage() {
             </div>
 
             {/* Input */}
-            <div className="p-4 bg-[var(--bg-primary)] border-t border-default">
+            <div className="p-4 bg-[var(--bg-primary)] border-t border-[var(--border-color)]">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   placeholder="พิมพ์ข้อความ..."
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm"
+                  className="flex-1 px-4 py-3 rounded-xl"
                   disabled={sending}
                 />
                 <button
                   onClick={sendMessage}
-                  disabled={!newMessage.trim() || sending}
-                  className="px-5 py-2.5 bg-[var(--accent-primary)] text-white rounded-xl
-                    font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed
-                    hover:bg-[var(--accent-hover)] transition-colors"
+                  disabled={sending || !newMessage.trim()}
+                  className="btn btn-primary px-5"
                 >
-                  {sending ? '...' : 'ส่ง'}
+                  {sending ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center bg-[var(--bg-secondary)]">
             <div className="text-center">
-              <div className="text-6xl mb-4">💬</div>
-              <p className="text-[var(--text-secondary)]">เลือกการสนทนาเพื่อเริ่มแชท</p>
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-[var(--bg-tertiary)] flex items-center justify-center">
+                <svg className="w-10 h-10 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-[var(--text-primary)] mb-2">เลือกการสนทนา</h3>
+              <p className="text-sm text-[var(--text-muted)]">เลือกแชทจากรายการด้านซ้ายเพื่อเริ่มต้น</p>
             </div>
           </div>
         )}
