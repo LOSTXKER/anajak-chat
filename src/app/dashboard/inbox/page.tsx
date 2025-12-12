@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 interface Conversation {
   id: string
   status: string
-  channel: string
+  channel_id: string
   created_at: string
   last_message_at: string
   contact?: {
@@ -48,7 +48,7 @@ export default function InboxPage() {
       let query = supabase
         .from('conversations')
         .select(`
-          id, status, channel, created_at, last_message_at,
+          id, status, channel_id, created_at, last_message_at,
           contact:contacts(id, name, metadata)
         `)
         .eq('business_id', bizId)
@@ -232,7 +232,7 @@ export default function InboxPage() {
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-sm text-[var(--text-secondary)] truncate flex-1">
-                        {conv.channel === 'line' ? 'LINE' : conv.channel}
+                        LINE
                       </span>
                       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${conv.status === 'open' ? 'bg-green-500' : 'bg-gray-300'}`}></span>
                     </div>
@@ -266,7 +266,7 @@ export default function InboxPage() {
                   {selectedConv.contact?.name || 'ไม่ทราบชื่อ'}
                 </h2>
                 <p className="text-xs text-[var(--text-muted)]">
-                  {selectedConv.channel === 'line' ? 'LINE' : selectedConv.channel}
+                  LINE
                 </p>
               </div>
               <span className={`badge ${selectedConv.status === 'open' ? 'badge-green' : 'badge-gray'}`}>

@@ -2,7 +2,7 @@
 SELECT 
   c.id,
   c.status,
-  c.channel,
+  c.channel_id,
   c.business_id,
   c.created_at,
   c.last_message_at,
