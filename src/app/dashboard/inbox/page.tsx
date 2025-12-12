@@ -44,6 +44,29 @@ export default function InboxPage() {
 
   const loadConversations = async () => {
     try {
+      // Get user's business_id first
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        console.error('No user found')
+        setLoading(false)
+        return
+      }
+
+      const { data: membership } = await supabase
+        .from('business_members')
+        .select('business_id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single<{ business_id: string }>()
+
+      if (!membership) {
+        console.error('No business membership found')
+        setLoading(false)
+        return
+      }
+
+      console.log('Loading conversations for business:', membership.business_id)
+
       const { data, error } = await supabase
         .from('conversations')
         .select(`
@@ -51,11 +74,13 @@ export default function InboxPage() {
           contact:contacts(*),
           channel:channels(*)
         `)
+        .eq('business_id', membership.business_id)
         .order('last_message_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
+      console.log('Loaded conversations:', data?.length || 0)
       setConversations(data as Conversation[])
     } catch (error) {
       console.error('Error loading conversations:', error)
