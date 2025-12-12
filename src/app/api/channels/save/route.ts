@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       .select('business_id')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .single()
+      .single<{ business_id: string }>()
 
     if (membership) {
       businessId = membership.business_id
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         .from('businesses')
         .select('id')
         .eq('owner_id', userId)
-        .single()
+        .single<{ id: string }>()
 
       if (business) {
         businessId = business.id
@@ -49,13 +49,14 @@ export async function POST(req: NextRequest) {
         // Create business_member if missing
         await supabaseAdmin
           .from('business_members')
-          .insert({
+          .upsert({
             business_id: business.id,
             user_id: userId,
             role: 'owner',
             status: 'active',
+          } as any, {
+            onConflict: 'business_id,user_id'
           })
-          .onConflict('business_id,user_id')
       }
     }
 
@@ -80,14 +81,14 @@ export async function POST(req: NextRequest) {
       .select('id')
       .eq('business_id', businessId)
       .eq('type', 'line')
-      .single()
+      .single<{ id: string }>()
 
     if (existingChannelId || existingLineChannel) {
       // Update existing channel
       const channelIdToUpdate = existingChannelId || existingLineChannel?.id
 
-      const { error } = await supabaseAdmin
-        .from('channels')
+      const { error } = await (supabaseAdmin
+        .from('channels') as any)
         .update({
           status: 'connected',
           config,
@@ -104,8 +105,8 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Create new channel only if none exists
-      const { error } = await supabaseAdmin
-        .from('channels')
+      const { error } = await (supabaseAdmin
+        .from('channels') as any)
         .insert({
           business_id: businessId,
           type: 'line',

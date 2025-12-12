@@ -48,7 +48,7 @@ export default function RegisterPage() {
               business_name: businessName,
               business_slug: slug,
               user_id: authData.user.id,
-            })
+            } as any)
 
           if (businessError) throw businessError
 

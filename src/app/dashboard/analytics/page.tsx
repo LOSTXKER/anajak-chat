@@ -47,7 +47,7 @@ export default function AnalyticsPage() {
         .from('business_members')
         .select('business_id')
         .eq('user_id', user.id)
-        .single()
+        .single<{ business_id: string }>()
 
       if (!membership) return
 
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
         .eq('business_id', membership.business_id)
         .eq('status', 'won')
 
-      const totalRevenue = entities?.reduce((sum, entity) => sum + (entity.value || 0), 0) || 0
+      const totalRevenue = (entities as any[])?.reduce((sum, entity) => sum + (entity.value || 0), 0) || 0
 
       // Calculate conversion rate
       const { count: wonEntities } = await supabase

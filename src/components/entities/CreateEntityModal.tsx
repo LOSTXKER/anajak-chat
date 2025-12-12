@@ -34,11 +34,11 @@ export default function CreateEntityModal({ onClose, onSuccess }: CreateEntityMo
         .from('business_members')
         .select('business_id')
         .eq('user_id', user.id)
-        .single()
+        .single<{ business_id: string }>()
 
       if (!membership) throw new Error('No business found')
 
-      const { error } = await supabase.from('entities').insert({
+      const { error } = await (supabase.from('entities') as any).insert({
         business_id: membership.business_id,
         type: formData.type,
         title: formData.title,

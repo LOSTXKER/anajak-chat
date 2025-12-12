@@ -115,7 +115,7 @@ async function handleTextMessage(event: MessageEvent) {
     console.log(`💬 Conversation: ${conversation.id}`)
 
     // Save incoming message
-    const { error: msgError } = await supabaseAdmin.from('messages').insert({
+    const { error: msgError } = await (supabaseAdmin.from('messages') as any).insert({
       conversation_id: conversation.id,
       business_id: businessId,
       sender_type: 'contact',
@@ -135,8 +135,8 @@ async function handleTextMessage(event: MessageEvent) {
     }
 
     // Update conversation timestamp
-    await supabaseAdmin
-      .from('conversations')
+    await (supabaseAdmin
+      .from('conversations') as any)
       .update({ 
         last_message_at: new Date().toISOString(),
         status: 'open' // Reopen if was closed
@@ -144,8 +144,8 @@ async function handleTextMessage(event: MessageEvent) {
       .eq('id', conversation.id)
 
     // Check if auto-reply is enabled
-    const { data: channel } = await supabaseAdmin
-      .from('channels')
+    const { data: channel } = await (supabaseAdmin
+      .from('channels') as any)
       .select('config')
       .eq('business_id', businessId)
       .eq('type', 'line')
@@ -160,7 +160,7 @@ async function handleTextMessage(event: MessageEvent) {
       await sendLineMessage(replyToken, autoReplyMessage)
       
       // Save auto-reply message
-      await supabaseAdmin.from('messages').insert({
+      await (supabaseAdmin.from('messages') as any).insert({
         conversation_id: conversation.id,
         business_id: businessId,
         sender_type: 'bot',
@@ -203,8 +203,8 @@ async function getOrCreateContact(lineUserId: string, businessId: string) {
     const profile = await getLineProfile(lineUserId)
     
     // Find existing contact by LINE user ID
-    const { data: existing } = await supabaseAdmin
-      .from('contacts')
+    const { data: existing } = await (supabaseAdmin
+      .from('contacts') as any)
       .select('*')
       .eq('business_id', businessId)
       .eq('metadata->>line_user_id', lineUserId)
@@ -216,8 +216,8 @@ async function getOrCreateContact(lineUserId: string, businessId: string) {
     }
 
     // Create new contact
-    const { data: newContact, error } = await supabaseAdmin
-      .from('contacts')
+    const { data: newContact, error } = await (supabaseAdmin
+      .from('contacts') as any)
       .insert({
         business_id: businessId,
         name: profile?.displayName || 'LINE User',
@@ -247,8 +247,8 @@ async function getOrCreateContact(lineUserId: string, businessId: string) {
 async function getOrCreateConversation(contactId: string, businessId: string) {
   try {
     // Find existing open conversation
-    const { data: existing } = await supabaseAdmin
-      .from('conversations')
+    const { data: existing } = await (supabaseAdmin
+      .from('conversations') as any)
       .select('*')
       .eq('contact_id', contactId)
       .eq('business_id', businessId)
@@ -263,8 +263,8 @@ async function getOrCreateConversation(contactId: string, businessId: string) {
     }
 
     // Get LINE channel
-    const { data: channel } = await supabaseAdmin
-      .from('channels')
+    const { data: channel } = await (supabaseAdmin
+      .from('channels') as any)
       .select('id')
       .eq('business_id', businessId)
       .eq('type', 'line')
@@ -276,8 +276,8 @@ async function getOrCreateConversation(contactId: string, businessId: string) {
     }
 
     // Create new conversation
-    const { data: newConversation, error } = await supabaseAdmin
-      .from('conversations')
+    const { data: newConversation, error } = await (supabaseAdmin
+      .from('conversations') as any)
       .insert({
         business_id: businessId,
         contact_id: contactId,

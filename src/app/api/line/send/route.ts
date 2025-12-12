@@ -26,7 +26,11 @@ export async function POST(req: NextRequest) {
         )
       `)
       .eq('id', conversationId)
-      .single()
+      .single<{
+        id: string
+        business_id: string
+        contact: { id: string; metadata: any } | null
+      }>()
 
     if (convError || !conversation) {
       return NextResponse.json(
@@ -48,8 +52,8 @@ export async function POST(req: NextRequest) {
     await pushLineMessage(lineUserId, message)
 
     // Save message to database
-    const { error: msgError } = await supabaseAdmin
-      .from('messages')
+    const { error: msgError } = await (supabaseAdmin
+      .from('messages') as any)
       .insert({
         conversation_id: conversationId,
         business_id: conversation.business_id,
@@ -71,8 +75,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Update conversation timestamp
-    await supabaseAdmin
-      .from('conversations')
+    await (supabaseAdmin
+      .from('conversations') as any)
       .update({ last_message_at: new Date().toISOString() })
       .eq('id', conversationId)
 

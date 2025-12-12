@@ -73,8 +73,8 @@ export default function InboxPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { error } = await supabase
-        .from('conversations')
+      const { error } = await (supabase
+        .from('conversations') as any)
         .update({
           status: 'claimed',
           assigned_to: user.id,
@@ -92,8 +92,8 @@ export default function InboxPage() {
 
   const handleReleaseConversation = async (conversationId: string) => {
     try {
-      const { error } = await supabase
-        .from('conversations')
+      const { error } = await (supabase
+        .from('conversations') as any)
         .update({
           status: 'open',
           assigned_to: null,

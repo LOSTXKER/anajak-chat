@@ -18,7 +18,10 @@ export async function getLineConfig(businessId?: string) {
       query = query.eq('business_id', businessId)
     }
 
-    const { data: channel, error } = await query.single()
+    const { data: channel, error } = await query.single<{
+      config: any
+      business_id: string
+    }>()
 
     if (error || !channel) {
       console.error('Failed to get LINE config from database:', error)

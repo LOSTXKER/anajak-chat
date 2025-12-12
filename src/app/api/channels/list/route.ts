@@ -20,13 +20,13 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     // Remove duplicates - keep only latest for each type
-    const uniqueChannels = channels?.reduce((acc: any[], channel) => {
-      const exists = acc.find(c => c.type === channel.type)
+    const uniqueChannels = (channels || []).reduce((acc: any[], channel: any) => {
+      const exists = acc.find((c: any) => c.type === channel.type)
       if (!exists) {
         acc.push(channel)
       }
       return acc
-    }, []) || []
+    }, [])
 
     return NextResponse.json({ 
       success: true,
@@ -51,13 +51,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Get user's business
-    const { data: membership } = await supabaseAdmin
+    const { data: membership, error: membershipError } = await supabaseAdmin
       .from('business_members')
       .select('business_id')
       .eq('user_id', userId)
-      .single()
+      .single<{ business_id: string }>()
 
-    if (!membership) {
+    if (membershipError || !membership) {
       return NextResponse.json({ error: 'No business found' }, { status: 404 })
     }
 
@@ -71,13 +71,13 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     // Remove duplicates
-    const uniqueChannels = channels?.reduce((acc: any[], channel) => {
-      const exists = acc.find(c => c.type === channel.type)
+    const uniqueChannels = (channels || []).reduce((acc: any[], channel: any) => {
+      const exists = acc.find((c: any) => c.type === channel.type)
       if (!exists) {
         acc.push(channel)
       }
       return acc
-    }, []) || []
+    }, [])
 
     return NextResponse.json({ 
       success: true,

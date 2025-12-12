@@ -121,7 +121,7 @@ export default function ChatThread({ conversation, onClaim, onRelease }: ChatThr
         }
       } else {
         // Save as internal note or for non-LINE channels
-        const { error } = await supabase.from('messages').insert({
+        const { error } = await (supabase.from('messages') as any).insert({
           conversation_id: conversation.id,
           business_id: conversation.business_id,
           sender_type: 'agent',
@@ -134,8 +134,8 @@ export default function ChatThread({ conversation, onClaim, onRelease }: ChatThr
         if (error) throw error
 
         // Update conversation last_message_at
-        await supabase
-          .from('conversations')
+        await (supabase
+          .from('conversations') as any)
           .update({ last_message_at: new Date().toISOString() })
           .eq('id', conversation.id)
       }
