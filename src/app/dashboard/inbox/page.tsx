@@ -52,12 +52,19 @@ export default function InboxPage() {
         return
       }
 
-      const { data: membership } = await supabase
+      const { data: membership, error: membershipError } = await supabase
         .from('business_members')
         .select('business_id')
         .eq('user_id', user.id)
         .eq('status', 'active')
-        .single<{ business_id: string }>()
+        .limit(1)
+        .maybeSingle<{ business_id: string }>()
+      
+      if (membershipError) {
+        console.error('Error fetching membership:', membershipError)
+        setLoading(false)
+        return
+      }
 
       if (!membership) {
         console.error('No business membership found')
