@@ -22,6 +22,7 @@ export default function ContextPanel({ conversation }: ContextPanelProps) {
 
   useEffect(() => {
     loadEntities()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation.id])
 
   const loadEntities = async () => {

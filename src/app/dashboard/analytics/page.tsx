@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
             </div>
             <div className="bg-white/10 backdrop-blur rounded-lg p-4">
               <p className="text-sm opacity-90 mb-1">คำถามยอดนิยม</p>
-              <p className="font-semibold">"สินค้ามีสต็อกหรือไม่?" ถูกถามบ่อยที่สุด</p>
+              <p className="font-semibold">&quot;สินค้ามีสต็อกหรือไม่?&quot; ถูกถามบ่อยที่สุด</p>
             </div>
             <div className="bg-white/10 backdrop-blur rounded-lg p-4">
               <p className="text-sm opacity-90 mb-1">Recommendation</p>

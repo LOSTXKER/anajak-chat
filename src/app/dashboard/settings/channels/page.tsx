@@ -380,8 +380,8 @@ function LineConnectionModal({
             <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
               <li>ไปที่ <a href="https://developers.line.biz/console/" target="_blank" className="underline">LINE Developers Console</a></li>
               <li>เลือก Channel ของคุณ</li>
-              <li>ไปที่ tab "Basic settings" สำหรับ Channel ID และ Secret</li>
-              <li>ไปที่ tab "Messaging API" สำหรับ Access Token</li>
+              <li>ไปที่ tab &quot;Basic settings&quot; สำหรับ Channel ID และ Secret</li>
+              <li>ไปที่ tab &quot;Messaging API&quot; สำหรับ Access Token</li>
             </ol>
           </div>
 

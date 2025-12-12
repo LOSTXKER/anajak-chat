@@ -50,6 +50,7 @@ export default function EntitiesPage() {
 
   useEffect(() => {
     filterEntities()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entities, searchQuery, statusFilter, typeFilter])
 
   const loadEntities = async () => {
