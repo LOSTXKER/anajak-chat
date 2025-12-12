@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true,
-      business_id: membership.business_id,
+      businessId: membership.business_id,
       role: membership.role
     })
   } catch (error) {
