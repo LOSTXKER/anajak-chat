@@ -20,7 +20,7 @@ interface Conversation {
   messages?: Array<{
     id: string
     content: string
-    direction: string
+    sender_type: string
     created_at: string
   }>
 }
@@ -28,9 +28,8 @@ interface Conversation {
 interface Message {
   id: string
   content: string
-  direction: string
-  created_at: string
   sender_type: string
+  created_at: string
 }
 
 export default function InboxPage() {
@@ -276,25 +275,28 @@ export default function InboxPage() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[var(--bg-secondary)]">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.direction === 'outgoing' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                    msg.direction === 'outgoing'
-                      ? 'bg-[var(--accent-primary)] text-white rounded-br-md'
-                      : 'bg-[var(--bg-primary)] text-[var(--text-primary)] rounded-bl-md shadow-sm'
-                  }`}>
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                    <p className={`text-[11px] mt-1 ${
-                      msg.direction === 'outgoing' ? 'text-white/70' : 'text-[var(--text-muted)]'
+              {messages.map((msg) => {
+                const isOutgoing = msg.sender_type === 'agent' || msg.sender_type === 'bot'
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                      isOutgoing
+                        ? 'bg-[var(--accent-primary)] text-white rounded-br-md'
+                        : 'bg-[var(--bg-primary)] text-[var(--text-primary)] rounded-bl-md shadow-sm'
                     }`}>
-                      {new Date(msg.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                      <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      <p className={`text-[11px] mt-1 ${
+                        isOutgoing ? 'text-white/70' : 'text-[var(--text-muted)]'
+                      }`}>
+                        {new Date(msg.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Input */}

@@ -28,7 +28,8 @@ SELECT
   m.id,
   m.conversation_id,
   m.content,
-  m.direction,
+  m.sender_type,
+  m.content_type,
   m.created_at
 FROM messages m
 ORDER BY m.created_at DESC
