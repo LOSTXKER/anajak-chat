@@ -75,9 +75,9 @@ const menuItems = [
   { href: '/dashboard/inbox', label: 'กล่องข้อความ', icon: Icons.inbox, badge: null },
   { href: '/dashboard/entities', label: 'งาน & ดีล', icon: Icons.entities, badge: null },
   { href: '/dashboard/contacts', label: 'รายชื่อ', icon: Icons.contacts, badge: null },
-  { href: '/dashboard/files', label: 'ไฟล์', icon: Icons.files, badge: 'เร็วๆ นี้', disabled: true },
-  { href: '/dashboard/automation', label: 'อัตโนมัติ', icon: Icons.automation, badge: 'เร็วๆ นี้', disabled: true },
-  { href: '/dashboard/ai', label: 'AI Center', icon: Icons.ai, badge: 'เร็วๆ นี้', disabled: true },
+  { href: '/dashboard/files', label: 'ไฟล์', icon: Icons.files, badge: null },
+  { href: '/dashboard/automation', label: 'อัตโนมัติ', icon: Icons.automation, badge: null },
+  { href: '/dashboard/ai', label: 'AI Center', icon: Icons.ai, badge: null },
   { href: '/dashboard/analytics', label: 'สถิติ', icon: Icons.analytics, badge: null },
   { href: '/dashboard/settings', label: 'ตั้งค่า', icon: Icons.settings, badge: null },
 ]
