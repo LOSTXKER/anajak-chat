@@ -44,35 +44,30 @@ export default function InboxPage() {
 
   const loadConversations = async () => {
     try {
-      // Get user's business_id first
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        console.error('No user found')
+      // Get auth session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        console.error('No session found')
         setLoading(false)
         return
       }
 
-      const { data: membership, error: membershipError } = await supabase
-        .from('business_members')
-        .select('business_id')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .limit(1)
-        .maybeSingle<{ business_id: string }>()
-      
-      if (membershipError) {
-        console.error('Error fetching membership:', membershipError)
+      // Get business_id from API (bypasses RLS)
+      const response = await fetch('/api/user/business', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Error fetching business:', error)
         setLoading(false)
         return
       }
 
-      if (!membership) {
-        console.error('No business membership found')
-        setLoading(false)
-        return
-      }
-
-      console.log('Loading conversations for business:', membership.business_id)
+      const { business_id } = await response.json()
+      console.log('Loading conversations for business:', business_id)
 
       const { data, error } = await supabase
         .from('conversations')
@@ -81,7 +76,7 @@ export default function InboxPage() {
           contact:contacts(*),
           channel:channels(*)
         `)
-        .eq('business_id', membership.business_id)
+        .eq('business_id', business_id)
         .order('last_message_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
 
