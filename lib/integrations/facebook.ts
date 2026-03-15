@@ -123,7 +123,7 @@ export function buildFacebookOAuthUrl(
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
-    scope: "pages_manage_metadata,pages_read_engagement,pages_messaging,pages_show_list",
+    scope: "pages_manage_metadata,pages_messaging,pages_show_list",
     response_type: "code",
     state,
   });
