@@ -14,6 +14,25 @@ export const DELETE = apiHandler(async (_request, context) => {
 
   if (!channel) return jsonError("Not found", 404);
 
+  const convIds = (await prisma.conversation.findMany({
+    where: { channelId: id },
+    select: { id: true },
+  })).map((c) => c.id);
+
+  if (convIds.length > 0) {
+    // Detach orders from conversations before deleting
+    await prisma.order.updateMany({
+      where: { conversationId: { in: convIds } },
+      data: { conversationId: null },
+    });
+    // Detach capi events from conversations
+    await prisma.capiEvent.updateMany({
+      where: { conversationId: { in: convIds } },
+      data: { conversationId: null },
+    });
+  }
+
+  await prisma.conversation.deleteMany({ where: { channelId: id } });
   await prisma.channel.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
