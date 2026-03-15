@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageSquare } from "lucide-react";
 import { ConversationList } from "./conversation-list";
 import { ChatView } from "./chat-view";
+import { createClient } from "@/lib/supabase/client";
 import type { Conversation } from "./types";
 
 export default function InboxPage() {
@@ -13,6 +14,11 @@ export default function InboxPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "pending" | "resolved">("open");
   const [search, setSearch] = useState("");
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusFilterRef = useRef(statusFilter);
+  const searchRef = useRef(search);
+
+  statusFilterRef.current = statusFilter;
+  searchRef.current = search;
 
   const fetchConversations = useCallback(async (s: string, status: string) => {
     setLoading(true);
@@ -32,6 +38,42 @@ export default function InboxPage() {
     fetchConversations(search, statusFilter);
   }, [statusFilter, fetchConversations]);
 
+  // Realtime subscription for conversation updates (new conversations, status changes)
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel("inbox-conversations")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "conversations" },
+        () => {
+          fetchConversations(searchRef.current, statusFilterRef.current);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "conversations" },
+        (payload) => {
+          const updated = payload.new as { id: string; status: string; last_message_at: string | null; assigned_to: string | null };
+          setConversations((prev) => {
+            const exists = prev.find((c) => c.id === updated.id);
+            if (!exists) return prev;
+            return prev.map((c) =>
+              c.id === updated.id
+                ? { ...c, lastMessageAt: updated.last_message_at ?? c.lastMessageAt, status: (updated.status as Conversation["status"]) ?? c.status }
+                : c
+            );
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchConversations]);
+
   function handleSearchChange(value: string) {
     setSearch(value);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -46,13 +88,13 @@ export default function InboxPage() {
     );
   }
 
-  function handleNewMessage(conversationId: string) {
+  const handleNewMessage = useCallback((conversationId: string) => {
     setConversations((prev) =>
       prev.map((c) =>
         c.id === conversationId ? { ...c, lastMessageAt: new Date().toISOString() } : c
       )
     );
-  }
+  }, []);
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
 

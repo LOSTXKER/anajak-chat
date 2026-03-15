@@ -28,11 +28,8 @@ export async function POST(request: Request) {
   try {
     body = JSON.parse(rawBody) as FacebookWebhookBody;
   } catch {
-    console.error("[FB Webhook] Invalid JSON body");
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
-
-  console.log("[FB Webhook] Received:", body.object, JSON.stringify(body.entry?.map(e => e.id)));
 
   if (body.object !== "page") {
     return NextResponse.json({ ok: true });
@@ -48,10 +45,7 @@ export async function POST(request: Request) {
       },
     });
 
-    if (!channel) {
-      console.error("[FB Webhook] No active facebook channel found");
-      continue;
-    }
+    if (!channel) continue;
 
     const creds = channel.credentials as {
       pageId: string;
@@ -59,15 +53,10 @@ export async function POST(request: Request) {
       appSecret: string;
     };
 
-    console.log("[FB Webhook] Channel pageId:", creds.pageId, "Entry pageId:", pageId);
-
-    if (creds.pageId !== pageId) {
-      console.error("[FB Webhook] Page ID mismatch");
-      continue;
-    }
+    if (creds.pageId !== pageId) continue;
 
     if (!verifyFacebookWebhook(creds.appSecret, rawBody, signature)) {
-      console.error("[FB Webhook] Signature verification failed, proceeding anyway in dev");
+      continue;
     }
 
     const messagingEvents = entry.messaging ?? [];
