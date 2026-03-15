@@ -59,7 +59,8 @@ export default function InboxPage() {
           const id = updated.id as string;
           const status = updated.status as string | undefined;
           const rawDate = updated.last_message_at as string | null;
-          const lastMessageAt = rawDate && !isNaN(Date.parse(rawDate)) ? new Date(rawDate).toISOString() : null;
+          const normalized = rawDate ? (rawDate.endsWith("Z") || rawDate.includes("+") ? rawDate : rawDate + "Z") : null;
+          const lastMessageAt = normalized && !isNaN(Date.parse(normalized)) ? new Date(normalized).toISOString() : null;
 
           setConversations((prev) => {
             const exists = prev.find((c) => c.id === id);

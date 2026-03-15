@@ -139,7 +139,9 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
             platformMessageId: (row.platform_message_id as string) ?? null,
             isAiSuggested: (row.is_ai_suggested as boolean) ?? false,
             metadata: (row.metadata as Record<string, unknown>) ?? {},
-            createdAt: row.created_at ? new Date(row.created_at as string).toISOString() : new Date().toISOString(),
+            createdAt: row.created_at
+              ? new Date(String(row.created_at).endsWith("Z") || String(row.created_at).includes("+") ? String(row.created_at) : String(row.created_at) + "Z").toISOString()
+              : new Date().toISOString(),
           };
           setMessages((prev) => {
             if (prev.find((m) => m.id === newMsg.id)) return prev;
