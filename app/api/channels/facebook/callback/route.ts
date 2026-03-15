@@ -59,6 +59,16 @@ export async function GET(request: Request) {
 
   const pageName = await getFacebookPageName(page.access_token) ?? page.name;
 
+  // Subscribe the page to the app's webhooks so Facebook sends events
+  const subscribeRes = await fetch(
+    `https://graph.facebook.com/v21.0/${page.id}/subscribed_apps?subscribed_fields=messages,messaging_postbacks&access_token=${page.access_token}`,
+    { method: "POST" }
+  );
+
+  if (!subscribeRes.ok) {
+    console.error("[FB Callback] Failed to subscribe page to app:", await subscribeRes.text());
+  }
+
   await prisma.channel.upsert({
     where: {
       // Use a deterministic lookup - find by platform + credentials
