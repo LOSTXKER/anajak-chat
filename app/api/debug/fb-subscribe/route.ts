@@ -42,13 +42,19 @@ export async function GET() {
     { method: "POST" }
   ).then(r => r.json());
 
+  // 6. Check page conversations to verify messages are received
+  const conversations = await fetch(
+    `https://graph.facebook.com/v21.0/${creds.pageId}/conversations?fields=id,updated_time,participants&access_token=${creds.pageAccessToken}`
+  ).then(r => r.json());
+
   return NextResponse.json({
     channelId: channel.id,
     pageId: creds.pageId,
-    tokenDebug,
-    pageInfo: { id: pageInfo.id, name: pageInfo.name, error: pageInfo.error },
+    tokenValid: tokenDebug.data?.is_valid,
+    tokenScopes: tokenDebug.data?.scopes,
     currentPageSubscriptions: subs,
     appWebhookSubscriptions: appSubs,
     resubscribeResult: resubscribe,
+    pageConversations: conversations,
   });
 }
