@@ -127,7 +127,20 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           filter: `conversation_id=eq.${conversation.id}`,
         },
         (payload) => {
-          const newMsg = payload.new as Message;
+          const row = payload.new as Record<string, unknown>;
+          const newMsg: Message = {
+            id: row.id as string,
+            conversationId: row.conversation_id as string,
+            senderType: row.sender_type as Message["senderType"],
+            senderId: (row.sender_id as string) ?? null,
+            content: (row.content as string) ?? null,
+            contentType: (row.content_type as Message["contentType"]) ?? "text",
+            mediaUrl: (row.media_url as string) ?? null,
+            platformMessageId: (row.platform_message_id as string) ?? null,
+            isAiSuggested: (row.is_ai_suggested as boolean) ?? false,
+            metadata: (row.metadata as Record<string, unknown>) ?? {},
+            createdAt: row.created_at ? new Date(row.created_at as string).toISOString() : new Date().toISOString(),
+          };
           setMessages((prev) => {
             if (prev.find((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
