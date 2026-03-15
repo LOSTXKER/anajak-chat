@@ -194,7 +194,7 @@ export function ConversationList({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className={cn("truncate text-sm", hasUnread ? "font-semibold" : "font-medium")}>{displayName}</span>
-                        {conv.lastMessageAt && (
+                        {conv.lastMessageAt && !isNaN(Date.parse(conv.lastMessageAt)) && (
                           <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(conv.lastMessageAt), {
                               addSuffix: false,

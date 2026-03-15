@@ -55,13 +55,18 @@ export default function InboxPage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "conversations" },
         (payload) => {
-          const updated = payload.new as { id: string; status: string; last_message_at: string | null; assigned_to: string | null };
+          const updated = payload.new as Record<string, unknown>;
+          const id = updated.id as string;
+          const status = updated.status as string | undefined;
+          const rawDate = updated.last_message_at as string | null;
+          const lastMessageAt = rawDate && !isNaN(Date.parse(rawDate)) ? new Date(rawDate).toISOString() : null;
+
           setConversations((prev) => {
-            const exists = prev.find((c) => c.id === updated.id);
+            const exists = prev.find((c) => c.id === id);
             if (!exists) return prev;
             return prev.map((c) =>
-              c.id === updated.id
-                ? { ...c, lastMessageAt: updated.last_message_at ?? c.lastMessageAt, status: (updated.status as Conversation["status"]) ?? c.status }
+              c.id === id
+                ? { ...c, ...(lastMessageAt && { lastMessageAt }), ...(status && { status: status as Conversation["status"] }) }
                 : c
             );
           });
