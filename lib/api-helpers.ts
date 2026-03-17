@@ -45,20 +45,6 @@ export function searchParams(request: NextRequest | Request) {
     : new URL(request.url).searchParams;
 }
 
-export function paginatedResponse<T>(
-  items: T[],
-  total: number,
-  page: number,
-  limit: number
-) {
-  return NextResponse.json({
-    items,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-  });
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RouteContext = { params: any };
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, apiHandler, jsonError } from "@/lib/api-helpers";
 import { getErpConfig, erpFetch } from "@/lib/erp";
+import { ERP_REQUEST_TIMEOUT } from "@/lib/constants";
 
 export const GET = apiHandler(async (_request, context) => {
   const user = await requireAuth();
@@ -14,7 +15,7 @@ export const GET = apiHandler(async (_request, context) => {
 
   try {
     const res = await erpFetch(config, `/products/${id}`, {
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(ERP_REQUEST_TIMEOUT),
     });
     const data: unknown = await res.json();
     return NextResponse.json(data, { status: res.ok ? 200 : res.status });

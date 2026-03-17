@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAuth, parsePagination, searchParams, apiHandler } from "@/lib/api-helpers";
 
 export const GET = apiHandler(async (request) => {
@@ -75,43 +76,28 @@ export const GET = apiHandler(async (request) => {
   ]);
 
   const convIds = conversations.map((c) => c.id);
-  const unreadCounts = convIds.length > 0
-    ? await prisma.message.groupBy({
-        by: ["conversationId"],
-        where: {
-          conversationId: { in: convIds },
-          senderType: "contact",
-        },
-        _count: true,
-      })
+
+  // Single query to get per-conversation unread counts, respecting each conversation's lastReadAt
+  const unreadRows = convIds.length > 0
+    ? await prisma.$queryRaw<{ conversation_id: string; count: bigint }[]>`
+        SELECT m.conversation_id, COUNT(*) AS count
+        FROM messages m
+        WHERE m.conversation_id = ANY(ARRAY[${Prisma.join(convIds)}]::uuid[])
+          AND m.sender_type = 'contact'
+          AND m.created_at > COALESCE(
+            (
+              SELECT cr.last_read_at
+              FROM conversation_reads cr
+              WHERE cr.conversation_id = m.conversation_id
+                AND cr.user_id = ${user.id}::uuid
+            ),
+            '1970-01-01'::timestamptz
+          )
+        GROUP BY m.conversation_id
+      `
     : [];
 
-  const readMap = new Map(
-    conversations.map((c) => [c.id, c.reads[0]?.lastReadAt ?? null])
-  );
-
-  const totalContactMsgs = new Map(
-    unreadCounts.map((g) => [g.conversationId, g._count])
-  );
-
-  const unreadAfterRead = convIds.length > 0
-    ? await Promise.all(
-        conversations.map(async (c) => {
-          const lastRead = readMap.get(c.id);
-          if (!lastRead) return { id: c.id, count: totalContactMsgs.get(c.id) ?? 0 };
-          const count = await prisma.message.count({
-            where: {
-              conversationId: c.id,
-              senderType: "contact",
-              createdAt: { gt: lastRead },
-            },
-          });
-          return { id: c.id, count };
-        })
-      )
-    : [];
-
-  const unreadMap = new Map(unreadAfterRead.map((u) => [u.id, u.count]));
+  const unreadMap = new Map(unreadRows.map((r) => [r.conversation_id, Number(r.count)]));
 
   const enriched = conversations.map(({ reads: _reads, ...c }) => ({
     ...c,

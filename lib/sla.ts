@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { SLA_WARNING_THRESHOLD_PERCENT } from "@/lib/constants";
 
 export type SlaStatus = "ok" | "warning" | "breached" | "none";
 
@@ -22,7 +23,7 @@ export function computeSlaDeadlines(
 
 export function checkSlaStatus(
   deadline: Date | null,
-  warningThresholdPercent = 20
+  warningThresholdPercent = SLA_WARNING_THRESHOLD_PERCENT
 ): SlaStatus {
   if (!deadline) return "none";
   const now = Date.now();
@@ -177,7 +178,7 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
     const elapsed = now.getTime() - createdMs;
     const percentElapsed = totalDuration > 0 ? (elapsed / totalDuration) * 100 : 0;
 
-    if (percentElapsed >= 80) {
+    if (percentElapsed >= 100 - SLA_WARNING_THRESHOLD_PERCENT) {
       await prisma.conversation.update({
         where: { id: conv.id },
         data: { slaWarningAt: now },

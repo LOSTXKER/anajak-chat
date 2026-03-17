@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth, apiHandler, jsonError } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { getErpConfig, erpFetch, logSync } from "@/lib/erp";
+import { ERP_REQUEST_TIMEOUT } from "@/lib/constants";
 
 export const POST = apiHandler(async (request) => {
   const user = await requireAuth();
@@ -33,7 +34,7 @@ export const POST = apiHandler(async (request) => {
     const res = await erpFetch(config, "/customers", {
       method: "POST",
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(ERP_REQUEST_TIMEOUT),
     });
 
     const data = await res.json() as { id?: string; customerId?: string };

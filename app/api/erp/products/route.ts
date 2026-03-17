@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, searchParams, apiHandler, jsonError } from "@/lib/api-helpers";
 import { getErpConfig, erpFetch } from "@/lib/erp";
+import { ERP_REQUEST_TIMEOUT } from "@/lib/constants";
 
 export const GET = apiHandler(async (request) => {
   const user = await requireAuth();
@@ -18,7 +19,7 @@ export const GET = apiHandler(async (request) => {
   try {
     const qs = new URLSearchParams({ q, page, limit });
     const res = await erpFetch(config, `/products?${qs}`, {
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(ERP_REQUEST_TIMEOUT),
     });
 
     const data: unknown = await res.json();

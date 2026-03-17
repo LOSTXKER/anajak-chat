@@ -304,7 +304,7 @@ export default function ChannelsPage() {
                       <div>
                         <CardTitle className="text-sm">{meta.label}</CardTitle>
                         {isConnected && (
-                          <span className="mt-1 inline-flex items-center bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5 text-xs font-medium">
+                          <span className="mt-1 inline-flex items-center bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5 text-xs font-medium dark:bg-emerald-950 dark:text-emerald-400">
                             <CheckCircle className="mr-1 h-3 w-3" />
                             เชื่อมต่อแล้ว
                           </span>
@@ -348,7 +348,7 @@ export default function ChannelsPage() {
                   </div>
                   <div>
                     <CardTitle className="text-sm">{PLATFORM_META.whatsapp.label}</CardTitle>
-                    <span className="mt-1 inline-flex bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-medium">เร็วๆ นี้</span>
+                    <span className="mt-1 inline-flex bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-medium dark:bg-gray-800 dark:text-gray-400">เร็วๆ นี้</span>
                   </div>
                 </div>
                 <CardDescription className="text-xs mt-2">

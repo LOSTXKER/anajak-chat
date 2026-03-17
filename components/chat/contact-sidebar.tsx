@@ -276,9 +276,9 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
               variant="outline"
               className={cn(
                 "text-xs capitalize",
-                conversation.aiSentiment === "positive" && "border-green-200 text-green-700",
-                conversation.aiSentiment === "negative" && "border-red-200 text-red-700",
-                conversation.aiSentiment === "neutral" && "border-gray-200 text-gray-700"
+                conversation.aiSentiment === "positive" && "border-green-200 text-green-700 dark:border-green-800 dark:text-green-400",
+                conversation.aiSentiment === "negative" && "border-red-200 text-red-700 dark:border-red-800 dark:text-red-400",
+                conversation.aiSentiment === "neutral" && "border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-400"
               )}
             >
               {conversation.aiSentiment}

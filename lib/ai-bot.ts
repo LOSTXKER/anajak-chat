@@ -3,6 +3,7 @@ import { suggestReply } from "@/lib/gemini";
 import { searchKb, formatKbContext } from "@/lib/kb";
 import { getErpConfig, erpFetch } from "@/lib/erp";
 import { isWithinBusinessHours, extractBusinessHours } from "@/lib/business-hours";
+import { AI_BOT_ERP_TIMEOUT } from "@/lib/constants";
 import { sendPlatformMessage } from "@/lib/integrations/send-message";
 import { createNotification } from "@/lib/notifications";
 import type { AiBotMode } from "@/lib/generated/prisma/client";
@@ -72,7 +73,7 @@ export async function processIncomingMessage(params: {
     if (erpConfig?.erpEnabled && /สินค้า|ราคา|stock|มีมั้ย|มีไหม|เหลือ/i.test(messageContent)) {
       try {
         const erpRes = await erpFetch(erpConfig, `/products?q=${encodeURIComponent(messageContent)}&limit=3`, {
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(AI_BOT_ERP_TIMEOUT),
         });
         if (erpRes.ok) {
           const data = await erpRes.json() as unknown[];

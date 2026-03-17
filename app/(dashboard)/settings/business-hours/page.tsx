@@ -120,7 +120,7 @@ export default function BusinessHoursPage() {
         <div className="flex items-center gap-3">
           {isOpen !== null && (
             <span
-              className={`text-sm font-medium ${isOpen ? "text-green-600" : "text-red-600"}`}
+              className={`text-sm font-medium ${isOpen ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
             >
               {isOpen ? "● กำลังเปิดทำการ" : "○ ปิดทำการ"}
             </span>

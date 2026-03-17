@@ -210,7 +210,7 @@ export default function TeamSettingsPage() {
                   <span className="bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 rounded-full px-2 py-0.5 text-xs font-medium">
                     {user.role.name}
                   </span>
-                  <Badge variant={user.isActive ? "default" : "outline"} className={user.isActive ? "bg-green-100 text-green-700 border-green-200" : ""}>
+                  <Badge variant={user.isActive ? "default" : "outline"} className={user.isActive ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800" : ""}>
                     {user.isActive ? "Active" : "ไม่ใช้งาน"}
                   </Badge>
                 </div>

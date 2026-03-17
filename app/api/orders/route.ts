@@ -3,6 +3,7 @@ import { requireAuth, requirePermission, parsePagination, searchParams, jsonErro
 import { prisma } from "@/lib/prisma";
 import { sendOrderCapiEvent } from "@/lib/capi-order-events";
 import { getErpConfig, erpFetch, logSync } from "@/lib/erp";
+import { ERP_REQUEST_TIMEOUT } from "@/lib/constants";
 
 export const GET = apiHandler(async (request) => {
   const user = await requireAuth();
@@ -109,7 +110,7 @@ export const POST = apiHandler(async (request) => {
       const erpRes = await erpFetch(erpConfig, "/orders", {
         method: "POST",
         body: JSON.stringify(erpPayload),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(ERP_REQUEST_TIMEOUT),
       });
       const erpData = await erpRes.json() as { id?: string; orderId?: string };
       const erpOrderId = (erpData.id ?? erpData.orderId ?? "") as string;
