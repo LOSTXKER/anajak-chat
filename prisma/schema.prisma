@@ -25,9 +25,14 @@ enum Platform {
 }
 
 enum ConversationStatus {
-  open
   pending
+  open
+  expired
   resolved
+  follow_up
+  missed
+  spam
+  blocked
   closed
 }
 

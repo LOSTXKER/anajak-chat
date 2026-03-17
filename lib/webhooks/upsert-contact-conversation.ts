@@ -101,7 +101,7 @@ async function upsertConversation(params: {
     where: {
       contactId: params.contactId,
       channelId: params.channelId,
-      status: { in: ["open", "pending"] },
+      status: { in: ["open", "pending", "resolved", "expired", "follow_up"] },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -126,10 +126,24 @@ async function upsertConversation(params: {
 
     await applySlaToConversation(conversation.id, params.orgId, "medium", conversation.createdAt).catch(() => {});
   } else {
+    const reopenable = ["resolved", "expired", "follow_up"];
+    const needsReopen = reopenable.includes(conversation.status);
+
     await prisma.conversation.update({
       where: { id: conversation.id },
-      data: { lastMessageAt: new Date() },
+      data: {
+        lastMessageAt: new Date(),
+        ...(needsReopen && {
+          status: "pending" as const,
+          assignedTo: null,
+          sessionDeadline: null,
+        }),
+      },
     });
+
+    if (needsReopen) {
+      conversation = { ...conversation, status: "pending" };
+    }
   }
 
   return conversation;

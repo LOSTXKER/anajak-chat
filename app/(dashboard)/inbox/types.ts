@@ -23,7 +23,7 @@ export interface ConversationLastMessage {
 export interface Conversation {
   id: string;
   orgId: string;
-  status: "open" | "pending" | "resolved" | "closed";
+  status: "pending" | "open" | "expired" | "resolved" | "follow_up" | "missed" | "spam" | "blocked" | "closed";
   priority: "low" | "medium" | "high" | "urgent";
   contact: ConversationContact;
   channel: ConversationChannel;

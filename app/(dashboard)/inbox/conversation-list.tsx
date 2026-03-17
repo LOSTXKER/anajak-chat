@@ -46,17 +46,26 @@ const PLATFORM_BADGE_STYLES: Record<string, string> = {
   manual: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
 };
 
-const STATUS_TABS = [
-  { value: "all", label: "ทั้งหมด" },
-  { value: "open", label: "เปิด" },
-  { value: "pending", label: "รอ" },
-  { value: "resolved", label: "แก้ไขแล้ว" },
-] as const;
+type StatusFilter = "all" | "pending" | "open" | "expired" | "follow_up" | "resolved";
 
-const STATUS_COLORS = {
-  open: "bg-green-500",
+const STATUS_TABS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "ทั้งหมด" },
+  { value: "pending", label: "รอรับ" },
+  { value: "open", label: "กำลังดูแล" },
+  { value: "expired", label: "หมดอายุ" },
+  { value: "follow_up", label: "ติดตาม" },
+  { value: "resolved", label: "เสร็จสิ้น" },
+];
+
+const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-500",
+  open: "bg-green-500",
+  expired: "bg-red-500",
   resolved: "bg-gray-400",
+  follow_up: "bg-blue-500",
+  missed: "bg-orange-500",
+  spam: "bg-zinc-500",
+  blocked: "bg-zinc-800",
   closed: "bg-gray-300",
 };
 
@@ -64,10 +73,11 @@ interface ConversationListProps {
   conversations: Conversation[];
   selectedId: string | null;
   loading: boolean;
-  statusFilter: "all" | "open" | "pending" | "resolved";
+  statusFilter: StatusFilter;
   search: string;
+  currentUserId: string | null;
   onSelectConversation: (id: string) => void;
-  onStatusFilterChange: (status: "all" | "open" | "pending" | "resolved") => void;
+  onStatusFilterChange: (status: StatusFilter) => void;
   onSearchChange: (value: string) => void;
   onRefresh: () => void;
 }
@@ -78,6 +88,7 @@ export function ConversationList({
   loading,
   statusFilter,
   search,
+  currentUserId,
   onSelectConversation,
   onStatusFilterChange,
   onSearchChange,
@@ -115,21 +126,36 @@ export function ConversationList({
         </div>
 
         {/* Status tabs */}
-        <div className="mt-2 flex gap-1">
-          {STATUS_TABS.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => onStatusFilterChange(tab.value)}
-              className={cn(
-                "flex-1 px-1.5 py-1 text-xs transition-colors",
-                statusFilter === tab.value
-                  ? "border-b-2 border-foreground text-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="mt-2 flex gap-1 overflow-x-auto">
+          {STATUS_TABS.map((tab) => {
+            const count = tab.value === "all"
+              ? conversations.length
+              : conversations.filter((c) => c.status === tab.value).length;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => onStatusFilterChange(tab.value)}
+                className={cn(
+                  "shrink-0 px-1.5 py-1 text-xs transition-colors flex items-center gap-1",
+                  statusFilter === tab.value
+                    ? "border-b-2 border-foreground text-foreground font-medium"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label}
+                {count > 0 && (
+                  <span className={cn(
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium",
+                    statusFilter === tab.value
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground"
+                  )}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -217,7 +243,7 @@ export function ConversationList({
                         <span
                           className={cn(
                             "h-1.5 w-1.5 rounded-full",
-                            STATUS_COLORS[conv.status]
+                            STATUS_COLORS[conv.status] ?? "bg-gray-400"
                           )}
                         />
                         <Badge
@@ -228,6 +254,11 @@ export function ConversationList({
                         >
                           {conv.channel.platform}
                         </Badge>
+                        {conv.assignedUser && (
+                          <span className="truncate text-[10px] text-muted-foreground">
+                            {conv.assignedUser.id === currentUserId ? "ฉัน" : conv.assignedUser.name}
+                          </span>
+                        )}
                         {conv.sourceAdId && (
                           <Badge variant="outline" className="h-4 px-1 py-0 text-[10px]">
                             Ad

@@ -7,6 +7,7 @@ import {
   UserPlus,
   ArrowRightLeft,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -332,6 +333,34 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     await handleStartChat();
   }
 
+  async function handleFollowUp() {
+    const res = await fetch(`/api/conversations/${conversation.id}/follow-up`, { method: "POST" });
+    if (res.ok) {
+      onConversationUpdate({ id: conversation.id, status: "follow_up" });
+    }
+  }
+
+  async function handleExpire() {
+    const res = await fetch(`/api/conversations/${conversation.id}/expire`, { method: "POST" });
+    if (res.ok) {
+      onConversationUpdate({ id: conversation.id, status: "expired" });
+    }
+  }
+
+  async function handleSpam() {
+    const res = await fetch(`/api/conversations/${conversation.id}/spam`, { method: "POST" });
+    if (res.ok) {
+      onConversationUpdate({ id: conversation.id, status: "spam" });
+    }
+  }
+
+  async function handleBlock() {
+    const res = await fetch(`/api/conversations/${conversation.id}/block`, { method: "POST" });
+    if (res.ok) {
+      onConversationUpdate({ id: conversation.id, status: "blocked" });
+    }
+  }
+
   const timeline: TimelineItem[] = [
     ...messages.map((m) => ({ kind: "message" as const, data: m })),
     ...notes.map((n) => ({ kind: "note" as const, data: n })),
@@ -361,7 +390,17 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           </Avatar>
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium">{displayName}</p>
-            <p className="text-xs text-muted-foreground">{conversation.channel.name}</p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{conversation.channel.name}</span>
+              {conversation.assignedUser && (
+                <span className="flex items-center gap-1">
+                  <Lock className="h-3 w-3" />
+                  {conversation.assignedUser.id === currentUserId.current
+                    ? "ฉัน"
+                    : conversation.assignedUser.name}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -408,9 +447,14 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="open">เปิด</SelectItem>
-                <SelectItem value="pending">รอดำเนินการ</SelectItem>
+                <SelectItem value="pending">รอรับ</SelectItem>
+                <SelectItem value="open">กำลังดูแล</SelectItem>
+                <SelectItem value="expired">หมดอายุ</SelectItem>
                 <SelectItem value="resolved">เสร็จสิ้น</SelectItem>
+                <SelectItem value="follow_up">ติดตาม</SelectItem>
+                <SelectItem value="missed">ไม่ได้รับ</SelectItem>
+                <SelectItem value="spam">สแปม</SelectItem>
+                <SelectItem value="blocked">บล็อก</SelectItem>
                 <SelectItem value="closed">ปิด</SelectItem>
               </SelectContent>
             </Select>
@@ -463,13 +507,19 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         {/* Session bar + Input area */}
         <SessionBar
           conversation={conversation}
+          currentUserId={currentUserId.current}
           onStartChat={handleStartChat}
           onResolve={handleResolve}
           onExtend={handleExtend}
           onReopen={handleReopen}
+          onFollowUp={handleFollowUp}
+          onExpire={handleExpire}
+          onSpam={handleSpam}
+          onBlock={handleBlock}
           starting={startingChat}
         />
-        {conversation.status === "open" && (
+        {conversation.status === "open" &&
+         (!conversation.assignedUser || conversation.assignedUser.id === currentUserId.current) && (
           <ChatInput onSendMessage={sendMessage} onSaveNote={saveNote} />
         )}
       </div>

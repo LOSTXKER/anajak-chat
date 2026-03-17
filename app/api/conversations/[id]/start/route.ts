@@ -16,8 +16,9 @@ export const POST = apiHandler(async (_request, { params }) => {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  if (conversation.status !== "pending") {
-    return NextResponse.json({ error: "Conversation is not pending" }, { status: 400 });
+  const startable = ["pending", "expired", "follow_up", "missed"];
+  if (!startable.includes(conversation.status)) {
+    return NextResponse.json({ error: "Cannot start from current status" }, { status: 400 });
   }
 
   const deadline = new Date(Date.now() + SESSION_MINUTES * 60 * 1000);

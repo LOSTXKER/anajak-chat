@@ -7,18 +7,28 @@ import { ChatView } from "./chat-view";
 import { createClient } from "@/lib/supabase/client";
 import type { Conversation } from "./types";
 
+type StatusFilter = "all" | "pending" | "open" | "expired" | "follow_up" | "resolved";
+
 export default function InboxPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "pending" | "resolved">("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusFilterRef = useRef(statusFilter);
   const searchRef = useRef(search);
 
   statusFilterRef.current = statusFilter;
   searchRef.current = search;
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id ?? null);
+    });
+  }, []);
 
   const fetchConversations = useCallback(async (s: string, status: string) => {
     setLoading(true);
@@ -112,6 +122,7 @@ export default function InboxPage() {
         loading={loading}
         statusFilter={statusFilter}
         search={search}
+        currentUserId={currentUserId}
         onSelectConversation={(id) => {
           setSelectedId(id);
           setConversations((prev) =>
