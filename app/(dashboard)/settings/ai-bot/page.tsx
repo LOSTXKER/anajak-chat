@@ -68,7 +68,7 @@ export default function AIBotPage() {
         toast({ title: "บันทึกการตั้งค่า AI Bot แล้ว" });
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "Error", description: err.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -80,7 +80,7 @@ export default function AIBotPage() {
     const res = await fetch(`/api/ai-bot/reply-log/${logId}/approve`, { method: "POST" });
     setActionLoading(null);
     if (res.ok) { toast({ title: "ส่งข้อความแล้ว" }); fetchLogs(); }
-    else { toast({ title: "Error", variant: "destructive" }); }
+    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
   }
 
   async function handleReject(logId: string) {
@@ -88,7 +88,7 @@ export default function AIBotPage() {
     const res = await fetch(`/api/ai-bot/reply-log/${logId}/reject`, { method: "POST" });
     setActionLoading(null);
     if (res.ok) { toast({ title: "ปฏิเสธแล้ว" }); fetchLogs(); }
-    else { toast({ title: "Error", variant: "destructive" }); }
+    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
   }
 
   async function handleEditSend() {
@@ -101,7 +101,7 @@ export default function AIBotPage() {
     });
     setActionLoading(null);
     if (res.ok) { toast({ title: "ส่งข้อความที่แก้ไขแล้ว" }); setEditingLog(null); fetchLogs(); }
-    else { toast({ title: "Error", variant: "destructive" }); }
+    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
   }
 
   if (loading) {

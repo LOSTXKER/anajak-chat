@@ -258,7 +258,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
         {/* Ad Source */}
         {conversation.sourceAdId && (
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Ad Source</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">แหล่งโฆษณา</p>
             <Badge variant="outline" className="text-xs">
               {conversation.sourceAdId}
             </Badge>
@@ -267,7 +267,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
 
         {/* AI Summary */}
         {conversation.aiSummary && (
-          <CollapsibleSection title="AI Summary" icon={Sparkles} defaultOpen={false}>
+          <CollapsibleSection title="AI สรุป" icon={Sparkles} defaultOpen={false}>
             <p className="text-xs text-muted-foreground leading-relaxed pl-1">
               {conversation.aiSummary}
             </p>
@@ -277,7 +277,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
         {/* Sentiment */}
         {conversation.aiSentiment && (
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Sentiment</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">ความรู้สึก</p>
             <Badge
               variant="outline"
               className={cn(

@@ -126,7 +126,7 @@ export default function TemplatesPage() {
         setDialogOpen(false);
       } else {
         const err = await res.json();
-        toast({ title: "Error", description: err.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
       }
     } finally {
       setSaving(false);

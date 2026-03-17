@@ -9,8 +9,8 @@ export default function AuthLayout({
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-20">
       <div className="w-full max-w-[380px]">
         <div className="mb-10 flex flex-col items-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-foreground">
-            <MessageSquare className="h-5 w-5 text-background" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+            <MessageSquare className="h-5 w-5 text-primary-foreground" />
           </div>
           <p className="mt-3 text-sm text-muted-foreground">Anajak Chat</p>
         </div>

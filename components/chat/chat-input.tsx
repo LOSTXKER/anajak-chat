@@ -99,35 +99,31 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
             onClose={() => setShowTemplates(false)}
           />
         )}
-        <div className="flex gap-2">
-          <div className="relative flex-1 rounded-lg border transition-colors">
+        <div className="flex items-end gap-2">
+          <div className="relative flex-1">
             <Textarea
               ref={textareaRef}
               placeholder="พิมพ์ข้อความ... (/ สำหรับ template)"
-              className="min-h-[60px] max-h-[120px] resize-none border-0 pr-10 text-sm shadow-none focus-visible:ring-0"
+              className="min-h-[40px] max-h-[120px] resize-none rounded-xl text-sm"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1 pb-0.5">
             <Button
               size="icon"
-              className="h-10 w-10 lg:h-8 lg:w-8 bg-accent text-white rounded-md"
-              onClick={() => handleSend()}
-              disabled={sending || !input.trim()}
-              aria-label="ส่งข้อความ"
+              variant="ghost"
+              className={cn("h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
+              onClick={() => setShowNoteInput(!showNoteInput)}
+              aria-label="เพิ่ม note"
             >
-              {sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+              <StickyNote className="h-4 w-4" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              className="h-10 w-10 lg:h-8 lg:w-8 text-muted-foreground hover:text-foreground transition-colors"
+              className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setShowMediaPicker(true)}
               aria-label="แนบสื่อ"
             >
@@ -135,12 +131,16 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
             </Button>
             <Button
               size="icon"
-              variant="ghost"
-              className={cn("h-10 w-10 lg:h-8 lg:w-8 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
-              onClick={() => setShowNoteInput(!showNoteInput)}
-              aria-label="เพิ่ม note"
+              className="h-8 w-8 rounded-full"
+              onClick={() => handleSend()}
+              disabled={sending || !input.trim()}
+              aria-label="ส่งข้อความ"
             >
-              <StickyNote className="h-4 w-4" />
+              {sending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
             </Button>
           </div>
         </div>

@@ -90,7 +90,7 @@ export default function BusinessHoursPage() {
         }
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "Error", description: err.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
       }
     } finally {
       setSaving(false);

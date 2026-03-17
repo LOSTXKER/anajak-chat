@@ -209,7 +209,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-5 rounded-full bg-muted overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-foreground transition-all"
+                            className="h-full rounded-full bg-primary transition-all"
                             style={{ width: `${pct}%` }}
                           />
                         </div>

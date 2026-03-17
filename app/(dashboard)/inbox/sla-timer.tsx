@@ -56,7 +56,7 @@ export function SlaTimer({ conversation }: SlaTimerProps) {
         title="SLA breach!"
       >
         <AlertTriangle className="h-3 w-3" />
-        <span>SLA Breach</span>
+        <span>เกิน SLA</span>
       </div>
     );
   }

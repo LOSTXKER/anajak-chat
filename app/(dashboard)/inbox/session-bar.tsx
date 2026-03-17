@@ -6,7 +6,7 @@ import {
   RotateCcw,
   BookmarkPlus,
   Lock,
-  ShieldAlert,
+  MoreHorizontal,
   Ban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,9 +43,9 @@ export function SessionBar({
 
   if (conversation.status === "pending") {
     return (
-      <div className="border-t bg-muted/30 px-4 py-4">
+      <div className="border-t px-4 py-3">
         <Button
-          className="w-full h-11 text-base font-semibold"
+          className="w-full h-10"
           onClick={onStartChat}
           disabled={starting}
         >
@@ -57,8 +57,8 @@ export function SessionBar({
 
   if (conversation.status === "resolved" || conversation.status === "closed") {
     return (
-      <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-3">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between border-t px-4 py-2.5">
+        <span className="text-xs text-muted-foreground">
           {conversation.status === "closed" ? "แชทนี้ถูกปิดแล้ว" : "แชทนี้เสร็จสิ้นแล้ว"}
         </span>
         <Button variant="outline" size="sm" onClick={onReopen} disabled={starting}>
@@ -72,9 +72,9 @@ export function SessionBar({
   if (conversation.status === "open") {
     if (isLockedByOther) {
       return (
-        <div className="flex items-center gap-2 border-t bg-yellow-50 dark:bg-yellow-950/30 px-4 py-3">
-          <Lock className="h-4 w-4 text-yellow-600 dark:text-yellow-400 shrink-0" />
-          <span className="text-sm text-yellow-700 dark:text-yellow-300">
+        <div className="flex items-center gap-2 border-t px-4 py-2.5">
+          <Lock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="text-xs text-muted-foreground">
             ดูแลโดย {conversation.assignedUser?.name}
           </span>
         </div>
@@ -82,24 +82,24 @@ export function SessionBar({
     }
 
     return (
-      <div className="flex items-center gap-2 border-t bg-muted/30 px-4 py-2">
+      <div className="flex items-center gap-1.5 border-t px-4 py-2">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700 dark:border-green-800 dark:hover:bg-green-950"
+          className="h-8 text-xs text-green-600 hover:text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-950/50"
           onClick={onResolve}
         >
-          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+          <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
           เสร็จสิ้น
         </Button>
 
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-800 dark:hover:bg-blue-950"
+          className="h-8 text-xs text-muted-foreground hover:text-foreground"
           onClick={onFollowUp}
         >
-          <BookmarkPlus className="mr-1.5 h-3.5 w-3.5" />
+          <BookmarkPlus className="mr-1 h-3.5 w-3.5" />
           ติดตาม
         </Button>
 
@@ -108,21 +108,21 @@ export function SessionBar({
         <div className="relative">
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 px-1.5 text-muted-foreground"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground"
             onClick={() => setShowMore(!showMore)}
             aria-label="เพิ่มเติม"
             aria-expanded={showMore}
             aria-haspopup="menu"
           >
-            <ShieldAlert className="h-3.5 w-3.5" />
+            <MoreHorizontal className="h-4 w-4" />
           </Button>
           {showMore && (
-            <div className="absolute bottom-full right-0 mb-1 flex flex-col gap-1 rounded-lg border bg-popover p-1 shadow-md z-10 min-w-28" role="menu">
+            <div className="absolute bottom-full right-0 mb-1 flex flex-col gap-0.5 rounded-lg border bg-popover p-1 shadow-lg z-10 min-w-28 animate-in fade-in zoom-in-95 duration-100" role="menu">
               <button
                 role="menuitem"
                 onClick={() => { onSpam(); setShowMore(false); }}
-                className="flex items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
+                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
               >
                 <Ban className="h-3 w-3" />
                 สแปม
@@ -130,7 +130,7 @@ export function SessionBar({
               <button
                 role="menuitem"
                 onClick={() => { onBlock(); setShowMore(false); }}
-                className="flex items-center gap-2 rounded px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs text-destructive hover:bg-destructive/10 transition-colors"
               >
                 <Ban className="h-3 w-3" />
                 บล็อก

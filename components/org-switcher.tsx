@@ -86,8 +86,8 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-md px-1 py-1 text-sm transition-colors hover:bg-muted">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground shrink-0">
-            <Building2 className="h-3.5 w-3.5 text-background" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
+            <Building2 className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
           <span className="truncate text-sm font-semibold tracking-tight">{currentOrgName}</span>
           <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -110,8 +110,8 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-md px-1 py-1 text-sm transition-colors hover:bg-muted">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground shrink-0">
-            <Building2 className="h-3.5 w-3.5 text-background" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
+            <Building2 className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
           <span className="truncate text-sm font-semibold tracking-tight">{currentOrgName}</span>
           <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />

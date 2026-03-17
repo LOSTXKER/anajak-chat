@@ -59,7 +59,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
             "rounded-2xl px-3 py-2 text-sm",
             isContact
               ? "rounded-bl-sm bg-muted text-foreground"
-              : "rounded-br-sm bg-foreground text-background"
+              : "rounded-br-sm bg-primary text-primary-foreground"
           )}
         >
           {message.contentType === "image" && message.mediaUrl ? (

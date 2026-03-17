@@ -514,7 +514,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 return (
                   <div key={`date-${item.date}`} className="flex items-center gap-3 py-2">
                     <div className="flex-1 border-t" />
-                    <span className="text-[11px] font-medium text-muted-foreground bg-background px-2">
+                    <span className="text-xs font-medium text-muted-foreground bg-background px-2">
                       {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
                         day: "2-digit",
                         month: "2-digit",
@@ -532,7 +532,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 const time = new Date(evt.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
                 return (
                   <div key={`evt-${evt.id}`} className="flex justify-center py-1">
-                    <span className="text-[11px] text-muted-foreground italic">
+                    <span className="text-xs text-muted-foreground italic">
                       {time} — {label}{actor ? ` โดย ${actor}` : ""}
                     </span>
                   </div>

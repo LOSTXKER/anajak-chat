@@ -167,11 +167,11 @@ export default function ChannelsPage() {
         window.location.href = url;
       } else {
         const data = await res.json();
-        toast({ title: "Error", description: data.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: data.error, variant: "destructive" });
         setOauthLoading(null);
       }
     } catch {
-      toast({ title: "Error", description: "Connection failed", variant: "destructive" });
+      toast({ title: "เกิดข้อผิดพลาด", description: "เชื่อมต่อไม่สำเร็จ", variant: "destructive" });
       setOauthLoading(null);
     }
   }
@@ -191,7 +191,7 @@ export default function ChannelsPage() {
         setLineForm({ channelId: "", channelSecret: "", channelAccessToken: "", name: "" });
         fetchChannels();
       } else {
-        toast({ title: "Error", description: data.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: data.error, variant: "destructive" });
       }
     } finally {
       setLineConnecting(false);
@@ -208,7 +208,7 @@ export default function ChannelsPage() {
         setChannels((prev) => prev.filter((c) => c.id !== channel.id));
       } else {
         const data = await res.json();
-        toast({ title: "Error", description: data.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: data.error, variant: "destructive" });
       }
     } finally {
       setDeletingId(null);

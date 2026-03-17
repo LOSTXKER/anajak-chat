@@ -96,7 +96,7 @@ export default function KnowledgeBasePage() {
         fetchArticles();
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "Error", description: err.error, variant: "destructive" });
+        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
       }
     } finally {
       setSaving(false);
@@ -114,7 +114,7 @@ export default function KnowledgeBasePage() {
     const res = await fetch(`/api/knowledge-base/${id}/embed`, { method: "POST" });
     setEmbedding(null);
     if (res.ok) { toast({ title: "สร้าง embedding แล้ว" }); }
-    else { toast({ title: "Error", variant: "destructive" }); }
+    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
   }
 
   async function handleEmbedAll() {
