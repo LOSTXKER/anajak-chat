@@ -44,8 +44,8 @@ export async function GET(request: Request) {
   debug.redirectUri = redirectUri;
 
   const tokenResult = await exchangeInstagramCode(igAppId, igAppSecret, redirectUri, code);
-  if (!tokenResult) {
-    return NextResponse.json({ ...debug, result: "token_exchange_failed" });
+  if (!tokenResult || tokenResult.error) {
+    return NextResponse.json({ ...debug, result: "token_exchange_failed", igError: tokenResult?.error ?? "null response" });
   }
   debug.tokenUserId = tokenResult.userId;
 

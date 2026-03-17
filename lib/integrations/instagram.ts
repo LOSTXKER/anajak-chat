@@ -114,7 +114,7 @@ export async function exchangeInstagramCode(
   igAppSecret: string,
   redirectUri: string,
   code: string
-): Promise<{ accessToken: string; userId: string } | null> {
+): Promise<{ accessToken: string; userId: string; error?: string } | null> {
   const res = await fetch("https://graph.instagram.com/oauth/access_token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -128,8 +128,7 @@ export async function exchangeInstagramCode(
   });
   if (!res.ok) {
     const errText = await res.text();
-    console.error("[IG] Token exchange failed:", res.status, errText);
-    return null;
+    return { accessToken: "", userId: "", error: `${res.status}: ${errText}` };
   }
   const data = await res.json() as { access_token: string; user_id: number };
   return { accessToken: data.access_token, userId: String(data.user_id) };
