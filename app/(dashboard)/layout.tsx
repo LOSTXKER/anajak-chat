@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { DesktopSidebar, MobileSidebar } from "@/components/sidebar";
 import { NotificationBell } from "@/components/notification-bell";
+import { NewMessageNotifier } from "@/components/new-message-notifier";
 
 export default async function DashboardLayout({
   children,
@@ -24,6 +25,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
+      <NewMessageNotifier orgId={user.orgId} />
       <DesktopSidebar user={userInfo} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
