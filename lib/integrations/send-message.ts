@@ -48,9 +48,11 @@ export async function sendPlatformMessage(params: SendMessageParams): Promise<bo
     }
 
     case "instagram": {
-      const igCreds: FacebookCredentials = {
-        pageId: creds.pageId ?? "",
-        pageAccessToken: creds.pageAccessToken ?? "",
+      const igCreds = {
+        igAccessToken: creds.igAccessToken ?? undefined,
+        igAccountId: creds.igAccountId ?? undefined,
+        pageAccessToken: creds.pageAccessToken ?? undefined,
+        pageId: creds.pageId ?? undefined,
         appSecret: creds.appSecret ?? "",
         verifyToken: creds.verifyToken ?? "",
       };

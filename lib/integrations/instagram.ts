@@ -1,15 +1,52 @@
 import { sendFacebookMessage, verifyFacebookWebhook } from "./facebook";
 import type { FacebookCredentials, FacebookAttachment, FacebookReferral } from "./facebook";
 
-export type InstagramCredentials = FacebookCredentials;
+export type InstagramCredentials = {
+  igAccessToken?: string;
+  igAccountId?: string;
+  pageAccessToken?: string;
+  pageId?: string;
+  appSecret: string;
+  verifyToken: string;
+};
 
 export async function sendInstagramMessage(
   credentials: InstagramCredentials,
   recipientIgsid: string,
   message: { text?: string; attachment?: FacebookAttachment }
 ): Promise<boolean> {
-  // Instagram DM uses the same Messenger Platform send API but through the Instagram account ID
-  return sendFacebookMessage(credentials, recipientIgsid, message);
+  // Prefer Instagram Graph API with IG token
+  if (credentials.igAccessToken && credentials.igAccountId) {
+    const body: Record<string, unknown> = {
+      recipient: { id: recipientIgsid },
+      message,
+    };
+    const res = await fetch(
+      `https://graph.instagram.com/v21.0/${credentials.igAccountId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${credentials.igAccessToken}`,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+    return res.ok;
+  }
+
+  // Fallback to Messenger Platform with Page Access Token
+  if (credentials.pageAccessToken) {
+    const fbCreds: FacebookCredentials = {
+      pageId: credentials.pageId ?? "",
+      pageAccessToken: credentials.pageAccessToken,
+      appSecret: credentials.appSecret,
+      verifyToken: credentials.verifyToken,
+    };
+    return sendFacebookMessage(fbCreds, recipientIgsid, message);
+  }
+
+  return false;
 }
 
 export { verifyFacebookWebhook as verifyInstagramWebhook };
