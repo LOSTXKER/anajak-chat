@@ -36,9 +36,9 @@ export async function GET(request: Request) {
   const tokenData = await tokenRes.json() as { access_token: string };
   const userAccessToken = tokenData.access_token;
 
-  // Get pages with connected Instagram accounts
+  // Get pages list first
   const pagesRes = await fetch(
-    `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userAccessToken}`
+    `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token&access_token=${userAccessToken}`
   );
 
   if (!pagesRes.ok) {
@@ -50,16 +50,35 @@ export async function GET(request: Request) {
       id: string;
       name: string;
       access_token: string;
-      instagram_business_account?: { id: string };
     }>;
   };
 
-  const pageWithIg = pagesData.data?.find((p) => p.instagram_business_account);
-  if (!pageWithIg?.instagram_business_account) {
+  if (!pagesData.data?.length) {
+    return NextResponse.redirect(`${baseUrl}/settings/channels?error=no_pages`);
+  }
+
+  // Use Page Access Token to query instagram_business_account (doesn't need IG OAuth scope)
+  let pageWithIg: { id: string; name: string; access_token: string } | undefined;
+  let igAccountId: string | undefined;
+
+  for (const page of pagesData.data) {
+    const igRes = await fetch(
+      `https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account&access_token=${page.access_token}`
+    );
+    if (igRes.ok) {
+      const igData = await igRes.json() as { instagram_business_account?: { id: string } };
+      if (igData.instagram_business_account) {
+        pageWithIg = page;
+        igAccountId = igData.instagram_business_account.id;
+        break;
+      }
+    }
+  }
+
+  if (!pageWithIg || !igAccountId) {
     return NextResponse.redirect(`${baseUrl}/settings/channels?error=no_instagram_account`);
   }
 
-  const igAccountId = pageWithIg.instagram_business_account.id;
   const igUsername = await getInstagramAccountName(pageWithIg.access_token, igAccountId) ?? `@instagram`;
 
   const existing = await prisma.channel.findFirst({
