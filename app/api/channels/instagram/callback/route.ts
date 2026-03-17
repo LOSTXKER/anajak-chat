@@ -14,43 +14,59 @@ export async function GET(request: Request) {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? url.origin;
 
+  // DEBUG: return all info as JSON instead of redirecting
+  const debug: Record<string, unknown> = { step: "start", code: !!code, state: !!state, error };
+
   if (error || !code || !state) {
-    return NextResponse.redirect(`${baseUrl}/settings/channels?error=oauth_failed`);
+    return NextResponse.json({ ...debug, result: "oauth_failed" });
   }
 
   let stateData: { orgId: string; userId: string };
   try {
     stateData = JSON.parse(Buffer.from(state, "base64url").toString());
-  } catch {
-    return NextResponse.redirect(`${baseUrl}/settings/channels?error=invalid_state`);
+    debug.stateData = stateData;
+  } catch (e) {
+    return NextResponse.json({ ...debug, result: "invalid_state", detail: String(e) });
   }
 
-  const igAppId = process.env.INSTAGRAM_APP_ID!;
-  const igAppSecret = process.env.INSTAGRAM_APP_SECRET!;
-  const appSecret = process.env.FACEBOOK_APP_SECRET!;
+  const igAppId = process.env.INSTAGRAM_APP_ID;
+  const igAppSecret = process.env.INSTAGRAM_APP_SECRET;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
+  debug.hasIgAppId = !!igAppId;
+  debug.hasIgAppSecret = !!igAppSecret;
+  debug.hasAppSecret = !!appSecret;
+
+  if (!igAppId || !igAppSecret) {
+    return NextResponse.json({ ...debug, result: "missing_env_vars" });
+  }
+
   const redirectUri = `${baseUrl}/api/channels/instagram/callback`;
+  debug.redirectUri = redirectUri;
 
   const tokenResult = await exchangeInstagramCode(igAppId, igAppSecret, redirectUri, code);
   if (!tokenResult) {
-    return NextResponse.redirect(`${baseUrl}/settings/channels?error=token_exchange_failed&detail=code_exchange`);
+    return NextResponse.json({ ...debug, result: "token_exchange_failed" });
   }
+  debug.tokenUserId = tokenResult.userId;
 
   const longLivedToken = await exchangeForLongLivedToken(igAppSecret, tokenResult.accessToken);
+  debug.hasLongLivedToken = !!longLivedToken;
   const finalToken = longLivedToken ?? tokenResult.accessToken;
 
   const userInfo = await getInstagramUserInfo(finalToken);
   if (!userInfo) {
-    return NextResponse.redirect(`${baseUrl}/settings/channels?error=no_instagram_account&detail=user_info`);
+    return NextResponse.json({ ...debug, result: "user_info_failed" });
   }
+  debug.userInfo = userInfo;
 
   const displayName = `@${userInfo.username}`;
   const igAccountId = userInfo.id;
 
-  // Get Page Access Token from connected Facebook channel (needed for sending messages)
   const fbChannel = await prisma.channel.findFirst({
     where: { orgId: stateData.orgId, platform: "facebook", isActive: true },
   });
   const fbCreds = fbChannel?.credentials as { pageId?: string; pageAccessToken?: string } | null;
+  debug.hasFbChannel = !!fbChannel;
 
   const existing = await prisma.channel.findFirst({
     where: { orgId: stateData.orgId, platform: "instagram" },
@@ -63,19 +79,22 @@ export async function GET(request: Request) {
       igAccessToken: finalToken,
       pageId: fbCreds?.pageId ?? null,
       pageAccessToken: fbCreds?.pageAccessToken ?? null,
-      appSecret,
+      appSecret: appSecret!,
       verifyToken: process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN ?? "anajak_fb_verify",
     },
     isActive: true,
   };
 
-  if (existing) {
-    await prisma.channel.update({ where: { id: existing.id }, data: channelData });
-  } else {
-    await prisma.channel.create({
-      data: { orgId: stateData.orgId, platform: "instagram", ...channelData },
-    });
+  try {
+    if (existing) {
+      await prisma.channel.update({ where: { id: existing.id }, data: channelData });
+    } else {
+      await prisma.channel.create({
+        data: { orgId: stateData.orgId, platform: "instagram", ...channelData },
+      });
+    }
+    return NextResponse.json({ ...debug, result: "SUCCESS", displayName });
+  } catch (e) {
+    return NextResponse.json({ ...debug, result: "db_error", detail: String(e) });
   }
-
-  return NextResponse.redirect(`${baseUrl}/settings/channels?success=instagram_connected`);
 }
