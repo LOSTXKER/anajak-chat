@@ -113,7 +113,7 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
           <div className="flex flex-col gap-1.5">
             <Button
               size="icon"
-              className="h-8 w-8 bg-accent text-white rounded-md"
+              className="h-10 w-10 lg:h-8 lg:w-8 bg-accent text-white rounded-md"
               onClick={() => handleSend()}
               disabled={sending || !input.trim()}
               aria-label="ส่งข้อความ"
@@ -127,7 +127,7 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
+              className="h-10 w-10 lg:h-8 lg:w-8 text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setShowMediaPicker(true)}
               aria-label="แนบสื่อ"
             >
@@ -136,7 +136,7 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
             <Button
               size="icon"
               variant="ghost"
-              className={cn("h-8 w-8 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
+              className={cn("h-10 w-10 lg:h-8 lg:w-8 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
               onClick={() => setShowNoteInput(!showNoteInput)}
               aria-label="เพิ่ม note"
             >

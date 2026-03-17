@@ -111,12 +111,16 @@ export function SessionBar({
             size="sm"
             className="h-7 px-1.5 text-muted-foreground"
             onClick={() => setShowMore(!showMore)}
+            aria-label="เพิ่มเติม"
+            aria-expanded={showMore}
+            aria-haspopup="menu"
           >
             <ShieldAlert className="h-3.5 w-3.5" />
           </Button>
           {showMore && (
-            <div className="absolute bottom-full right-0 mb-1 flex flex-col gap-1 rounded-lg border bg-popover p-1 shadow-md z-10 min-w-28">
+            <div className="absolute bottom-full right-0 mb-1 flex flex-col gap-1 rounded-lg border bg-popover p-1 shadow-md z-10 min-w-28" role="menu">
               <button
+                role="menuitem"
                 onClick={() => { onSpam(); setShowMore(false); }}
                 className="flex items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
               >
@@ -124,6 +128,7 @@ export function SessionBar({
                 สแปม
               </button>
               <button
+                role="menuitem"
                 onClick={() => { onBlock(); setShowMore(false); }}
                 className="flex items-center gap-2 rounded px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
               >

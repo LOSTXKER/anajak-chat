@@ -92,7 +92,7 @@ export default function SLAPage() {
             กำหนดเวลาตอบกลับและแก้ไขสำหรับทุกการสนทนา
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90">
+        <Button onClick={handleSave} disabled={saving}>
           {saving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

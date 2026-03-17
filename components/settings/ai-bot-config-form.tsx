@@ -43,7 +43,7 @@ export function AIBotConfigForm({ config, onChange, onSave, saving }: AIBotConfi
           <span className="text-muted-foreground">เปิดใช้งาน</span>
           <Switch checked={config.isActive} onCheckedChange={(v) => onChange((p) => ({ ...p, isActive: v }))} />
         </div>
-        <Button onClick={onSave} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90">
+        <Button onClick={onSave} disabled={saving}>
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           บันทึก
         </Button>

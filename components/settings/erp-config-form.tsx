@@ -49,7 +49,7 @@ export function ErpConfigForm({
           )}
           Test Connection
         </Button>
-        <Button onClick={onSave} disabled={saving} className="bg-foreground text-background hover:bg-foreground/90">
+        <Button onClick={onSave} disabled={saving}>
           {saving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

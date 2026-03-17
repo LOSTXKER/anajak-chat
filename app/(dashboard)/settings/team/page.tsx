@@ -35,7 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
 interface User {
   id: string;
@@ -116,7 +117,7 @@ export default function TeamSettingsPage() {
           <p className="text-sm text-muted-foreground">จัดการสมาชิกในทีม</p>
         </div>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger render={<Button className="bg-foreground text-background hover:bg-foreground/90" />}>
+          <DialogTrigger render={<Button />}>
             <UserPlus className="mr-2 h-4 w-4" />
             เพิ่มสมาชิก
           </DialogTrigger>
@@ -180,7 +181,7 @@ export default function TeamSettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full bg-foreground text-background hover:bg-foreground/90" disabled={inviteLoading}>
+              <Button type="submit" className="w-full" disabled={inviteLoading}>
                 {inviteLoading ? "กำลังสร้าง..." : "สร้างบัญชี"}
               </Button>
             </form>
@@ -211,15 +212,13 @@ export default function TeamSettingsPage() {
                     {user.role.name}
                   </span>
                   <Badge variant={user.isActive ? "default" : "outline"} className={user.isActive ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800" : ""}>
-                    {user.isActive ? "Active" : "ไม่ใช้งาน"}
+                    {user.isActive ? "ใช้งาน" : "ไม่ใช้งาน"}
                   </Badge>
                 </div>
               </div>
             ))}
             {users.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                ไม่มีข้อมูล
-              </div>
+              <EmptyState icon={Users} message="ยังไม่มีสมาชิก" className="border-0" />
             )}
           </div>
         </CardContent>

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { cn } from "@/lib/utils";
 import { ConversationList } from "./conversation-list";
 import type { MainTab, StatusFilter, LabelFilter, ChannelFilter } from "./conversation-list";
 import { ChatView } from "./chat-view";
@@ -183,46 +186,68 @@ export default function InboxPage() {
 
   return (
     <div className="flex h-full overflow-hidden">
-      <ConversationList
-        conversations={conversations}
-        selectedId={selectedId}
-        loading={loading}
-        mainTab={mainTab}
-        statusFilter={statusFilter}
-        labelFilter={labelFilter}
-        channelFilter={channelFilter}
-        search={search}
-        currentUserId={currentUserId}
-        onSelectConversation={(id) => {
-          setSelectedId(id);
-          setConversations((prev) =>
-            prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c))
-          );
-        }}
-        onMainTabChange={setMainTab}
-        onStatusFilterChange={setStatusFilter}
-        onLabelFilterChange={setLabelFilter}
-        onChannelFilterChange={setChannelFilter}
-        onSearchChange={handleSearchChange}
-        onRefresh={refetch}
-      />
-      <div className="flex-1 overflow-hidden">
+      {/* Conversation list - full width on mobile when no conversation selected, fixed width on desktop */}
+      <div className={cn(
+        "shrink-0 lg:block",
+        selected ? "hidden lg:block" : "w-full lg:w-auto"
+      )}>
+        <ConversationList
+          conversations={conversations}
+          selectedId={selectedId}
+          loading={loading}
+          mainTab={mainTab}
+          statusFilter={statusFilter}
+          labelFilter={labelFilter}
+          channelFilter={channelFilter}
+          search={search}
+          currentUserId={currentUserId}
+          onSelectConversation={(id) => {
+            setSelectedId(id);
+            setConversations((prev) =>
+              prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c))
+            );
+          }}
+          onMainTabChange={setMainTab}
+          onStatusFilterChange={setStatusFilter}
+          onLabelFilterChange={setLabelFilter}
+          onChannelFilterChange={setChannelFilter}
+          onSearchChange={handleSearchChange}
+          onRefresh={refetch}
+        />
+      </div>
+      {/* Chat area - full width on mobile when conversation selected */}
+      <div className={cn(
+        "flex-1 overflow-hidden",
+        selected ? "block" : "hidden lg:block"
+      )}>
         {selected ? (
-          <ChatView
-            key={selected.id}
-            conversation={selected}
-            onConversationUpdate={handleConversationUpdate}
-            onNewMessage={handleNewMessage}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center bg-muted rounded-full p-4">
-                <MessageSquare className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-xl font-medium text-foreground/80">เลือกการสนทนาเพื่อเริ่มแชท</p>
-              <p className="mt-1 text-sm text-muted-foreground">คลิกที่การสนทนาทางซ้ายเพื่อเปิดแชท</p>
+          <div className="flex h-full flex-col">
+            {/* Mobile back button */}
+            <div className="flex items-center gap-2 border-b px-3 py-2 lg:hidden">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedId(null)}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium truncate">
+                {selected.contact.displayName ?? selected.contact.platformId}
+              </span>
             </div>
+            <div className="flex-1 overflow-hidden">
+              <ChatView
+                key={selected.id}
+                conversation={selected}
+                onConversationUpdate={handleConversationUpdate}
+                onNewMessage={handleNewMessage}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <EmptyState
+              icon={MessageSquare}
+              message="เลือกการสนทนาเพื่อเริ่มแชท"
+              description="คลิกที่การสนทนาทางซ้ายเพื่อเปิดแชท"
+              className="border-0"
+            />
           </div>
         )}
       </div>

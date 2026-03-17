@@ -165,7 +165,7 @@ export default function TemplatesPage() {
             จัดการ template ข้อความตอบกลับด่วน พิมพ์ / ในแชทเพื่อใช้งาน
           </p>
         </div>
-        <Button onClick={openCreate} className="bg-foreground text-background hover:bg-foreground/90">
+        <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
           เพิ่ม Template
         </Button>
@@ -188,9 +188,9 @@ export default function TemplatesPage() {
               key={cat.value}
               onClick={() => setCategoryFilter(cat.value)}
               className={cn(
-                "rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors border",
+                "rounded-full px-2.5 py-1 text-xs font-medium transition-colors border",
                 categoryFilter === cat.value
-                  ? "bg-foreground text-background border-transparent"
+                  ? "bg-primary text-primary-foreground border-transparent"
                   : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
               )}
             >
@@ -329,7 +329,7 @@ export default function TemplatesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>ยกเลิก</Button>
-            <Button className="bg-foreground text-background hover:bg-foreground/90" onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {editing ? "บันทึก" : "สร้าง"}
             </Button>

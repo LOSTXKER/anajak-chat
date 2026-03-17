@@ -97,7 +97,7 @@ export default function AdsPage() {
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium transition-colors",
                     platformFilter === p
-                      ? "bg-foreground text-background"
+                      ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
                   )}
                 >
@@ -114,7 +114,7 @@ export default function AdsPage() {
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium transition-colors",
                     days === d
-                      ? "bg-foreground text-background"
+                      ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
                   )}
                 >

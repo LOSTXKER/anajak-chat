@@ -72,6 +72,7 @@ function NavGroup({ label, items, onClick }: { label: string; items: NavItem[]; 
               key={item.href}
               href={item.href}
               onClick={onClick}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "relative flex items-center gap-3 px-3 py-2 text-[13px] transition-colors",
                 isActive
@@ -161,6 +162,7 @@ function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () 
           <Link
             href="/settings/general"
             onClick={onNavClick}
+            aria-current={isSettingsActive ? "page" : undefined}
             className={cn(
               "relative flex items-center gap-3 px-3 py-2 text-[13px] transition-colors",
               isSettingsActive

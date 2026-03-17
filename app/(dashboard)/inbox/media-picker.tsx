@@ -89,7 +89,7 @@ export function MediaPickerModal({ onSelect, onClose }: MediaPickerModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex h-[600px] w-full max-w-2xl flex-col rounded-xl border bg-background shadow-2xl">
+      <div className="flex max-h-[min(600px,85vh)] w-full max-w-2xl flex-col rounded-xl border bg-background shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2 border-b px-4 py-3">
           {folderStack.length > 0 && (

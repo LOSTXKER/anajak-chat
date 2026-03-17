@@ -108,12 +108,16 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
               size="icon"
               className="h-7 w-7"
               onClick={() => setShowMenu(!showMenu)}
+              aria-label="เมนู"
+              aria-expanded={showMenu}
+              aria-haspopup="menu"
             >
               <MoreVertical className="h-4 w-4" />
             </Button>
             {showMenu && (
-              <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-lg border bg-popover p-1 shadow-lg">
+              <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-lg border bg-popover p-1 shadow-lg" role="menu">
                 <button
+                  role="menuitem"
                   onClick={() => handleExport("excel")}
                   className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
                 >
@@ -121,6 +125,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                   Export แชทเป็น Excel
                 </button>
                 <button
+                  role="menuitem"
                   onClick={() => handleExport("zip")}
                   className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
                 >
@@ -131,6 +136,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                   <>
                     <div className="my-1 border-t" />
                     <button
+                      role="menuitem"
                       onClick={() => { setShowMenu(false); onSpam(); }}
                       className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                     >

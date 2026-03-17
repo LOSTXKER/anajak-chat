@@ -32,8 +32,15 @@ export function FilterDropdown<T extends string>({
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   return (
@@ -41,7 +48,7 @@ export function FilterDropdown<T extends string>({
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors border",
+          "flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors border",
           isDefault
             ? "border-transparent text-muted-foreground hover:bg-muted"
             : "border-foreground/20 bg-foreground/5 text-foreground font-medium"
@@ -51,7 +58,7 @@ export function FilterDropdown<T extends string>({
         <ChevronDown className="h-3 w-3 opacity-60" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 min-w-32 rounded-lg border bg-popover p-1 shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-1 min-w-32 rounded-lg border bg-popover p-1 shadow-lg animate-in fade-in zoom-in-95 duration-100">
           {options.map((opt) => (
             <button
               key={opt.value}

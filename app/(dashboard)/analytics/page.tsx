@@ -6,6 +6,7 @@ import {
   RefreshCw, Download,
 } from "lucide-react";
 import { SkeletonKpiRow, SkeletonTable } from "@/components/skeleton";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 
@@ -65,11 +66,11 @@ function KpiCard({ icon: Icon, label, value, sub }: {
 }
 
 const SEGMENT_COLORS: Record<string, string> = {
-  "VIP": "bg-zinc-400",
-  "Regular": "bg-zinc-400",
-  "Window Shopper": "bg-zinc-400",
+  "VIP": "bg-amber-500",
+  "Regular": "bg-blue-500",
+  "Window Shopper": "bg-violet-400",
   "One-timer": "bg-zinc-400",
-  "At-risk": "bg-zinc-400",
+  "At-risk": "bg-red-400",
 };
 
 export default function AnalyticsPage() {
@@ -128,7 +129,7 @@ export default function AnalyticsPage() {
                 onClick={() => setDays(d)}
                 className={cn(
                   "rounded-full px-4 py-1.5 text-xs font-medium transition-colors",
-                  days === d ? "bg-foreground text-background" : "bg-muted hover:bg-muted/80"
+                  days === d ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
                 )}
               >
                 {d} วัน
@@ -138,6 +139,8 @@ export default function AnalyticsPage() {
           <div className="relative">
             <button
               onClick={() => setExportOpen(!exportOpen)}
+              aria-haspopup="menu"
+              aria-expanded={exportOpen}
               className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
             >
               <Download className="h-3.5 w-3.5" />ส่งออก
@@ -158,7 +161,7 @@ export default function AnalyticsPage() {
               </div>
             )}
           </div>
-          <button onClick={fetchAll} className="rounded-lg border p-1.5 hover:bg-muted transition-colors">
+          <button onClick={fetchAll} aria-label="รีเฟรช" className="rounded-lg border p-1.5 hover:bg-muted transition-colors">
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </button>
           </div>
@@ -187,7 +190,7 @@ export default function AnalyticsPage() {
             <div className="rounded-xl border p-4">
               <h2 className="mb-4 text-sm font-semibold">Funnel การขาย</h2>
               {funnel.length === 0 ? (
-                <p className="text-sm text-muted-foreground">ไม่มีข้อมูล</p>
+                <EmptyState icon={TrendingUp} message="ไม่มีข้อมูล Funnel" className="border-0 py-8" />
               ) : (
                 <div className="space-y-3">
                   {funnel.map((stage, i) => {
@@ -221,7 +224,7 @@ export default function AnalyticsPage() {
             <div className="rounded-xl border p-4">
               <h2 className="mb-4 text-sm font-semibold">กลุ่มลูกค้า</h2>
               {segments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">ไม่มีข้อมูล</p>
+                <EmptyState icon={Users} message="ไม่มีข้อมูลกลุ่มลูกค้า" className="border-0 py-8" />
               ) : (
                 <div className="space-y-2">
                   {segments.map((s) => (

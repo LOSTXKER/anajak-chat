@@ -168,7 +168,7 @@ export default function KnowledgeBasePage() {
               Import CSV
             </Button>
             <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
-            <Button size="sm" onClick={openNew} className="bg-foreground text-background hover:bg-foreground/90">
+            <Button size="sm" onClick={openNew}>
               <Plus className="mr-2 h-4 w-4" />
               เพิ่มบทความ
             </Button>
@@ -185,7 +185,7 @@ export default function KnowledgeBasePage() {
                 className={cn(
                   "rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors",
                   category === c.value
-                    ? "bg-foreground text-background border-transparent"
+                    ? "bg-primary text-primary-foreground border-transparent"
                     : "bg-background border-border hover:bg-muted"
                 )}
               >
@@ -344,7 +344,7 @@ export default function KnowledgeBasePage() {
               </div>
               <div className="mt-6 flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowDialog(false)}>ยกเลิก</Button>
-                <Button className="bg-foreground text-background hover:bg-foreground/90" onClick={handleSave} disabled={saving || !editing.title || !editing.content}>
+                <Button onClick={handleSave} disabled={saving || !editing.title || !editing.content}>
                   {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   บันทึก
                 </Button>

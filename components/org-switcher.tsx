@@ -4,6 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import { Building2, Check, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -131,39 +139,37 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-sm rounded-lg border bg-background p-6 shadow-xl">
-            <h3 className="text-base font-semibold">สร้างองค์กรใหม่</h3>
-            <p className="mt-1 text-sm text-muted-foreground">เพิ่มธุรกิจ/องค์กรใหม่เพื่อจัดการแยกต่างหาก</p>
-            <input
-              type="text"
-              value={newOrgName}
-              onChange={(e) => setNewOrgName(e.target.value)}
-              placeholder="ชื่อองค์กร"
-              className="mt-4 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent"
-              autoFocus
-              onKeyDown={(e) => e.key === "Enter" && createOrg()}
-            />
-            <div className="mt-4 flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => { setShowCreate(false); setNewOrgName(""); }}
-              >
-                ยกเลิก
-              </Button>
-              <Button
-                size="sm"
-                onClick={createOrg}
-                disabled={creating || !newOrgName.trim()}
-              >
-                {creating ? "กำลังสร้าง..." : "สร้าง"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={showCreate} onOpenChange={(open) => { setShowCreate(open); if (!open) setNewOrgName(""); }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>สร้างองค์กรใหม่</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">เพิ่มธุรกิจ/องค์กรใหม่เพื่อจัดการแยกต่างหาก</p>
+          <Input
+            value={newOrgName}
+            onChange={(e) => setNewOrgName(e.target.value)}
+            placeholder="ชื่อองค์กร"
+            autoFocus
+            onKeyDown={(e) => e.key === "Enter" && createOrg()}
+          />
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShowCreate(false); setNewOrgName(""); }}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              size="sm"
+              onClick={createOrg}
+              disabled={creating || !newOrgName.trim()}
+            >
+              {creating ? "กำลังสร้าง..." : "สร้าง"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

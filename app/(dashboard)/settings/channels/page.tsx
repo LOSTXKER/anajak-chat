@@ -427,7 +427,6 @@ export default function ChannelsPage() {
               ยกเลิก
             </Button>
             <Button
-              className="bg-foreground text-background hover:bg-foreground/90"
               onClick={handleLineConnect}
               disabled={
                 lineConnecting ||

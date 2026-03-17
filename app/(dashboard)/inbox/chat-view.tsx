@@ -425,20 +425,20 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap justify-end">
             <SlaTimer conversation={conversation} />
 
             <Select
               value={conversation.assignedUser?.id ?? "unassigned"}
               onValueChange={(v) => v && v !== "unassigned" && assignToAgent(v)}
             >
-              <SelectTrigger className="h-8 w-36 text-xs">
+              <SelectTrigger className="h-8 w-28 lg:w-36 text-xs">
                 <div className="flex items-center gap-1.5 truncate">
                   <UserPlus className="h-3 w-3 shrink-0" />
                   <span className="truncate">
                     {assigningId
                       ? "กำลังมอบ..."
-                      : conversation.assignedUser?.name ?? "ยังไม่มอบหมาย"}
+                      : conversation.assignedUser?.name ?? "มอบหมาย"}
                   </span>
                 </div>
               </SelectTrigger>
@@ -462,15 +462,16 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-8 w-8 hidden lg:inline-flex"
               title="โอนแชท"
+              aria-label="โอนแชท"
               onClick={() => setShowTransferDialog(true)}
             >
               <ArrowRightLeft className="h-4 w-4" />
             </Button>
 
             <Select value={conversation.status} onValueChange={(v) => v && updateStatus(v)}>
-              <SelectTrigger className="h-8 w-32 text-xs">
+              <SelectTrigger className="h-8 w-24 lg:w-32 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

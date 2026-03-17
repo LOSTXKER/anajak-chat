@@ -15,6 +15,7 @@ import {
   MessagesSquare,
 } from "lucide-react";
 import { SkeletonConversation } from "@/components/skeleton";
+import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -127,10 +128,12 @@ export function ConversationList({
   const hasActiveFilter = statusFilter !== "all" || labelFilter !== "" || channelFilter !== "";
 
   return (
-    <div className="flex w-72 shrink-0 flex-col border-r bg-background">
+    <div className="flex w-full lg:w-72 shrink-0 flex-col border-r bg-background">
       {/* Main tabs */}
-      <div className="flex border-b">
+      <div className="flex border-b" role="tablist">
         <button
+          role="tab"
+          aria-selected={mainTab === "all"}
           onClick={() => onMainTabChange("all")}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors",
@@ -143,6 +146,8 @@ export function ConversationList({
           แชททั้งหมด
         </button>
         <button
+          role="tab"
+          aria-selected={mainTab === "inbox"}
           onClick={() => onMainTabChange("inbox")}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors relative",
@@ -219,12 +224,11 @@ export function ConversationList({
             ))}
           </div>
         ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <MessageSquare className="h-8 w-8 text-muted-foreground/30" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              {mainTab === "inbox" ? "ไม่มีแชทในอินบ็อกซ์" : "ไม่มีการสนทนา"}
-            </p>
-          </div>
+          <EmptyState
+            icon={MessageSquare}
+            message={mainTab === "inbox" ? "ไม่มีแชทในอินบ็อกซ์" : "ไม่มีการสนทนา"}
+            className="border-0 py-12"
+          />
         ) : (
           <div className="flex flex-col gap-1">
             {conversations.map((conv) => {

@@ -69,7 +69,6 @@ export default function GeneralSettingsPage() {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-foreground text-background hover:bg-foreground/90"
             >
               {loading ? "กำลังบันทึก..." : "บันทึก"}
             </Button>

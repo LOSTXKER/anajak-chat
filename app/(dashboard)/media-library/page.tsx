@@ -251,7 +251,7 @@ export default function MediaLibraryPage() {
               <FolderPlus className="mr-2 h-4 w-4" />
               โฟลเดอร์ใหม่
             </Button>
-            <Button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="bg-foreground text-background hover:bg-foreground/90">
+            <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
               {uploading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -341,7 +341,7 @@ export default function MediaLibraryPage() {
                           {folder._count.files} ไฟล์ · {folder._count.children} โฟลเดอร์
                         </p>
                       </div>
-                      <div className="absolute top-1.5 right-1.5 hidden group-hover:flex gap-0.5">
+                      <div className="absolute top-1.5 right-1.5 flex lg:opacity-0 lg:group-hover:opacity-100 transition-opacity gap-0.5">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -400,7 +400,7 @@ export default function MediaLibraryPage() {
                           </div>
 
                           {/* Hover actions */}
-                          <div className="absolute top-1.5 right-1.5 hidden group-hover:flex gap-0.5 bg-background/90 backdrop-blur-sm rounded p-0.5">
+                          <div className="absolute top-1.5 right-1.5 flex lg:opacity-0 lg:group-hover:opacity-100 transition-opacity gap-0.5 bg-background/90 backdrop-blur-sm rounded p-0.5">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -457,7 +457,7 @@ export default function MediaLibraryPage() {
                               ))}
                             </div>
                           )}
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyUrl(file)}>
                               {copiedId === file.id ? (
                                 <Check className="h-3.5 w-3.5 text-green-600" />

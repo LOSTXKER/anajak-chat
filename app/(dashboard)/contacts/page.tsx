@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Users, Search, ChevronLeft, ChevronRight,
   MessageSquare, ShoppingBag, StickyNote, RefreshCw,
-  ExternalLink, X,
+  ExternalLink, X, ArrowLeft,
 } from "lucide-react";
 import { SkeletonConversation } from "@/components/skeleton";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,7 +95,7 @@ export default function ContactsPage() {
       />
       <div className="flex flex-1 min-h-0 overflow-hidden rounded-xl border bg-card">
         {/* Contact List */}
-        <div className={cn("flex flex-col overflow-hidden transition-all", selected ? "w-1/2 border-r" : "w-full")}>
+        <div className={cn("flex flex-col overflow-hidden transition-all", selected ? "hidden md:flex md:w-1/2 border-r" : "w-full")}>
           <div className="p-4 border-b">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -127,10 +128,11 @@ export default function ContactsPage() {
                 ))}
               </div>
             ) : contacts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <Users className="h-10 w-10 opacity-30" />
-                <p className="mt-3 text-sm">ยังไม่มีข้อมูลลูกค้า</p>
-              </div>
+              <EmptyState
+                icon={Users}
+                message="ยังไม่มีข้อมูลลูกค้า"
+                className="border-0"
+              />
             ) : (
               <div className="space-y-2 p-3">
                 {contacts.map((c) => (
@@ -189,8 +191,11 @@ export default function ContactsPage() {
 
         {/* Contact Detail + Journey */}
         {selected && (
-          <div className="w-1/2 flex flex-col overflow-hidden">
+          <div className="w-full md:w-1/2 flex flex-col overflow-hidden">
             <div className="p-4 border-b flex items-center gap-3">
+              <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden" onClick={() => setSelected(null)}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <div className={cn(
                 "h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium overflow-hidden",
                 selected.avatarUrl ? "bg-muted" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
@@ -227,10 +232,12 @@ export default function ContactsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b px-4 text-sm">
+            <div className="flex border-b px-4 text-sm" role="tablist">
               {(["journey", "info"] as const).map((tab) => (
                 <button
                   key={tab}
+                  role="tab"
+                  aria-selected={activeTab === tab}
                   onClick={() => setActiveTab(tab)}
                   className={cn(
                     "py-2.5 px-3 border-b-2 -mb-px font-medium transition-colors",
@@ -266,7 +273,11 @@ export default function ContactsPage() {
                   ))}
                 </div>
               ) : timeline.length === 0 ? (
-                <p className="text-sm text-muted-foreground">ไม่มีประวัติ</p>
+                <EmptyState
+                  icon={MessageSquare}
+                  message="ไม่มีประวัติ"
+                  className="border-0 py-8"
+                />
               ) : (
                 <div className="relative">
                   <div className="absolute left-3.5 top-0 bottom-0 w-px bg-border" />
