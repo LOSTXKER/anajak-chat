@@ -8,6 +8,8 @@ export const GET = apiHandler(async (request) => {
   const sp = searchParams(request);
   const status = sp.get("status");
   const label = sp.get("label");
+  const platform = sp.get("platform");
+  const tag = sp.get("tag");
   const assignedTo = sp.get("assignedTo");
   const search = sp.get("search") ?? "";
   const { page, limit, skip } = parsePagination(request, { limit: 30 });
@@ -16,6 +18,8 @@ export const GET = apiHandler(async (request) => {
     orgId: user.orgId,
     ...(status && status !== "all" ? { status: status as "open" | "pending" | "resolved" | "closed" } : {}),
     ...(label ? { labels: { has: label } } : {}),
+    ...(platform ? { channel: { platform: platform as "facebook" | "instagram" | "line" | "whatsapp" | "web" } } : {}),
+    ...(tag ? { contact: { tags: { has: tag } } } : {}),
     ...(assignedTo ? { assignedTo } : {}),
     ...(search
       ? {
@@ -41,6 +45,8 @@ export const GET = apiHandler(async (request) => {
             avatarUrl: true,
             platform: true,
             platformId: true,
+            phone: true,
+            email: true,
             tags: true,
           },
         },

@@ -171,6 +171,7 @@ model Organization {
   aiBotConfigs        AiBotConfig[]
   knowledgeArticles   KnowledgeArticle[]
   aiReplyLogs         AiReplyLog[]
+  contactLabels       ContactLabel[]
 
   @@map("organizations")
 }
@@ -199,6 +200,7 @@ model User {
   roleId             String   @map("role_id") @db.Uuid
   avatarUrl          String?  @map("avatar_url")
   isActive           Boolean  @default(true) @map("is_active")
+  isAvailable        Boolean  @default(true) @map("is_available")
   maxConcurrentChats Int      @default(10) @map("max_concurrent_chats")
   createdAt          DateTime @default(now()) @map("created_at")
 
@@ -363,6 +365,19 @@ model ConversationEvent {
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@map("conversation_events")
+}
+
+model ContactLabel {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  name      String
+  color     String   @default("#6B7280")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, name])
+  @@map("contact_labels")
 }
 
 model Order {

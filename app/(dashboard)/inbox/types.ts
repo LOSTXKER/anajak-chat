@@ -4,6 +4,8 @@ export interface ConversationContact {
   avatarUrl: string | null;
   platform: string;
   platformId: string;
+  phone: string | null;
+  email: string | null;
   tags: string[];
 }
 
@@ -64,5 +66,14 @@ export interface Note {
   content: string;
   mentions: string[];
   authorId: string;
+  createdAt: string;
+}
+
+export interface ConversationEvent {
+  id: string;
+  conversationId: string;
+  eventType: string;
+  actorId: string | null;
+  metadata: Record<string, unknown>;
   createdAt: string;
 }

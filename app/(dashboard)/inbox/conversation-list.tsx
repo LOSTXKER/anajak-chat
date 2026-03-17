@@ -44,6 +44,7 @@ const PLATFORM_COLORS = {
 export type MainTab = "all" | "inbox";
 export type StatusFilter = "all" | "pending" | "open" | "resolved" | "closed";
 export type LabelFilter = "" | "missed" | "follow_up" | "spam" | "blocked";
+export type ChannelFilter = "" | "facebook" | "instagram" | "line" | "whatsapp" | "web";
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "สถานะทั้งหมด" },
@@ -59,6 +60,15 @@ const LABEL_OPTIONS: { value: LabelFilter; label: string }[] = [
   { value: "follow_up", label: "ติดตาม" },
   { value: "spam", label: "สแปม" },
   { value: "blocked", label: "บล็อก" },
+];
+
+const CHANNEL_OPTIONS: { value: ChannelFilter; label: string }[] = [
+  { value: "", label: "ช่องทั้งหมด" },
+  { value: "facebook", label: "Facebook" },
+  { value: "instagram", label: "Instagram" },
+  { value: "line", label: "LINE" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "web", label: "Web" },
 ];
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -82,12 +92,14 @@ interface ConversationListProps {
   mainTab: MainTab;
   statusFilter: StatusFilter;
   labelFilter: LabelFilter;
+  channelFilter: ChannelFilter;
   search: string;
   currentUserId: string | null;
   onSelectConversation: (id: string) => void;
   onMainTabChange: (tab: MainTab) => void;
   onStatusFilterChange: (status: StatusFilter) => void;
   onLabelFilterChange: (label: LabelFilter) => void;
+  onChannelFilterChange: (channel: ChannelFilter) => void;
   onSearchChange: (value: string) => void;
   onRefresh: () => void;
 }
@@ -160,12 +172,14 @@ export function ConversationList({
   mainTab,
   statusFilter,
   labelFilter,
+  channelFilter,
   search,
   currentUserId,
   onSelectConversation,
   onMainTabChange,
   onStatusFilterChange,
   onLabelFilterChange,
+  onChannelFilterChange,
   onSearchChange,
   onRefresh,
 }: ConversationListProps) {
@@ -182,7 +196,7 @@ export function ConversationList({
     (c) => c.assignedUser?.id === currentUserId
   ).length;
 
-  const hasActiveFilter = statusFilter !== "all" || labelFilter !== "";
+  const hasActiveFilter = statusFilter !== "all" || labelFilter !== "" || channelFilter !== "";
 
   return (
     <div className="flex w-72 shrink-0 flex-col border-r bg-background">
@@ -236,12 +250,17 @@ export function ConversationList({
           </Button>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 flex-wrap">
           <SlidersHorizontal className="h-3 w-3 text-muted-foreground shrink-0" />
           <FilterDropdown
             value={statusFilter}
             options={STATUS_OPTIONS}
             onChange={onStatusFilterChange}
+          />
+          <FilterDropdown
+            value={channelFilter}
+            options={CHANNEL_OPTIONS}
+            onChange={onChannelFilterChange}
           />
           <FilterDropdown
             value={labelFilter}
@@ -253,6 +272,7 @@ export function ConversationList({
               onClick={() => {
                 onStatusFilterChange("all");
                 onLabelFilterChange("");
+                onChannelFilterChange("");
               }}
               className="text-[10px] text-muted-foreground hover:text-foreground ml-auto"
             >

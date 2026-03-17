@@ -35,7 +35,7 @@ import { ContactSidebar } from "@/components/chat/contact-sidebar";
 import { ChatInput } from "@/components/chat/chat-input";
 import { SlaTimer } from "./sla-timer";
 import { SessionBar } from "./session-bar";
-import type { Conversation, Message, Note } from "./types";
+import type { Conversation, Message, Note, ConversationEvent } from "./types";
 
 const LABEL_BADGE: Record<string, { label: string; className: string }> = {
   missed: { label: "ไม่ได้รับ", className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
@@ -52,12 +52,15 @@ interface ChatViewProps {
 
 type TimelineItem =
   | { kind: "message"; data: Message }
-  | { kind: "note"; data: Note };
+  | { kind: "note"; data: Note }
+  | { kind: "event"; data: ConversationEvent }
+  | { kind: "date"; date: string; createdAt: string };
 
 interface AgentOption {
   id: string;
   name: string;
   avatarUrl: string | null;
+  isAvailable?: boolean;
 }
 
 interface PresenceUser {
@@ -65,9 +68,22 @@ interface PresenceUser {
   user_name: string;
 }
 
+const EVENT_LABELS: Record<string, string> = {
+  session_started: "เริ่มแชท",
+  resolved: "เสร็จสิ้น",
+  assigned: "มอบหมายให้",
+  transferred: "โอนแชทให้",
+  follow_up: "ติดตาม",
+  marked_spam: "กำหนดเป็นสแปม",
+  blocked: "บล็อก",
+  sla_escalated: "SLA Escalated",
+  sla_breach: "SLA Breach",
+};
+
 export function ChatView({ conversation, onConversationUpdate, onNewMessage }: ChatViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [events, setEvents] = useState<ConversationEvent[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -102,6 +118,14 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     }
   }, [conversation.id]);
 
+  const fetchEvents = useCallback(async () => {
+    const res = await fetch(`/api/conversations/${conversation.id}/events`);
+    if (res.ok) {
+      const data = await res.json();
+      setEvents(data);
+    }
+  }, [conversation.id]);
+
   const markAsRead = useCallback(() => {
     fetch(`/api/conversations/${conversation.id}/read`, { method: "POST" }).catch(() => {});
   }, [conversation.id]);
@@ -109,9 +133,10 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
   useEffect(() => {
     fetchMessages();
     fetchNotes();
+    fetchEvents();
     fetchAgents();
     markAsRead();
-  }, [fetchMessages, fetchNotes, markAsRead]);
+  }, [fetchMessages, fetchNotes, fetchEvents, markAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -354,10 +379,23 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     }
   }
 
-  const timeline: TimelineItem[] = [
+  const rawItems = [
     ...messages.map((m) => ({ kind: "message" as const, data: m })),
     ...notes.map((n) => ({ kind: "note" as const, data: n })),
+    ...events.map((e) => ({ kind: "event" as const, data: e })),
   ].sort((a, b) => new Date(a.data.createdAt).getTime() - new Date(b.data.createdAt).getTime());
+
+  const timeline: TimelineItem[] = [];
+  let lastDate = "";
+  for (const item of rawItems) {
+    const ts = item.data.createdAt;
+    const d = ts.slice(0, 10);
+    if (d !== lastDate) {
+      timeline.push({ kind: "date", date: d, createdAt: ts });
+      lastDate = d;
+    }
+    timeline.push(item);
+  }
 
   const displayName = conversation.contact.displayName ?? conversation.contact.platformId;
 
@@ -428,7 +466,12 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 </SelectItem>
                 {agents.map((agent) => (
                   <SelectItem key={agent.id} value={agent.id}>
-                    {agent.name}
+                    <span className="flex items-center gap-1.5">
+                      {agent.name}
+                      {agent.isAvailable === false && (
+                        <span className="text-[10px] text-red-500 font-medium">ไม่ว่าง</span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -483,9 +526,37 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            timeline.map((item) => {
+            timeline.map((item, idx) => {
+              if (item.kind === "date") {
+                return (
+                  <div key={`date-${item.date}`} className="flex items-center gap-3 py-2">
+                    <div className="flex-1 border-t" />
+                    <span className="text-[11px] font-medium text-muted-foreground bg-background px-2">
+                      {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <div className="flex-1 border-t" />
+                  </div>
+                );
+              }
+              if (item.kind === "event") {
+                const evt = item.data as ConversationEvent;
+                const label = EVENT_LABELS[evt.eventType] ?? evt.eventType;
+                const actor = (evt.metadata as Record<string, unknown>)?.agentName as string | undefined;
+                const time = new Date(evt.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+                return (
+                  <div key={`evt-${evt.id}`} className="flex justify-center py-1">
+                    <span className="text-[11px] text-muted-foreground italic">
+                      {time} — {label}{actor ? ` โดย ${actor}` : ""}
+                    </span>
+                  </div>
+                );
+              }
               if (item.kind === "note") {
-                return <NoteBubble key={`note-${item.data.id}`} note={item.data as Note} />;
+                return <NoteBubble key={`note-${(item.data as Note).id}`} note={item.data as Note} />;
               }
               const msg = item.data as Message;
               return (
@@ -519,7 +590,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         )}
       </div>
 
-      <ContactSidebar conversation={conversation} />
+      <ContactSidebar conversation={conversation} onSpam={handleSpam} />
 
       {/* Transfer dialog */}
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageSquare } from "lucide-react";
 import { ConversationList } from "./conversation-list";
-import type { MainTab, StatusFilter, LabelFilter } from "./conversation-list";
+import type { MainTab, StatusFilter, LabelFilter, ChannelFilter } from "./conversation-list";
 import { ChatView } from "./chat-view";
 import { createClient } from "@/lib/supabase/client";
 import type { Conversation } from "./types";
@@ -15,6 +15,7 @@ export default function InboxPage() {
   const [mainTab, setMainTab] = useState<MainTab>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [labelFilter, setLabelFilter] = useState<LabelFilter>("");
+  const [channelFilter, setChannelFilter] = useState<ChannelFilter>("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -22,12 +23,14 @@ export default function InboxPage() {
   const mainTabRef = useRef(mainTab);
   const statusFilterRef = useRef(statusFilter);
   const labelFilterRef = useRef(labelFilter);
+  const channelFilterRef = useRef(channelFilter);
   const searchRef = useRef(search);
   const currentUserIdRef = useRef(currentUserId);
 
   mainTabRef.current = mainTab;
   statusFilterRef.current = statusFilter;
   labelFilterRef.current = labelFilter;
+  channelFilterRef.current = channelFilter;
   searchRef.current = search;
   currentUserIdRef.current = currentUserId;
 
@@ -43,6 +46,7 @@ export default function InboxPage() {
       search: string;
       status: StatusFilter;
       label: LabelFilter;
+      channel: ChannelFilter;
       tab: MainTab;
       userId: string | null;
     }) => {
@@ -51,6 +55,7 @@ export default function InboxPage() {
         const params = new URLSearchParams();
         if (opts.status !== "all") params.set("status", opts.status);
         if (opts.label) params.set("label", opts.label);
+        if (opts.channel) params.set("platform", opts.channel);
         if (opts.search) params.set("search", opts.search);
         if (opts.tab === "inbox" && opts.userId) params.set("assignedTo", opts.userId);
 
@@ -71,6 +76,7 @@ export default function InboxPage() {
       search: searchRef.current,
       status: statusFilterRef.current,
       label: labelFilterRef.current,
+      channel: channelFilterRef.current,
       tab: mainTabRef.current,
       userId: currentUserIdRef.current,
     });
@@ -80,7 +86,7 @@ export default function InboxPage() {
     if (currentUserId !== null || mainTab !== "inbox") {
       refetch();
     }
-  }, [mainTab, statusFilter, labelFilter, currentUserId, refetch]);
+  }, [mainTab, statusFilter, labelFilter, channelFilter, currentUserId, refetch]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -152,6 +158,7 @@ export default function InboxPage() {
         search: value,
         status: statusFilter,
         label: labelFilter,
+        channel: channelFilter,
         tab: mainTab,
         userId: currentUserId,
       });
@@ -183,6 +190,7 @@ export default function InboxPage() {
         mainTab={mainTab}
         statusFilter={statusFilter}
         labelFilter={labelFilter}
+        channelFilter={channelFilter}
         search={search}
         currentUserId={currentUserId}
         onSelectConversation={(id) => {
@@ -194,6 +202,7 @@ export default function InboxPage() {
         onMainTabChange={setMainTab}
         onStatusFilterChange={setStatusFilter}
         onLabelFilterChange={setLabelFilter}
+        onChannelFilterChange={setChannelFilter}
         onSearchChange={handleSearchChange}
         onRefresh={refetch}
       />
