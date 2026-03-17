@@ -128,3 +128,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+.chat-messages-bg {
+  background-color: #FAFAFA;
+}
+.dark .chat-messages-bg {
+  background-color: #0F0F12;
+}

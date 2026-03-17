@@ -34,7 +34,6 @@ export function SlaTimer({ conversation }: SlaTimerProps) {
     firstResponseAt?: string | null;
   };
 
-  // If conversation already has a first response, use resolution deadline
   const relevantDeadline = conv.firstResponseAt
     ? conv.slaResolutionDeadline
     : (conv.slaFirstResponseDeadline ?? conv.slaResolutionDeadline);
@@ -52,8 +51,8 @@ export function SlaTimer({ conversation }: SlaTimerProps) {
   if (isBreached) {
     return (
       <div
-        className="flex items-center gap-1 rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400"
-        title="SLA breach!"
+        className="flex items-center gap-1 rounded-full bg-red-100/80 px-2 py-0.5 text-xs font-medium text-red-600 dark:bg-red-950/50 dark:text-red-400"
+        title="เกินเวลา SLA"
       >
         <AlertTriangle className="h-3 w-3" />
         <span>เกิน SLA</span>
@@ -64,10 +63,10 @@ export function SlaTimer({ conversation }: SlaTimerProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
+        "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
         isWarning
-          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400"
-          : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
+          ? "bg-amber-100/80 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
+          : "text-muted-foreground"
       )}
       title={`SLA deadline: ${new Date(relevantDeadline).toLocaleString("th-TH")}`}
     >

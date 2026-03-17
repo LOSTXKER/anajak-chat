@@ -128,7 +128,7 @@ export function ConversationList({
   const hasActiveFilter = statusFilter !== "all" || labelFilter !== "" || channelFilter !== "";
 
   return (
-    <div className="flex w-full lg:w-72 shrink-0 flex-col border-r bg-background">
+    <div className="flex w-full lg:w-72 shrink-0 flex-col border-r">
       {/* Main tabs */}
       <div className="flex border-b" role="tablist">
         <button
@@ -138,7 +138,7 @@ export function ConversationList({
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors",
             mainTab === "all"
-              ? "border-b-2 border-foreground text-foreground"
+              ? "border-b-2 border-accent text-foreground"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -152,7 +152,7 @@ export function ConversationList({
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors relative",
             mainTab === "inbox"
-              ? "border-b-2 border-foreground text-foreground"
+              ? "border-b-2 border-accent text-foreground"
               : "text-muted-foreground hover:text-foreground"
           )}
         >
@@ -255,8 +255,8 @@ export function ConversationList({
                   className={cn(
                     "w-full rounded-lg p-3 text-left transition-colors",
                     isSelected
-                      ? "bg-muted/50"
-                      : "hover:bg-muted/30"
+                      ? "bg-accent/10 border border-accent/20"
+                      : "hover:bg-muted/30 border border-transparent"
                   )}
                 >
                   <div className="flex gap-3">
@@ -286,7 +286,7 @@ export function ConversationList({
                       <div className="flex items-center gap-1.5">
                         <p className={cn("truncate text-xs flex-1", unread > 0 ? "font-medium text-foreground" : "text-muted-foreground")}>{preview}</p>
                         {unread > 0 && (
-                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
                             {unread > 99 ? "99+" : unread}
                           </span>
                         )}

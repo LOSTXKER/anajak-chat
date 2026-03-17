@@ -131,7 +131,7 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
             </Button>
             <Button
               size="icon"
-              className="h-8 w-8 rounded-full"
+              className="h-8 w-8 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
               onClick={() => handleSend()}
               disabled={sending || !input.trim()}
               aria-label="ส่งข้อความ"

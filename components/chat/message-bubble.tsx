@@ -34,7 +34,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
           <AvatarFallback className="text-xs bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">B</AvatarFallback>
         </Avatar>
         <div className="max-w-[70%]">
-          <div className="rounded-2xl rounded-bl-sm bg-zinc-50 dark:bg-zinc-900 border border-border px-3 py-2 text-sm">
+          <div className="rounded-2xl rounded-bl-sm bg-card border border-border px-3 py-2 text-sm">
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
           </div>
           <p className="mt-0.5 text-[10px] text-muted-foreground text-left">
@@ -58,8 +58,8 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
           className={cn(
             "rounded-2xl px-3 py-2 text-sm",
             isContact
-              ? "rounded-bl-sm bg-muted text-foreground"
-              : "rounded-br-sm bg-primary text-primary-foreground"
+              ? "rounded-bl-sm bg-card border border-border text-foreground"
+              : "rounded-br-sm bg-accent text-accent-foreground"
           )}
         >
           {message.contentType === "image" && message.mediaUrl ? (

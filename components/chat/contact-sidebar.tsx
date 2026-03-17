@@ -122,7 +122,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                   className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
                 >
                   <FileSpreadsheet className="h-3.5 w-3.5" />
-                  Export แชทเป็น Excel
+                  ส่งออกแชทเป็น Excel
                 </button>
                 <button
                   role="menuitem"
@@ -130,7 +130,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                   className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
                 >
                   <FolderArchive className="h-3.5 w-3.5" />
-                  Export แชทเป็น Zip
+                  ส่งออกแชทเป็น Zip
                 </button>
                 {onSpam && (
                   <>
@@ -184,7 +184,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
               onSave={(v) => { setEmail(v); saveField("email", v); }}
             />
             <div className="space-y-0.5">
-              <p className="text-[10px] text-muted-foreground">Platform ID</p>
+              <p className="text-[10px] text-muted-foreground">รหัสแพลตฟอร์ม</p>
               <p className="text-xs font-mono break-all text-muted-foreground">{contact.platformId}</p>
             </div>
           </div>

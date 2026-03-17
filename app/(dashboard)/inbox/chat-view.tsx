@@ -367,9 +367,25 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     ...events.map((e) => ({ kind: "event" as const, data: e })),
   ].sort((a, b) => new Date(a.data.createdAt).getTime() - new Date(b.data.createdAt).getTime());
 
+  const deduped: typeof rawItems = [];
+  for (const item of rawItems) {
+    if (item.kind === "event") {
+      const evt = item.data as ConversationEvent;
+      const prev = deduped[deduped.length - 1];
+      if (
+        prev?.kind === "event" &&
+        (prev.data as ConversationEvent).eventType === evt.eventType &&
+        Math.abs(new Date(evt.createdAt).getTime() - new Date(prev.data.createdAt).getTime()) < 60_000
+      ) {
+        continue;
+      }
+    }
+    deduped.push(item);
+  }
+
   const timeline: TimelineItem[] = [];
   let lastDate = "";
-  for (const item of rawItems) {
+  for (const item of deduped) {
     const ts = item.data.createdAt;
     const d = ts.slice(0, 10);
     if (d !== lastDate) {
@@ -485,7 +501,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-1">
+        <div className="chat-messages-bg flex-1 overflow-y-auto p-4 space-y-1">
           {nextCursor && (
             <div className="flex justify-center pb-2">
               <Button
@@ -514,7 +530,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 return (
                   <div key={`date-${item.date}`} className="flex items-center gap-3 py-2">
                     <div className="flex-1 border-t" />
-                    <span className="text-xs font-medium text-muted-foreground bg-background px-2">
+                    <span className="text-xs font-medium text-muted-foreground px-2">
                       {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
                         day: "2-digit",
                         month: "2-digit",
