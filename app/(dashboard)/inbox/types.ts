@@ -35,9 +35,11 @@ export interface Conversation {
   sourceAdId: string | null;
   aiSummary: string | null;
   aiSentiment: string | null;
+  sessionDeadline: string | null;
   slaFirstResponseDeadline: string | null;
   slaResolutionDeadline: string | null;
   slaBreachedAt: string | null;
+  unreadCount: number;
 }
 
 export interface Message {

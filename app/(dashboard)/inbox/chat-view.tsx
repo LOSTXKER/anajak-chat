@@ -31,6 +31,7 @@ import { NoteBubble } from "@/components/chat/note-bubble";
 import { ContactSidebar } from "@/components/chat/contact-sidebar";
 import { ChatInput } from "@/components/chat/chat-input";
 import { SlaTimer } from "./sla-timer";
+import { SessionBar } from "./session-bar";
 import type { Conversation, Message, Note } from "./types";
 
 interface ChatViewProps {
@@ -91,11 +92,16 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     }
   }, [conversation.id]);
 
+  const markAsRead = useCallback(() => {
+    fetch(`/api/conversations/${conversation.id}/read`, { method: "POST" }).catch(() => {});
+  }, [conversation.id]);
+
   useEffect(() => {
     fetchMessages();
     fetchNotes();
     fetchAgents();
-  }, [fetchMessages, fetchNotes]);
+    markAsRead();
+  }, [fetchMessages, fetchNotes, markAsRead]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -148,6 +154,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
             return [...prev, newMsg];
           });
           onNewMessage(conversation.id);
+          markAsRead();
         }
       )
       .on("presence", { event: "sync" }, () => {
@@ -172,7 +179,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversation.id, onNewMessage]);
+  }, [conversation.id, onNewMessage, markAsRead]);
 
   async function loadOlderMessages() {
     if (!nextCursor || loadingMore) return;
@@ -271,6 +278,8 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     }
   }
 
+  const [startingChat, setStartingChat] = useState(false);
+
   async function updateStatus(status: string) {
     const res = await fetch(`/api/conversations/${conversation.id}`, {
       method: "PATCH",
@@ -280,6 +289,47 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     if (res.ok) {
       onConversationUpdate({ id: conversation.id, status: status as Conversation["status"] });
     }
+  }
+
+  async function handleStartChat() {
+    setStartingChat(true);
+    try {
+      const res = await fetch(`/api/conversations/${conversation.id}/start`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        onConversationUpdate({
+          id: conversation.id,
+          status: data.status,
+          assignedUser: data.assignedUser,
+          sessionDeadline: data.sessionDeadline,
+        });
+      }
+    } finally {
+      setStartingChat(false);
+    }
+  }
+
+  async function handleResolve() {
+    const res = await fetch(`/api/conversations/${conversation.id}/resolve`, { method: "POST" });
+    if (res.ok) {
+      onConversationUpdate({ id: conversation.id, status: "resolved" });
+    }
+  }
+
+  async function handleExtend(minutes: number) {
+    const res = await fetch(`/api/conversations/${conversation.id}/extend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ minutes }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      onConversationUpdate({ id: conversation.id, sessionDeadline: data.sessionDeadline });
+    }
+  }
+
+  async function handleReopen() {
+    await handleStartChat();
   }
 
   const timeline: TimelineItem[] = [
@@ -410,8 +460,18 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input area */}
-        <ChatInput onSendMessage={sendMessage} onSaveNote={saveNote} />
+        {/* Session bar + Input area */}
+        <SessionBar
+          conversation={conversation}
+          onStartChat={handleStartChat}
+          onResolve={handleResolve}
+          onExtend={handleExtend}
+          onReopen={handleReopen}
+          starting={startingChat}
+        />
+        {conversation.status === "open" && (
+          <ChatInput onSendMessage={sendMessage} onSaveNote={saveNote} />
+        )}
       </div>
 
       <ContactSidebar conversation={conversation} />

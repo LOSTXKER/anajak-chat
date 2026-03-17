@@ -161,7 +161,7 @@ export function ConversationList({
               const initial = displayName.charAt(0).toUpperCase();
               const preview = getPreview(conv);
               const isSelected = conv.id === selectedId;
-              const hasUnread = conv.status === "open" && conv.messages[0]?.senderType === "contact";
+              const unread = conv.unreadCount ?? 0;
 
               return (
                 <button
@@ -193,7 +193,7 @@ export function ConversationList({
                     {/* Content */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className={cn("truncate text-sm", hasUnread ? "font-semibold" : "font-medium")}>{displayName}</span>
+                        <span className={cn("truncate text-sm", unread > 0 ? "font-semibold text-foreground" : "font-medium")}>{displayName}</span>
                         {conv.lastMessageAt && !isNaN(Date.parse(conv.lastMessageAt)) && (
                           <span className="ml-auto shrink-0 text-xs text-muted-foreground">
                             {formatDistanceToNow(new Date(conv.lastMessageAt), {
@@ -204,7 +204,14 @@ export function ConversationList({
                         )}
                       </div>
 
-                      <p className="truncate text-xs text-muted-foreground">{preview}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className={cn("truncate text-xs flex-1", unread > 0 ? "font-medium text-foreground" : "text-muted-foreground")}>{preview}</p>
+                        {unread > 0 && (
+                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                            {unread > 99 ? "99+" : unread}
+                          </span>
+                        )}
+                      </div>
 
                       <div className="mt-1 flex items-center gap-1.5">
                         <span

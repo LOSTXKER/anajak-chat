@@ -11,7 +11,7 @@ export default function InboxPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "pending" | "resolved">("open");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "pending" | "resolved">("all");
   const [search, setSearch] = useState("");
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusFilterRef = useRef(statusFilter);
@@ -112,7 +112,12 @@ export default function InboxPage() {
         loading={loading}
         statusFilter={statusFilter}
         search={search}
-        onSelectConversation={setSelectedId}
+        onSelectConversation={(id) => {
+          setSelectedId(id);
+          setConversations((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c))
+          );
+        }}
         onStatusFilterChange={setStatusFilter}
         onSearchChange={handleSearchChange}
         onRefresh={() => fetchConversations(search, statusFilter)}

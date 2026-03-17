@@ -202,11 +202,12 @@ model User {
   maxConcurrentChats Int      @default(10) @map("max_concurrent_chats")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  organization          Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  role                  Role            @relation(fields: [roleId], references: [id])
-  assignedConversations Conversation[]  @relation("AssignedAgent")
+  organization          Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  role                  Role               @relation(fields: [roleId], references: [id])
+  assignedConversations Conversation[]     @relation("AssignedAgent")
   notifications         Notification[]
   memberships           OrgMembership[]
+  conversationReads     ConversationRead[]
 
   @@map("users")
 }
@@ -299,6 +300,7 @@ model Conversation {
   slaBreachedAt       DateTime?          @map("sla_breached_at")
   slaWarningAt        DateTime?          @map("sla_warning_at")
   lastMessageAt       DateTime?          @map("last_message_at")
+  sessionDeadline     DateTime?          @map("session_deadline")
   metadata            Json               @default("{}") @db.JsonB
   createdAt           DateTime           @default(now()) @map("created_at")
 
@@ -310,6 +312,7 @@ model Conversation {
   events        ConversationEvent[]
   orders        Order[]
   aiReplyLogs   AiReplyLog[]
+  reads         ConversationRead[]
 
   @@index([orgId, status])
   @@index([orgId, assignedTo])
@@ -334,6 +337,19 @@ model Message {
 
   @@index([conversationId, createdAt])
   @@map("messages")
+}
+
+model ConversationRead {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  lastReadAt     DateTime @map("last_read_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId])
+  @@map("conversation_reads")
 }
 
 model ConversationEvent {

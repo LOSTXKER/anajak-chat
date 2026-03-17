@@ -53,6 +53,11 @@ export const GET = apiHandler(async (request) => {
           take: 1,
           select: { content: true, contentType: true, createdAt: true, senderType: true },
         },
+        reads: {
+          where: { userId: user.id },
+          select: { lastReadAt: true },
+          take: 1,
+        },
         _count: {
           select: { messages: true },
         },
@@ -61,8 +66,52 @@ export const GET = apiHandler(async (request) => {
     prisma.conversation.count({ where }),
   ]);
 
+  const convIds = conversations.map((c) => c.id);
+  const unreadCounts = convIds.length > 0
+    ? await prisma.message.groupBy({
+        by: ["conversationId"],
+        where: {
+          conversationId: { in: convIds },
+          senderType: "contact",
+        },
+        _count: true,
+      })
+    : [];
+
+  const readMap = new Map(
+    conversations.map((c) => [c.id, c.reads[0]?.lastReadAt ?? null])
+  );
+
+  const totalContactMsgs = new Map(
+    unreadCounts.map((g) => [g.conversationId, g._count])
+  );
+
+  const unreadAfterRead = convIds.length > 0
+    ? await Promise.all(
+        conversations.map(async (c) => {
+          const lastRead = readMap.get(c.id);
+          if (!lastRead) return { id: c.id, count: totalContactMsgs.get(c.id) ?? 0 };
+          const count = await prisma.message.count({
+            where: {
+              conversationId: c.id,
+              senderType: "contact",
+              createdAt: { gt: lastRead },
+            },
+          });
+          return { id: c.id, count };
+        })
+      )
+    : [];
+
+  const unreadMap = new Map(unreadAfterRead.map((u) => [u.id, u.count]));
+
+  const enriched = conversations.map(({ reads: _reads, ...c }) => ({
+    ...c,
+    unreadCount: unreadMap.get(c.id) ?? 0,
+  }));
+
   return NextResponse.json({
-    conversations,
+    conversations: enriched,
     total,
     page,
     totalPages: Math.ceil(total / limit),

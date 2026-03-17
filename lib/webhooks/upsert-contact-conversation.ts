@@ -112,7 +112,7 @@ async function upsertConversation(params: {
         orgId: params.orgId,
         channelId: params.channelId,
         contactId: params.contactId,
-        status: "open",
+        status: "pending",
         isReturningCustomer: params.totalConversations > 0,
         lastMessageAt: new Date(),
         ...params.adSource,
@@ -124,7 +124,6 @@ async function upsertConversation(params: {
       data: { totalConversations: { increment: 1 } },
     });
 
-    await autoAssignConversation(conversation.id, params.orgId).catch(() => {});
     await applySlaToConversation(conversation.id, params.orgId, "medium", conversation.createdAt).catch(() => {});
   } else {
     await prisma.conversation.update({
