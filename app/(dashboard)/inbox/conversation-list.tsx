@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -10,6 +10,10 @@ import {
   MessageCircle,
   Search,
   RefreshCw,
+  SlidersHorizontal,
+  ChevronDown,
+  Inbox,
+  MessagesSquare,
 } from "lucide-react";
 import { SkeletonConversation } from "@/components/skeleton";
 import { cn } from "@/lib/utils";
@@ -37,13 +41,24 @@ const PLATFORM_COLORS = {
   manual: "text-muted-foreground",
 };
 
-export type StatusFilter = "all" | "pending" | "open" | "resolved";
+export type MainTab = "all" | "inbox";
+export type StatusFilter = "all" | "pending" | "open" | "resolved" | "closed";
+export type LabelFilter = "" | "missed" | "follow_up" | "spam" | "blocked";
 
-const STATUS_TABS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "ทั้งหมด" },
+const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "สถานะทั้งหมด" },
   { value: "pending", label: "รอรับ" },
   { value: "open", label: "กำลังดูแล" },
   { value: "resolved", label: "เสร็จสิ้น" },
+  { value: "closed", label: "ปิด" },
+];
+
+const LABEL_OPTIONS: { value: LabelFilter; label: string }[] = [
+  { value: "", label: "ป้ายทั้งหมด" },
+  { value: "missed", label: "ไม่ได้รับ" },
+  { value: "follow_up", label: "ติดตาม" },
+  { value: "spam", label: "สแปม" },
+  { value: "blocked", label: "บล็อก" },
 ];
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
@@ -64,24 +79,93 @@ interface ConversationListProps {
   conversations: Conversation[];
   selectedId: string | null;
   loading: boolean;
+  mainTab: MainTab;
   statusFilter: StatusFilter;
+  labelFilter: LabelFilter;
   search: string;
   currentUserId: string | null;
   onSelectConversation: (id: string) => void;
+  onMainTabChange: (tab: MainTab) => void;
   onStatusFilterChange: (status: StatusFilter) => void;
+  onLabelFilterChange: (label: LabelFilter) => void;
   onSearchChange: (value: string) => void;
   onRefresh: () => void;
+}
+
+function FilterDropdown<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-colors",
+          value !== options[0].value
+            ? "border-foreground/20 bg-foreground/5 text-foreground font-medium"
+            : "border-border text-muted-foreground hover:text-foreground"
+        )}
+      >
+        {selected?.label}
+        <ChevronDown className="h-3 w-3" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-1 min-w-36 rounded-lg border bg-popover p-1 shadow-lg">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={cn(
+                "flex w-full items-center rounded px-3 py-1.5 text-left text-xs transition-colors",
+                value === opt.value
+                  ? "bg-muted font-medium text-foreground"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ConversationList({
   conversations,
   selectedId,
   loading,
+  mainTab,
   statusFilter,
+  labelFilter,
   search,
   currentUserId,
   onSelectConversation,
+  onMainTabChange,
   onStatusFilterChange,
+  onLabelFilterChange,
   onSearchChange,
   onRefresh,
 }: ConversationListProps) {
@@ -94,59 +178,87 @@ export function ConversationList({
     return last.content ?? "";
   }, []);
 
+  const inboxCount = conversations.filter(
+    (c) => c.assignedUser?.id === currentUserId
+  ).length;
+
+  const hasActiveFilter = statusFilter !== "all" || labelFilter !== "";
+
   return (
     <div className="flex w-72 shrink-0 flex-col border-r bg-background">
-      {/* Header */}
-      <div className="border-b p-3">
-        <div className="mb-2 flex items-center justify-between">
-          <h1 className="font-semibold">กล่องข้อความ</h1>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRefresh}>
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+      {/* Main tabs */}
+      <div className="flex border-b">
+        <button
+          onClick={() => onMainTabChange("all")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors",
+            mainTab === "all"
+              ? "border-b-2 border-foreground text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <MessagesSquare className="h-4 w-4" />
+          แชททั้งหมด
+        </button>
+        <button
+          onClick={() => onMainTabChange("inbox")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors relative",
+            mainTab === "inbox"
+              ? "border-b-2 border-foreground text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Inbox className="h-4 w-4" />
+          อินบ็อกซ์
+          {inboxCount > 0 && (
+            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+              {inboxCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Search + Filters */}
+      <div className="border-b p-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="h-8 pl-8 text-sm"
+              placeholder="ค้นหา..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onRefresh}>
+            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="h-8 pl-8 text-sm"
-            placeholder="ค้นหาการสนทนา..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+        <div className="flex items-center gap-1.5">
+          <SlidersHorizontal className="h-3 w-3 text-muted-foreground shrink-0" />
+          <FilterDropdown
+            value={statusFilter}
+            options={STATUS_OPTIONS}
+            onChange={onStatusFilterChange}
           />
-        </div>
-
-        {/* Status tabs */}
-        <div className="mt-2 flex gap-1 overflow-x-auto">
-          {STATUS_TABS.map((tab) => {
-            const count = tab.value === "all"
-              ? conversations.length
-              : conversations.filter((c) => c.status === tab.value).length;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => onStatusFilterChange(tab.value)}
-                className={cn(
-                  "shrink-0 px-1.5 py-1 text-xs transition-colors flex items-center gap-1",
-                  statusFilter === tab.value
-                    ? "border-b-2 border-foreground text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tab.label}
-                {count > 0 && (
-                  <span className={cn(
-                    "inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-medium",
-                    statusFilter === tab.value
-                      ? "bg-foreground text-background"
-                      : "bg-muted text-muted-foreground"
-                  )}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          <FilterDropdown
+            value={labelFilter}
+            options={LABEL_OPTIONS}
+            onChange={onLabelFilterChange}
+          />
+          {hasActiveFilter && (
+            <button
+              onClick={() => {
+                onStatusFilterChange("all");
+                onLabelFilterChange("");
+              }}
+              className="text-[10px] text-muted-foreground hover:text-foreground ml-auto"
+            >
+              ล้าง
+            </button>
+          )}
         </div>
       </div>
 
@@ -161,7 +273,9 @@ export function ConversationList({
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <MessageSquare className="h-8 w-8 text-muted-foreground/30" />
-            <p className="mt-2 text-sm text-muted-foreground">ไม่มีการสนทนา</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {mainTab === "inbox" ? "ไม่มีแชทในอินบ็อกซ์" : "ไม่มีการสนทนา"}
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-1">
@@ -239,11 +353,6 @@ export function ConversationList({
                           <span className="truncate text-[10px] text-muted-foreground">
                             {conv.assignedUser.id === currentUserId ? "ฉัน" : conv.assignedUser.name}
                           </span>
-                        )}
-                        {conv.sourceAdId && (
-                          <Badge variant="outline" className="h-4 px-1 py-0 text-[10px]">
-                            Ad
-                          </Badge>
                         )}
                       </div>
                     </div>
