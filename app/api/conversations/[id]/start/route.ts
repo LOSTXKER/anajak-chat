@@ -16,7 +16,7 @@ export const POST = apiHandler(async (_request, { params }) => {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const startable = ["pending", "expired", "follow_up", "missed"];
+  const startable = ["pending", "expired", "follow_up", "missed", "resolved", "closed", "spam", "blocked"];
   if (!startable.includes(conversation.status)) {
     return NextResponse.json({ error: "Cannot start from current status" }, { status: 400 });
   }
