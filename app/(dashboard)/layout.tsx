@@ -18,6 +18,7 @@ export default async function DashboardLayout({
   const userInfo = {
     name: user.name,
     email: user.email,
+    orgId: user.orgId,
     orgName: user.organization.name,
     roleName: user.role.name,
     userId: user.id,

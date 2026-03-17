@@ -159,6 +159,7 @@ model Organization {
 
   users               User[]
   roles               Role[]
+  memberships         OrgMembership[]
   channels            Channel[]
   contacts            Contact[]
   conversations       Conversation[]
@@ -183,8 +184,9 @@ model Role {
   isSystemRole Boolean  @default(false) @map("is_system_role")
   createdAt    DateTime @default(now()) @map("created_at")
 
-  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  organization Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
   users        User[]
+  memberships  OrgMembership[]
 
   @@map("roles")
 }
@@ -200,12 +202,29 @@ model User {
   maxConcurrentChats Int      @default(10) @map("max_concurrent_chats")
   createdAt          DateTime @default(now()) @map("created_at")
 
-  organization          Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  role                  Role           @relation(fields: [roleId], references: [id])
-  assignedConversations Conversation[] @relation("AssignedAgent")
+  organization          Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  role                  Role            @relation(fields: [roleId], references: [id])
+  assignedConversations Conversation[]  @relation("AssignedAgent")
   notifications         Notification[]
+  memberships           OrgMembership[]
 
   @@map("users")
+}
+
+model OrgMembership {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  role         Role         @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, orgId])
+  @@index([userId])
+  @@map("org_memberships")
 }
 
 model Channel {

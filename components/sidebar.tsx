@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/notification-bell";
+import { OrgSwitcher } from "@/components/org-switcher";
 import {
   MessageSquare,
   Users,
@@ -32,6 +33,7 @@ import {
 interface UserInfo {
   name: string;
   email: string;
+  orgId: string;
   orgName: string;
   roleName: string;
   userId: string;
@@ -144,11 +146,8 @@ function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () 
 
   return (
     <div className="flex h-full flex-col border-r bg-background">
-      <div className="flex h-12 items-center gap-2.5 px-4 shrink-0">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground">
-          <MessageSquare className="h-3.5 w-3.5 text-background" />
-        </div>
-        <span className="text-sm font-semibold tracking-tight">{user.orgName}</span>
+      <div className="flex h-12 items-center px-3 shrink-0">
+        <OrgSwitcher currentOrgId={user.orgId} currentOrgName={user.orgName} />
       </div>
 
       <ScrollArea className="flex-1 py-2">

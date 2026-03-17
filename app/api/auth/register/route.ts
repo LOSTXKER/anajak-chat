@@ -109,6 +109,14 @@ export async function POST(request: Request) {
       },
     });
 
+    await prisma.orgMembership.create({
+      data: {
+        userId: authUserId,
+        orgId: org.id,
+        roleId: ownerRole.id,
+      },
+    });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Register error:", error);
