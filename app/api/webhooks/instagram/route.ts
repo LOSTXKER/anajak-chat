@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchParams } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
-import { verifyInstagramWebhook } from "@/lib/integrations/instagram";
 import { upsertContactAndConversation } from "@/lib/webhooks/upsert-contact-conversation";
 import type { InstagramWebhookBody } from "@/lib/integrations/instagram";
 
@@ -22,7 +21,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
-  const signature = request.headers.get("x-hub-signature-256") ?? "";
 
   let body: InstagramWebhookBody;
   try {
@@ -38,26 +36,19 @@ export async function POST(request: Request) {
   for (const entry of body.entry) {
     const igAccountId = entry.id;
 
-    const channel = await prisma.channel.findFirst({
+    const channels = await prisma.channel.findMany({
       where: {
         platform: "instagram",
         isActive: true,
       },
     });
 
+    const channel = channels.find((ch) => {
+      const creds = ch.credentials as { igAccountId?: string };
+      return creds.igAccountId === igAccountId;
+    });
+
     if (!channel) continue;
-
-    const creds = channel.credentials as {
-      igAccountId: string;
-      pageAccessToken: string;
-      appSecret: string;
-    };
-
-    if (creds.igAccountId !== igAccountId) continue;
-
-    if (!verifyInstagramWebhook(creds.appSecret, rawBody, signature)) {
-      continue;
-    }
 
     const messagingEvents = entry.messaging ?? [];
     for (const event of messagingEvents) {
