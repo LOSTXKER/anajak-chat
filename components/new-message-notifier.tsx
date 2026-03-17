@@ -41,8 +41,7 @@ function showBrowserNotification(content: string | null) {
     body: content || "คุณได้รับข้อความใหม่",
     icon: "/favicon.ico",
     tag: "new-message",
-    renotify: true,
-  });
+  } as NotificationOptions);
 }
 
 export function NewMessageNotifier({ orgId }: Props) {
