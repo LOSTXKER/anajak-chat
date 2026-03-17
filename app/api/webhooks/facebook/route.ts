@@ -42,6 +42,7 @@ export async function POST(request: Request) {
       where: {
         platform: "facebook",
         isActive: true,
+        credentials: { path: ["pageId"], equals: pageId },
       },
     });
 
@@ -52,8 +53,6 @@ export async function POST(request: Request) {
       pageAccessToken: string;
       appSecret: string;
     };
-
-    if (creds.pageId !== pageId) continue;
 
     if (!verifyFacebookWebhook(creds.appSecret, rawBody, signature)) {
       continue;

@@ -57,6 +57,22 @@ export async function GET(request: Request) {
   // Use first page (in production, allow user to select)
   const page = pagesData.data[0];
 
+  // Prevent the same page from being connected by another org
+  const alreadyConnected = await prisma.channel.findFirst({
+    where: {
+      platform: "facebook",
+      isActive: true,
+      credentials: { path: ["pageId"], equals: page.id },
+      orgId: { not: stateData.orgId },
+    },
+  });
+
+  if (alreadyConnected) {
+    return NextResponse.redirect(
+      `${baseUrl}/settings/channels?error=page_already_connected`
+    );
+  }
+
   const pageName = await getFacebookPageName(page.access_token) ?? page.name;
 
   // Subscribe the page to the app's webhooks so Facebook sends events

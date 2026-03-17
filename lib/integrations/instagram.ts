@@ -65,7 +65,7 @@ export function buildInstagramOAuthUrl(
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
-    scope: "instagram_manage_messages,instagram_basic,pages_show_list",
+    scope: "instagram_business_manage_messages,instagram_business_basic,pages_show_list",
     response_type: "code",
     state,
   });

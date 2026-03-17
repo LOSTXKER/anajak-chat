@@ -136,6 +136,7 @@ export default function ChannelsPage() {
       no_pages: "ไม่พบ Facebook Pages ในบัญชีนี้",
       no_instagram_account: "ไม่พบ Instagram Business Account ที่เชื่อมกับ Page นี้",
       pages_fetch_failed: "ดึงข้อมูล Pages ไม่สำเร็จ",
+      page_already_connected: "เพจนี้ถูกเชื่อมต่อโดยบัญชีอื่นแล้ว",
     };
     return map[key] ?? "เกิดข้อผิดพลาด กรุณาลองใหม่";
   }
