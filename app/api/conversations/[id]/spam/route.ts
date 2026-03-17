@@ -14,9 +14,13 @@ export const POST = apiHandler(async (_request, { params }) => {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const labels = conversation.labels.includes("spam")
+    ? conversation.labels
+    : [...conversation.labels, "spam"];
+
   await prisma.conversation.update({
     where: { id },
-    data: { status: "spam" },
+    data: { status: "resolved", labels },
   });
 
   await prisma.conversationEvent.create({
@@ -27,5 +31,5 @@ export const POST = apiHandler(async (_request, { params }) => {
     },
   });
 
-  return NextResponse.json({ status: "spam" });
+  return NextResponse.json({ status: "resolved", labels });
 });

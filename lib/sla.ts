@@ -58,6 +58,7 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
     },
     select: {
       id: true,
+      status: true,
       priority: true,
       assignedTo: true,
       firstResponseAt: true,
@@ -80,9 +81,22 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
 
     if (!isFirstResponseBreached && !isResolutionBreached) continue;
 
+    const breachData: Record<string, unknown> = { slaBreachedAt: now };
+
+    if (isFirstResponseBreached && conv.status === "pending") {
+      const existing = await prisma.conversation.findUnique({
+        where: { id: conv.id },
+        select: { labels: true },
+      });
+      const currentLabels = existing?.labels ?? [];
+      if (!currentLabels.includes("missed")) {
+        breachData.labels = [...currentLabels, "missed"];
+      }
+    }
+
     await prisma.conversation.update({
       where: { id: conv.id },
-      data: { slaBreachedAt: now },
+      data: breachData,
     });
 
     // Notify assigned agent

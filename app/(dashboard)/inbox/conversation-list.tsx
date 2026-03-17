@@ -37,36 +37,27 @@ const PLATFORM_COLORS = {
   manual: "text-muted-foreground",
 };
 
-const PLATFORM_BADGE_STYLES: Record<string, string> = {
-  line: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  facebook: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  instagram: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  whatsapp: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  web: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  manual: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-};
-
-type StatusFilter = "all" | "pending" | "open" | "expired" | "follow_up" | "resolved";
+export type StatusFilter = "all" | "pending" | "open" | "resolved";
 
 const STATUS_TABS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "ทั้งหมด" },
   { value: "pending", label: "รอรับ" },
   { value: "open", label: "กำลังดูแล" },
-  { value: "expired", label: "หมดอายุ" },
-  { value: "follow_up", label: "ติดตาม" },
   { value: "resolved", label: "เสร็จสิ้น" },
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-yellow-500",
-  open: "bg-green-500",
-  expired: "bg-red-500",
-  resolved: "bg-gray-400",
-  follow_up: "bg-blue-500",
-  missed: "bg-orange-500",
-  spam: "bg-zinc-500",
-  blocked: "bg-zinc-800",
-  closed: "bg-gray-300",
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  pending: { label: "รอรับ", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300" },
+  open: { label: "กำลังดูแล", className: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
+  resolved: { label: "เสร็จสิ้น", className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
+  closed: { label: "ปิด", className: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300" },
+};
+
+const LABEL_BADGE: Record<string, { label: string; className: string }> = {
+  missed: { label: "ไม่ได้รับ", className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  follow_up: { label: "ติดตาม", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  spam: { label: "สแปม", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
+  blocked: { label: "บล็อก", className: "bg-zinc-300 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-100" },
 };
 
 interface ConversationListProps {
@@ -181,13 +172,15 @@ export function ConversationList({
               const platformColor =
                 PLATFORM_COLORS[conv.channel.platform as keyof typeof PLATFORM_COLORS] ??
                 "text-gray-600";
-              const platformBadge =
-                PLATFORM_BADGE_STYLES[conv.channel.platform] ?? PLATFORM_BADGE_STYLES.web;
               const displayName = conv.contact.displayName ?? conv.contact.platformId;
               const initial = displayName.charAt(0).toUpperCase();
               const preview = getPreview(conv);
               const isSelected = conv.id === selectedId;
               const unread = conv.unreadCount ?? 0;
+              const statusInfo = STATUS_BADGE[conv.status] ?? STATUS_BADGE.closed;
+              const convLabels = (conv.labels ?? [])
+                .map((l) => LABEL_BADGE[l])
+                .filter(Boolean);
 
               return (
                 <button
@@ -201,22 +194,16 @@ export function ConversationList({
                   )}
                 >
                   <div className="flex gap-3">
-                    {/* Avatar with platform badge */}
                     <div className="relative shrink-0">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={conv.contact.avatarUrl ?? undefined} />
                         <AvatarFallback className="text-sm">{initial}</AvatarFallback>
                       </Avatar>
-                      <div
-                        className={cn(
-                          "absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5"
-                        )}
-                      >
+                      <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5">
                         <PlatformIcon className={cn("h-3 w-3", platformColor)} />
                       </div>
                     </div>
 
-                    {/* Content */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className={cn("truncate text-sm", unread > 0 ? "font-semibold text-foreground" : "font-medium")}>{displayName}</span>
@@ -239,21 +226,15 @@ export function ConversationList({
                         )}
                       </div>
 
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            "h-1.5 w-1.5 rounded-full",
-                            STATUS_COLORS[conv.status] ?? "bg-gray-400"
-                          )}
-                        />
-                        <Badge
-                          className={cn(
-                            "h-4 rounded-full px-1.5 py-0 text-[10px] font-medium border-0",
-                            platformBadge
-                          )}
-                        >
-                          {conv.channel.platform}
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        <Badge className={cn("h-4 rounded px-1.5 py-0 text-[10px] font-medium border-0", statusInfo.className)}>
+                          {statusInfo.label}
                         </Badge>
+                        {convLabels.map((lb) => (
+                          <Badge key={lb.label} className={cn("h-4 rounded px-1.5 py-0 text-[10px] font-medium border-0", lb.className)}>
+                            {lb.label}
+                          </Badge>
+                        ))}
                         {conv.assignedUser && (
                           <span className="truncate text-[10px] text-muted-foreground">
                             {conv.assignedUser.id === currentUserId ? "ฉัน" : conv.assignedUser.name}
@@ -264,15 +245,6 @@ export function ConversationList({
                             Ad
                           </Badge>
                         )}
-                        {conv.contact.tags.slice(0, 2).map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="h-4 px-1 py-0 text-[10px]"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
                       </div>
                     </div>
                   </div>

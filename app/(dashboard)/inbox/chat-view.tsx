@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { NoteBubble } from "@/components/chat/note-bubble";
 import { ContactSidebar } from "@/components/chat/contact-sidebar";
@@ -34,6 +36,13 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { SlaTimer } from "./sla-timer";
 import { SessionBar } from "./session-bar";
 import type { Conversation, Message, Note } from "./types";
+
+const LABEL_BADGE: Record<string, { label: string; className: string }> = {
+  missed: { label: "ไม่ได้รับ", className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  follow_up: { label: "ติดตาม", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  spam: { label: "สแปม", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
+  blocked: { label: "บล็อก", className: "bg-zinc-300 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-100" },
+};
 
 interface ChatViewProps {
   conversation: Conversation;
@@ -302,7 +311,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           id: conversation.id,
           status: data.status,
           assignedUser: data.assignedUser,
-          sessionDeadline: data.sessionDeadline,
+          labels: data.labels,
         });
       }
     } finally {
@@ -317,18 +326,6 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
     }
   }
 
-  async function handleExtend(minutes: number) {
-    const res = await fetch(`/api/conversations/${conversation.id}/extend`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ minutes }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      onConversationUpdate({ id: conversation.id, sessionDeadline: data.sessionDeadline });
-    }
-  }
-
   async function handleReopen() {
     await handleStartChat();
   }
@@ -336,28 +333,24 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
   async function handleFollowUp() {
     const res = await fetch(`/api/conversations/${conversation.id}/follow-up`, { method: "POST" });
     if (res.ok) {
-      onConversationUpdate({ id: conversation.id, status: "follow_up" });
-    }
-  }
-
-  async function handleExpire() {
-    const res = await fetch(`/api/conversations/${conversation.id}/expire`, { method: "POST" });
-    if (res.ok) {
-      onConversationUpdate({ id: conversation.id, status: "expired" });
+      const data = await res.json();
+      onConversationUpdate({ id: conversation.id, status: data.status, labels: data.labels });
     }
   }
 
   async function handleSpam() {
     const res = await fetch(`/api/conversations/${conversation.id}/spam`, { method: "POST" });
     if (res.ok) {
-      onConversationUpdate({ id: conversation.id, status: "spam" });
+      const data = await res.json();
+      onConversationUpdate({ id: conversation.id, status: data.status, labels: data.labels });
     }
   }
 
   async function handleBlock() {
     const res = await fetch(`/api/conversations/${conversation.id}/block`, { method: "POST" });
     if (res.ok) {
-      onConversationUpdate({ id: conversation.id, status: "blocked" });
+      const data = await res.json();
+      onConversationUpdate({ id: conversation.id, status: data.status, labels: data.labels });
     }
   }
 
@@ -400,6 +393,15 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                     : conversation.assignedUser.name}
                 </span>
               )}
+              {(conversation.labels ?? []).map((l) => {
+                const info = LABEL_BADGE[l];
+                if (!info) return null;
+                return (
+                  <Badge key={l} className={cn("h-4 rounded px-1.5 py-0 text-[10px] font-medium border-0", info.className)}>
+                    {info.label}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
 
@@ -449,12 +451,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
               <SelectContent>
                 <SelectItem value="pending">รอรับ</SelectItem>
                 <SelectItem value="open">กำลังดูแล</SelectItem>
-                <SelectItem value="expired">หมดอายุ</SelectItem>
                 <SelectItem value="resolved">เสร็จสิ้น</SelectItem>
-                <SelectItem value="follow_up">ติดตาม</SelectItem>
-                <SelectItem value="missed">ไม่ได้รับ</SelectItem>
-                <SelectItem value="spam">สแปม</SelectItem>
-                <SelectItem value="blocked">บล็อก</SelectItem>
                 <SelectItem value="closed">ปิด</SelectItem>
               </SelectContent>
             </Select>
@@ -510,10 +507,8 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           currentUserId={currentUserId.current}
           onStartChat={handleStartChat}
           onResolve={handleResolve}
-          onExtend={handleExtend}
           onReopen={handleReopen}
           onFollowUp={handleFollowUp}
-          onExpire={handleExpire}
           onSpam={handleSpam}
           onBlock={handleBlock}
           starting={startingChat}

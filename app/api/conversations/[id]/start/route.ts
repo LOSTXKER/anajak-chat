@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, apiHandler } from "@/lib/api-helpers";
 
-const SESSION_MINUTES = 30;
-
 export const POST = apiHandler(async (_request, { params }) => {
   const user = await requireAuth();
   const { id } = await params;
@@ -16,19 +14,17 @@ export const POST = apiHandler(async (_request, { params }) => {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const startable = ["pending", "expired", "follow_up", "missed", "resolved", "closed", "spam", "blocked"];
+  const startable = ["pending", "resolved", "closed"];
   if (!startable.includes(conversation.status)) {
     return NextResponse.json({ error: "Cannot start from current status" }, { status: 400 });
   }
-
-  const deadline = new Date(Date.now() + SESSION_MINUTES * 60 * 1000);
 
   const updated = await prisma.conversation.update({
     where: { id },
     data: {
       status: "open",
       assignedTo: user.id,
-      sessionDeadline: deadline,
+      labels: [],
     },
     include: {
       assignedUser: { select: { id: true, name: true, avatarUrl: true } },
@@ -40,13 +36,13 @@ export const POST = apiHandler(async (_request, { params }) => {
       conversationId: id,
       eventType: "session_started",
       actorId: user.id,
-      metadata: { agentName: user.name, sessionMinutes: SESSION_MINUTES },
+      metadata: { agentName: user.name },
     },
   });
 
   return NextResponse.json({
     status: updated.status,
     assignedUser: updated.assignedUser,
-    sessionDeadline: updated.sessionDeadline?.toISOString() ?? null,
+    labels: updated.labels,
   });
 });

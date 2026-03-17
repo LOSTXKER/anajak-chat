@@ -7,6 +7,7 @@ export const GET = apiHandler(async (request) => {
 
   const sp = searchParams(request);
   const status = sp.get("status");
+  const label = sp.get("label");
   const assignedTo = sp.get("assignedTo");
   const search = sp.get("search") ?? "";
   const { page, limit, skip } = parsePagination(request, { limit: 30 });
@@ -14,6 +15,7 @@ export const GET = apiHandler(async (request) => {
   const where = {
     orgId: user.orgId,
     ...(status && status !== "all" ? { status: status as "open" | "pending" | "resolved" | "closed" } : {}),
+    ...(label ? { labels: { has: label } } : {}),
     ...(assignedTo ? { assignedTo } : {}),
     ...(search
       ? {

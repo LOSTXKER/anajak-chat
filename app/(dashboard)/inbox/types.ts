@@ -23,8 +23,9 @@ export interface ConversationLastMessage {
 export interface Conversation {
   id: string;
   orgId: string;
-  status: "pending" | "open" | "expired" | "resolved" | "follow_up" | "missed" | "spam" | "blocked" | "closed";
+  status: "pending" | "open" | "resolved" | "closed";
   priority: "low" | "medium" | "high" | "urgent";
+  labels: string[];
   contact: ConversationContact;
   channel: ConversationChannel;
   assignedUser: { id: string; name: string; avatarUrl: string | null } | null;
@@ -35,7 +36,6 @@ export interface Conversation {
   sourceAdId: string | null;
   aiSummary: string | null;
   aiSentiment: string | null;
-  sessionDeadline: string | null;
   slaFirstResponseDeadline: string | null;
   slaResolutionDeadline: string | null;
   slaBreachedAt: string | null;

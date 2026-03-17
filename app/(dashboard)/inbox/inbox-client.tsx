@@ -3,11 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageSquare } from "lucide-react";
 import { ConversationList } from "./conversation-list";
+import type { StatusFilter } from "./conversation-list";
 import { ChatView } from "./chat-view";
 import { createClient } from "@/lib/supabase/client";
 import type { Conversation } from "./types";
-
-type StatusFilter = "all" | "pending" | "open" | "expired" | "follow_up" | "resolved";
 
 export default function InboxPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -68,6 +67,7 @@ export default function InboxPage() {
           const updated = payload.new as Record<string, unknown>;
           const id = updated.id as string;
           const status = updated.status as string | undefined;
+          const labels = updated.labels as string[] | undefined;
           const rawDate = updated.last_message_at as string | null;
           const normalized = rawDate ? (rawDate.endsWith("Z") || rawDate.includes("+") ? rawDate : rawDate + "Z") : null;
           const lastMessageAt = normalized && !isNaN(Date.parse(normalized)) ? new Date(normalized).toISOString() : null;
@@ -77,7 +77,12 @@ export default function InboxPage() {
             if (!exists) return prev;
             return prev.map((c) =>
               c.id === id
-                ? { ...c, ...(lastMessageAt && { lastMessageAt }), ...(status && { status: status as Conversation["status"] }) }
+                ? {
+                    ...c,
+                    ...(lastMessageAt && { lastMessageAt }),
+                    ...(status && { status: status as Conversation["status"] }),
+                    ...(labels && { labels }),
+                  }
                 : c
             );
           });

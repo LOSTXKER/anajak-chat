@@ -27,12 +27,7 @@ enum Platform {
 enum ConversationStatus {
   pending
   open
-  expired
   resolved
-  follow_up
-  missed
-  spam
-  blocked
   closed
 }
 
@@ -305,7 +300,7 @@ model Conversation {
   slaBreachedAt       DateTime?          @map("sla_breached_at")
   slaWarningAt        DateTime?          @map("sla_warning_at")
   lastMessageAt       DateTime?          @map("last_message_at")
-  sessionDeadline     DateTime?          @map("session_deadline")
+  labels              String[]           @default([])
   metadata            Json               @default("{}") @db.JsonB
   createdAt           DateTime           @default(now()) @map("created_at")
 
