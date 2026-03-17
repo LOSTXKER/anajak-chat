@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { searchParams } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { upsertContactAndConversation } from "@/lib/webhooks/upsert-contact-conversation";
 import type { InstagramWebhookBody } from "@/lib/integrations/instagram";
+
+function verifySignature(secret: string, body: string, signature: string): boolean {
+  const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
+  return `sha256=${expected}` === signature;
+}
 
 export async function GET(request: Request) {
   const sp = searchParams(request);
@@ -21,6 +27,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
+  const signature = request.headers.get("x-hub-signature-256") ?? "";
+
+  const igAppSecret = process.env.INSTAGRAM_APP_SECRET;
+  if (igAppSecret && signature && !verifySignature(igAppSecret, rawBody, signature)) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
+  }
 
   let body: InstagramWebhookBody;
   try {
