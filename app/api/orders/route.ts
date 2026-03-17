@@ -92,7 +92,7 @@ export const POST = apiHandler(async (request) => {
   });
 
   // Auto-send CAPI Purchase event
-  await sendOrderCapiEvent(order.id, "Purchase").catch(() => {});
+  await sendOrderCapiEvent(order.id, "Purchase").catch((e) => console.error("[Orders] CAPI purchase event error:", e));
 
   // Push order to ERP if configured
   const erpConfig = getErpConfig(user.organization.settings);

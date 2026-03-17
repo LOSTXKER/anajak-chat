@@ -68,7 +68,7 @@ export function TemplatePicker({ onSelect, onClose, contactName }: TemplatePicke
   function handleSelect(t: Template) {
     onSelect(substituteVariables(t.content));
     // Increment usage
-    fetch(`/api/templates/${t.id}`, { method: "POST" }).catch(() => {});
+    fetch(`/api/templates/${t.id}`, { method: "POST" }).catch((e) => console.error("[Templates] usage increment error:", e));
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

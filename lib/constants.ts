@@ -47,3 +47,15 @@ export const EVENT_LABELS: Record<string, string> = {
   sla_escalated: "SLA Escalated",
   sla_breach: "SLA Breach",
 };
+
+// ─── Platform Badge Colors ────────────────────────────────────────────────────
+const PLATFORM_BADGE_BASE = "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400";
+export const PLATFORM_BADGE_COLORS: Record<string, string> = {
+  facebook: PLATFORM_BADGE_BASE,
+  instagram: PLATFORM_BADGE_BASE,
+  line: PLATFORM_BADGE_BASE,
+  whatsapp: PLATFORM_BADGE_BASE,
+  web: PLATFORM_BADGE_BASE,
+  manual: PLATFORM_BADGE_BASE,
+};
+export const PLATFORM_BADGE_FALLBACK = "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";

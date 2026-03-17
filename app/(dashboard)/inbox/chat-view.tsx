@@ -109,7 +109,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
   }, [conversation.id]);
 
   const markAsRead = useCallback(() => {
-    fetch(`/api/conversations/${conversation.id}/read`, { method: "POST" }).catch(() => {});
+    fetch(`/api/conversations/${conversation.id}/read`, { method: "POST" }).catch((e) => console.error("[Chat] mark-read error:", e));
   }, [conversation.id]);
 
   useEffect(() => {

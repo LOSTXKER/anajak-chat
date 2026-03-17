@@ -48,7 +48,7 @@ export const PATCH = apiHandler(async (request, context) => {
   });
 
   if (body.status && body.status !== prevStatus) {
-    await sendOrderStatusCapiEvent(id, body.status).catch(() => {});
+    await sendOrderStatusCapiEvent(id, body.status).catch((e) => console.error("[Orders] CAPI status event error:", e));
   }
 
   return NextResponse.json(updated);
@@ -67,7 +67,7 @@ export const DELETE = apiHandler(async (_request, context) => {
   await prisma.contact.update({
     where: { id: order.contactId },
     data: { totalRevenue: { decrement: Number(order.amount) } },
-  }).catch(() => {});
+  }).catch((e) => console.error("[Orders] revenue decrement error:", e));
 
   return NextResponse.json({ success: true });
 });

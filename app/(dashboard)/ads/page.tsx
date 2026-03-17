@@ -13,6 +13,7 @@ import { SkeletonKpiRow, SkeletonTable } from "@/components/skeleton";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PLATFORM_BADGE_COLORS, PLATFORM_BADGE_FALLBACK } from "@/lib/constants";
 
 interface AdRow {
   adId: string;
@@ -51,11 +52,6 @@ const PLATFORM_LABELS: Record<string, string> = {
   facebook: "Facebook",
   instagram: "Instagram",
   line: "LINE",
-};
-const PLATFORM_COLORS: Record<string, string> = {
-  facebook: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  instagram: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  line: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
 };
 
 function formatCurrency(value: number) {
@@ -221,7 +217,7 @@ export default function AdsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium", PLATFORM_COLORS[ad.platform] ?? "bg-gray-100 text-gray-700")}>
+                          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium", PLATFORM_BADGE_COLORS[ad.platform] ?? PLATFORM_BADGE_FALLBACK)}>
                             {PLATFORM_LABELS[ad.platform] ?? ad.platform}
                           </span>
                         </td>

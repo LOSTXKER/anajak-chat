@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (VALID_STATUSES.includes(newStatus as ValidStatus)) {
-    await sendOrderStatusCapiEvent(order.id, newStatus).catch(() => {});
+    await sendOrderStatusCapiEvent(order.id, newStatus).catch((e) => console.error("[ERP Webhook] CAPI status event error:", e));
   }
 
   const chatMsg = buildOrderStatusMessage(newStatus, {

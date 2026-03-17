@@ -23,7 +23,7 @@ export default function GeneralSettingsPage() {
       .then((data) => {
         if (data.name) setOrgName(data.name);
       })
-      .catch(() => {});
+      .catch((e) => console.error("[Settings] org fetch error:", e));
   }, []);
 
   async function handleSave() {

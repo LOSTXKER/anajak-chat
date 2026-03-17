@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { PLATFORM_BADGE_COLORS } from "@/lib/constants";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
@@ -40,14 +41,6 @@ interface TimelineEvent {
 
 const PAGE_SIZE = 20;
 
-const PLATFORM_COLORS: Record<string, string> = {
-  facebook: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  instagram: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  line: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  whatsapp: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  web: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  manual: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-};
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -162,7 +155,7 @@ export default function ContactsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm truncate">{c.displayName ?? "ไม่ระบุชื่อ"}</p>
-                        <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0", PLATFORM_COLORS[c.platform] ?? "bg-gray-100 dark:bg-gray-800")}>
+                        <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0", PLATFORM_BADGE_COLORS[c.platform] ?? "bg-gray-100 dark:bg-gray-800")}>
                           {c.platform}
                         </span>
                       </div>

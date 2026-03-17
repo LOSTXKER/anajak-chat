@@ -6,11 +6,11 @@ import { requireAuth, jsonError, apiHandler } from "@/lib/api-helpers";
 
 export const POST = apiHandler(async (request, context) => {
   const user = await requireAuth();
+  const body = await request.json().catch(() => ({})) as { agentId?: string };
 
   const permissions = user.role.permissions as string[];
 
   if (!hasPermission(permissions, "chat:assign") && !hasPermission(permissions, "*")) {
-    const body = await request.json();
     if (body.agentId !== user.id) {
       return jsonError("Forbidden", 403);
     }
@@ -18,7 +18,6 @@ export const POST = apiHandler(async (request, context) => {
 
   const { params } = context as { params: Promise<{ id: string }> };
   const { id } = await params;
-  const body = await request.json().catch(() => ({})) as { agentId?: string };
   const agentId = body.agentId ?? user.id;
 
   const conversation = await prisma.conversation.findFirst({
