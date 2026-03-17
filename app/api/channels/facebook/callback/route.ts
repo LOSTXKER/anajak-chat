@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getFacebookPageName } from "@/lib/integrations/facebook";
+import { META_GRAPH_BASE_URL } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
 
   // Exchange code for user access token
   const tokenRes = await fetch(
-    `https://graph.facebook.com/v21.0/oauth/access_token?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${appSecret}&code=${code}`
+    `${META_GRAPH_BASE_URL}/oauth/access_token?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${appSecret}&code=${code}`
   );
 
   if (!tokenRes.ok) {
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
 
   // Get list of pages the user manages
   const pagesRes = await fetch(
-    `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token&access_token=${userAccessToken}`
+    `${META_GRAPH_BASE_URL}/me/accounts?fields=id,name,access_token&access_token=${userAccessToken}`
   );
 
   if (!pagesRes.ok) {
@@ -77,7 +78,7 @@ export async function GET(request: Request) {
 
   // Subscribe the page to the app's webhooks so Facebook sends events
   const subscribeRes = await fetch(
-    `https://graph.facebook.com/v21.0/${page.id}/subscribed_apps?subscribed_fields=messages,messaging_postbacks&access_token=${page.access_token}`,
+    `${META_GRAPH_BASE_URL}/${page.id}/subscribed_apps?subscribed_fields=messages,messaging_postbacks&access_token=${page.access_token}`,
     { method: "POST" }
   );
 

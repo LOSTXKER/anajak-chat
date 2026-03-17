@@ -36,13 +36,7 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { SlaTimer } from "./sla-timer";
 import { SessionBar } from "./session-bar";
 import type { Conversation, Message, Note, ConversationEvent } from "./types";
-
-const LABEL_BADGE: Record<string, { label: string; className: string }> = {
-  missed: { label: "ไม่ได้รับ", className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
-  follow_up: { label: "ติดตาม", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  spam: { label: "สแปม", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-  blocked: { label: "บล็อก", className: "bg-zinc-300 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-100" },
-};
+import { LABEL_BADGE, EVENT_LABELS } from "@/lib/constants";
 
 interface ChatViewProps {
   conversation: Conversation;
@@ -67,18 +61,6 @@ interface PresenceUser {
   user_id: string;
   user_name: string;
 }
-
-const EVENT_LABELS: Record<string, string> = {
-  session_started: "เริ่มแชท",
-  resolved: "เสร็จสิ้น",
-  assigned: "มอบหมายให้",
-  transferred: "โอนแชทให้",
-  follow_up: "ติดตาม",
-  marked_spam: "กำหนดเป็นสแปม",
-  blocked: "บล็อก",
-  sla_escalated: "SLA Escalated",
-  sla_breach: "SLA Breach",
-};
 
 export function ChatView({ conversation, onConversationUpdate, onNewMessage }: ChatViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -404,7 +386,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Collision warning */}
         {collidingAgents.length > 0 && (
-          <div className="flex items-center gap-2 border-b bg-yellow-50 px-4 py-2 text-xs text-yellow-800">
+          <div className="flex items-center gap-2 border-b bg-yellow-50 px-4 py-2 text-xs text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             <span>
               {collidingAgents.map((a) => a.user_name).join(", ")}{" "}
@@ -469,7 +451,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                     <span className="flex items-center gap-1.5">
                       {agent.name}
                       {agent.isAvailable === false && (
-                        <span className="text-[10px] text-red-500 font-medium">ไม่ว่าง</span>
+                        <span className="text-[10px] text-red-500 dark:text-red-400 font-medium">ไม่ว่าง</span>
                       )}
                     </span>
                   </SelectItem>

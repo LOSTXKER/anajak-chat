@@ -1,36 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getErpConfig, verifyErpWebhook, logSync } from "@/lib/erp";
+import { logSync } from "@/lib/erp";
+import { validateErpWebhook, isWebhookError } from "@/lib/webhooks/erp-helpers";
 
 export async function POST(request: NextRequest) {
-  const rawBody = await request.text();
-  const signature = request.headers.get("x-erp-signature");
-  const orgId = request.headers.get("x-org-id") ?? request.nextUrl.searchParams.get("orgId");
+  const ctx = await validateErpWebhook(request);
+  if (isWebhookError(ctx)) return ctx;
 
-  if (!orgId) return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
-
-  const org = await prisma.organization.findUnique({ where: { id: orgId } });
-  if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
-
-  const config = getErpConfig(org.settings);
-  if (!config) return NextResponse.json({ error: "ERP not configured" }, { status: 400 });
-
-  if (config.erpWebhookSecret && !verifyErpWebhook(rawBody, signature, config.erpWebhookSecret)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
-
-  let payload: Record<string, unknown>;
-  try {
-    payload = JSON.parse(rawBody) as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const { orgId, payload } = ctx;
 
   const erpCustomerId = payload.id as string | undefined;
   const phone = payload.phone as string | undefined;
   const email = payload.email as string | undefined;
 
-  // Find matching contact
   const contact = await prisma.contact.findFirst({
     where: {
       orgId,

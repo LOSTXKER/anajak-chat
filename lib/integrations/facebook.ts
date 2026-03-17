@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { META_GRAPH_BASE_URL, META_GRAPH_API_VERSION } from "@/lib/constants";
 
 export interface FacebookCredentials {
   pageId: string;
@@ -22,7 +23,7 @@ export async function sendFacebookMessage(
   message: { text?: string; attachment?: FacebookAttachment }
 ): Promise<boolean> {
   const res = await fetch(
-    `https://graph.facebook.com/v21.0/me/messages?access_token=${credentials.pageAccessToken}`,
+    `${META_GRAPH_BASE_URL}/me/messages?access_token=${credentials.pageAccessToken}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -105,7 +106,7 @@ export function parseFacebookReferral(event: FacebookMessagingEvent): FacebookRe
 export async function getFacebookPageName(pageAccessToken: string): Promise<string | null> {
   try {
     const res = await fetch(
-      `https://graph.facebook.com/v21.0/me?fields=name&access_token=${pageAccessToken}`
+      `${META_GRAPH_BASE_URL}/me?fields=name&access_token=${pageAccessToken}`
     );
     if (!res.ok) return null;
     const data = await res.json() as { name: string };
@@ -127,5 +128,5 @@ export function buildFacebookOAuthUrl(
     response_type: "code",
     state,
   });
-  return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
+  return `https://www.facebook.com/${META_GRAPH_API_VERSION}/dialog/oauth?${params.toString()}`;
 }

@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { CapiEventStatus } from "@/lib/generated/prisma/client";
+import { META_GRAPH_BASE_URL } from "@/lib/constants";
 
-const META_GRAPH_URL = "https://graph.facebook.com/v21.0";
+const META_GRAPH_URL = META_GRAPH_BASE_URL;
 
 // ─── Dataset Management ──────────────────────────────────────────────────────
 

@@ -1,3 +1,5 @@
+import { META_GRAPH_BASE_URL } from "@/lib/constants";
+
 export interface WhatsAppCredentials {
   wabaId: string;
   phoneNumberId: string;
@@ -22,7 +24,7 @@ export async function sendWhatsAppMessage(
         };
 
   const res = await fetch(
-    `https://graph.facebook.com/v21.0/${credentials.phoneNumberId}/messages`,
+    `${META_GRAPH_BASE_URL}/${credentials.phoneNumberId}/messages`,
     {
       method: "POST",
       headers: {
@@ -61,7 +63,7 @@ export function parseWhatsAppWebhook(body: WhatsAppWebhookBody): WhatsAppMessage
           timestamp: parseInt(msg.timestamp) * 1000,
           text: msg.text?.body ?? null,
           imageUrl:
-            msg.type === "image" && msg.image ? `https://graph.facebook.com/v21.0/${msg.image.id}` : null,
+            msg.type === "image" && msg.image ? `${META_GRAPH_BASE_URL}/${msg.image.id}` : null,
           type: msg.type,
           referral: msg.referral,
         });

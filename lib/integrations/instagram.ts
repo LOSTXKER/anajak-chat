@@ -1,5 +1,6 @@
 import { sendFacebookMessage, verifyFacebookWebhook } from "./facebook";
 import type { FacebookCredentials, FacebookAttachment, FacebookReferral } from "./facebook";
+import { META_GRAPH_BASE_URL, META_IG_GRAPH_BASE_URL } from "@/lib/constants";
 
 export type InstagramCredentials = {
   igAccessToken?: string;
@@ -22,7 +23,7 @@ export async function sendInstagramMessage(
       message,
     };
     const res = await fetch(
-      `https://graph.instagram.com/v21.0/${credentials.igAccountId}/messages`,
+      `${META_IG_GRAPH_BASE_URL}/${credentials.igAccountId}/messages`,
       {
         method: "POST",
         headers: {
@@ -84,7 +85,7 @@ export interface InstagramWebhookBody {
 export async function getInstagramAccountName(pageAccessToken: string, igAccountId: string): Promise<string | null> {
   try {
     const res = await fetch(
-      `https://graph.facebook.com/v21.0/${igAccountId}?fields=username&access_token=${pageAccessToken}`
+      `${META_GRAPH_BASE_URL}/${igAccountId}?fields=username&access_token=${pageAccessToken}`
     );
     if (!res.ok) return null;
     const data = await res.json() as { username: string };
@@ -147,7 +148,7 @@ export async function getInstagramUserInfo(
   accessToken: string
 ): Promise<{ id: string; username: string } | null> {
   const res = await fetch(
-    `https://graph.instagram.com/v21.0/me?fields=user_id,username&access_token=${accessToken}`
+    `${META_IG_GRAPH_BASE_URL}/me?fields=user_id,username&access_token=${accessToken}`
   );
   if (!res.ok) return null;
   const data = await res.json() as { user_id: string; username: string };

@@ -6,8 +6,6 @@ import {
   Tag,
   Phone,
   Mail,
-  ChevronDown,
-  ChevronRight,
   Plus,
   X,
   MoreVertical,
@@ -21,114 +19,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { EditableField } from "@/components/ui/editable-field";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 import type { Conversation } from "@/app/(dashboard)/inbox/types";
 
 export interface ContactSidebarProps {
   conversation: Conversation;
   onSpam?: () => void;
-}
-
-function EditableField({
-  label,
-  value,
-  icon: Icon,
-  placeholder,
-  type = "text",
-  onSave,
-}: {
-  label: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-  placeholder: string;
-  type?: string;
-  onSave: (value: string) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setDraft(value);
-  }, [value]);
-
-  useEffect(() => {
-    if (editing) inputRef.current?.focus();
-  }, [editing]);
-
-  function handleBlur() {
-    setEditing(false);
-    if (draft !== value) onSave(draft);
-  }
-
-  if (editing) {
-    return (
-      <div className="space-y-1">
-        <p className="text-[10px] text-muted-foreground">{label}</p>
-        <Input
-          ref={inputRef}
-          type={type}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={(e) => { if (e.key === "Enter") handleBlur(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }}
-          className="h-7 text-xs"
-          placeholder={placeholder}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setEditing(true)}
-      className="w-full text-left group space-y-0.5"
-    >
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-      <div className="flex items-center gap-1.5">
-        <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
-        <span className={cn("text-xs truncate", value ? "text-foreground" : "text-muted-foreground italic")}>
-          {value || placeholder}
-        </span>
-      </div>
-    </button>
-  );
-}
-
-function CollapsibleSection({
-  title,
-  icon: Icon,
-  defaultOpen = true,
-  action,
-  children,
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  defaultOpen?: boolean;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-1.5 py-1"
-      >
-        {open ? (
-          <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-        )}
-        <Icon className="h-3 w-3 text-muted-foreground" />
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex-1 text-left">
-          {title}
-        </span>
-        {action && <span onClick={(e) => e.stopPropagation()}>{action}</span>}
-      </button>
-      {open && <div className="mt-1">{children}</div>}
-    </div>
-  );
 }
 
 export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {

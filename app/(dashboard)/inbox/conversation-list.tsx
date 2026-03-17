@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef, useEffect } from "react";
+import { useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -11,7 +11,6 @@ import {
   Search,
   RefreshCw,
   SlidersHorizontal,
-  ChevronDown,
   Inbox,
   MessagesSquare,
 } from "lucide-react";
@@ -21,7 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FilterDropdown } from "@/components/ui/filter-dropdown";
 import type { Conversation } from "./types";
+import { STATUS_BADGE, LABEL_BADGE } from "@/lib/constants";
 
 const PLATFORM_ICONS = {
   facebook: Facebook,
@@ -71,19 +72,6 @@ const CHANNEL_OPTIONS: { value: ChannelFilter; label: string }[] = [
   { value: "web", label: "Web" },
 ];
 
-const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  pending: { label: "รอรับ", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300" },
-  open: { label: "กำลังดูแล", className: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" },
-  resolved: { label: "เสร็จสิ้น", className: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
-  closed: { label: "ปิด", className: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300" },
-};
-
-const LABEL_BADGE: Record<string, { label: string; className: string }> = {
-  missed: { label: "ไม่ได้รับ", className: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
-  follow_up: { label: "ติดตาม", className: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  spam: { label: "สแปม", className: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
-  blocked: { label: "บล็อก", className: "bg-zinc-300 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-100" },
-};
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -104,66 +92,6 @@ interface ConversationListProps {
   onRefresh: () => void;
 }
 
-function FilterDropdown<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (v: T) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const selected = options.find((o) => o.value === value);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className={cn(
-          "flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-colors",
-          value !== options[0].value
-            ? "border-foreground/20 bg-foreground/5 text-foreground font-medium"
-            : "border-border text-muted-foreground hover:text-foreground"
-        )}
-      >
-        {selected?.label}
-        <ChevronDown className="h-3 w-3" />
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 min-w-36 rounded-lg border bg-popover p-1 shadow-lg">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => {
-                onChange(opt.value);
-                setOpen(false);
-              }}
-              className={cn(
-                "flex w-full items-center rounded px-3 py-1.5 text-left text-xs transition-colors",
-                value === opt.value
-                  ? "bg-muted font-medium text-foreground"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function ConversationList({
   conversations,
