@@ -126,7 +126,11 @@ export async function exchangeInstagramCode(
       code,
     }),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("[IG] Token exchange failed:", res.status, errText);
+    return null;
+  }
   const data = await res.json() as { access_token: string; user_id: number };
   return { accessToken: data.access_token, userId: String(data.user_id) };
 }
@@ -149,7 +153,11 @@ export async function getInstagramUserInfo(
   const res = await fetch(
     `https://graph.instagram.com/v21.0/me?fields=user_id,username&access_token=${accessToken}`
   );
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("[IG] User info failed:", res.status, errText);
+    return null;
+  }
   const data = await res.json() as { user_id: string; username: string };
   return { id: data.user_id, username: data.username };
 }

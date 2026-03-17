@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
   const tokenResult = await exchangeInstagramCode(igAppId, igAppSecret, redirectUri, code);
   if (!tokenResult) {
-    return NextResponse.redirect(`${baseUrl}/settings/channels?error=token_exchange_failed`);
+    return NextResponse.redirect(`${baseUrl}/settings/channels?error=token_exchange_failed&detail=code_exchange`);
   }
 
   const longLivedToken = await exchangeForLongLivedToken(igAppSecret, tokenResult.accessToken);
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   const userInfo = await getInstagramUserInfo(finalToken);
   if (!userInfo) {
-    return NextResponse.redirect(`${baseUrl}/settings/channels?error=no_instagram_account`);
+    return NextResponse.redirect(`${baseUrl}/settings/channels?error=no_instagram_account&detail=user_info`);
   }
 
   const displayName = `@${userInfo.username}`;
