@@ -19,11 +19,9 @@ import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FilterDropdown } from "@/components/ui/filter-dropdown";
 import type { Conversation } from "./types";
-import { STATUS_BADGE, LABEL_BADGE } from "@/lib/constants";
 
 const PLATFORM_ICONS = {
   facebook: Facebook,
@@ -159,7 +157,7 @@ export function ConversationList({
           <Inbox className="h-4 w-4" />
           อินบ็อกซ์
           {inboxCount > 0 && (
-            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
               {inboxCount}
             </span>
           )}
@@ -237,29 +235,25 @@ export function ConversationList({
                 MessageCircle;
               const platformColor =
                 PLATFORM_COLORS[conv.channel.platform as keyof typeof PLATFORM_COLORS] ??
-                "text-gray-600";
+                "text-muted-foreground";
               const displayName = conv.contact.displayName ?? conv.contact.platformId;
               const initial = displayName.charAt(0).toUpperCase();
               const preview = getPreview(conv);
               const isSelected = conv.id === selectedId;
               const unread = conv.unreadCount ?? 0;
-              const statusInfo = STATUS_BADGE[conv.status] ?? STATUS_BADGE.closed;
-              const convLabels = (conv.labels ?? [])
-                .map((l) => LABEL_BADGE[l])
-                .filter(Boolean);
 
               return (
                 <button
                   key={conv.id}
                   onClick={() => onSelectConversation(conv.id)}
                   className={cn(
-                    "w-full rounded-lg p-3 text-left transition-colors",
+                    "w-full rounded-lg p-2.5 text-left transition-colors",
                     isSelected
-                      ? "bg-accent/10 border border-accent/20"
-                      : "hover:bg-muted/30 border border-transparent"
+                      ? "bg-accent/10"
+                      : "hover:bg-muted/30"
                   )}
                 >
-                  <div className="flex gap-3">
+                  <div className="flex gap-2.5">
                     <div className="relative shrink-0">
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={conv.contact.avatarUrl ?? undefined} />
@@ -274,7 +268,7 @@ export function ConversationList({
                       <div className="flex items-center gap-1.5">
                         <span className={cn("truncate text-sm", unread > 0 ? "font-semibold text-foreground" : "font-medium")}>{displayName}</span>
                         {conv.lastMessageAt && !isNaN(Date.parse(conv.lastMessageAt)) && (
-                          <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                          <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
                             {formatDistanceToNow(new Date(conv.lastMessageAt), {
                               addSuffix: false,
                               locale: th,
@@ -283,28 +277,10 @@ export function ConversationList({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <p className={cn("truncate text-xs flex-1", unread > 0 ? "font-medium text-foreground" : "text-muted-foreground")}>{preview}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className={cn("truncate text-xs flex-1", unread > 0 ? "text-foreground" : "text-muted-foreground")}>{preview}</p>
                         {unread > 0 && (
-                          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
-                            {unread > 99 ? "99+" : unread}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-1 flex flex-wrap items-center gap-1">
-                        <Badge className={cn("h-4 rounded px-1.5 py-0 text-[10px] font-medium border-0", statusInfo.className)}>
-                          {statusInfo.label}
-                        </Badge>
-                        {convLabels.map((lb) => (
-                          <Badge key={lb.label} className={cn("h-4 rounded px-1.5 py-0 text-[10px] font-medium border-0", lb.className)}>
-                            {lb.label}
-                          </Badge>
-                        ))}
-                        {conv.assignedUser && (
-                          <span className="truncate text-[10px] text-muted-foreground">
-                            {conv.assignedUser.id === currentUserId ? "ฉัน" : conv.assignedUser.name}
-                          </span>
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
                         )}
                       </div>
                     </div>

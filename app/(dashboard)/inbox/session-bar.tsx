@@ -8,6 +8,7 @@ import {
   Lock,
   MoreHorizontal,
   Ban,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Conversation } from "./types";
@@ -19,6 +20,7 @@ interface SessionBarProps {
   onResolve: () => void;
   onReopen: () => void;
   onFollowUp: () => void;
+  onTransfer?: () => void;
   onSpam: () => void;
   onBlock: () => void;
   starting: boolean;
@@ -31,6 +33,7 @@ export function SessionBar({
   onResolve,
   onReopen,
   onFollowUp,
+  onTransfer,
   onSpam,
   onBlock,
   starting,
@@ -118,7 +121,17 @@ export function SessionBar({
             <MoreHorizontal className="h-4 w-4" />
           </Button>
           {showMore && (
-            <div className="absolute bottom-full right-0 mb-1 flex flex-col gap-0.5 rounded-lg border bg-popover p-1 shadow-lg z-10 min-w-28 animate-in fade-in zoom-in-95 duration-100" role="menu">
+            <div className="absolute bottom-full right-0 mb-1 flex flex-col gap-0.5 rounded-lg border bg-popover p-1 shadow-lg z-10 min-w-32 animate-in fade-in zoom-in-95 duration-100" role="menu">
+              {onTransfer && (
+                <button
+                  role="menuitem"
+                  onClick={() => { onTransfer(); setShowMore(false); }}
+                  className="flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
+                >
+                  <ArrowRightLeft className="h-3 w-3" />
+                  โอนแชท
+                </button>
+              )}
               <button
                 role="menuitem"
                 onClick={() => { onSpam(); setShowMore(false); }}

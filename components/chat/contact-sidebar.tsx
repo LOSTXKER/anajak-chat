@@ -40,6 +40,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [showTagInput, setShowTagInput] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [editing, setEditing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -158,34 +159,72 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
         </div>
 
         {/* Contact Details */}
-        <CollapsibleSection title="ข้อมูลติดต่อ" icon={User}>
-          <div className="space-y-2.5 pl-1">
-            <EditableField
-              label="ชื่อ"
-              value={name}
-              icon={User}
-              placeholder="ใส่ชื่อ..."
-              onSave={(v) => { setName(v); saveField("displayName", v); }}
-            />
-            <EditableField
-              label="เบอร์โทร"
-              value={phone}
-              icon={Phone}
-              placeholder="ใส่เบอร์โทร..."
-              type="tel"
-              onSave={(v) => { setPhone(v); saveField("phone", v); }}
-            />
-            <EditableField
-              label="อีเมล"
-              value={email}
-              icon={Mail}
-              placeholder="ใส่อีเมล..."
-              type="email"
-              onSave={(v) => { setEmail(v); saveField("email", v); }}
-            />
-            <div className="space-y-0.5">
-              <p className="text-[10px] text-muted-foreground">รหัสแพลตฟอร์ม</p>
-              <p className="text-xs font-mono break-all text-muted-foreground">{contact.platformId}</p>
+        <CollapsibleSection
+          title="ข้อมูลติดต่อ"
+          icon={User}
+          action={
+            <button
+              onClick={() => setEditing(!editing)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {editing ? "เสร็จ" : "แก้ไข"}
+            </button>
+          }
+        >
+          <div className="space-y-2 pl-1">
+            {editing ? (
+              <>
+                <EditableField
+                  label="ชื่อ"
+                  value={name}
+                  icon={User}
+                  placeholder="ใส่ชื่อ..."
+                  onSave={(v) => { setName(v); saveField("displayName", v); }}
+                />
+                <EditableField
+                  label="เบอร์โทร"
+                  value={phone}
+                  icon={Phone}
+                  placeholder="ใส่เบอร์โทร..."
+                  type="tel"
+                  onSave={(v) => { setPhone(v); saveField("phone", v); }}
+                />
+                <EditableField
+                  label="อีเมล"
+                  value={email}
+                  icon={Mail}
+                  placeholder="ใส่อีเมล..."
+                  type="email"
+                  onSave={(v) => { setEmail(v); saveField("email", v); }}
+                />
+              </>
+            ) : (
+              <>
+                {name && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span>{name}</span>
+                  </div>
+                )}
+                {phone && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <Phone className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span>{phone}</span>
+                  </div>
+                )}
+                {email && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span>{email}</span>
+                  </div>
+                )}
+                {!name && !phone && !email && (
+                  <p className="text-xs text-muted-foreground italic">ยังไม่มีข้อมูล</p>
+                )}
+              </>
+            )}
+            <div className="pt-1 border-t">
+              <p className="text-[10px] text-muted-foreground/60 font-mono break-all">{contact.platformId}</p>
             </div>
           </div>
         </CollapsibleSection>
@@ -208,7 +247,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center gap-0.5 bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 rounded-full text-xs px-2 py-0.5"
+                  className="inline-flex items-center gap-0.5 bg-muted text-foreground rounded-full text-xs px-2 py-0.5"
                 >
                   {tag}
                   <button onClick={() => removeTag(tag)} className="hover:text-red-500 transition-colors">
@@ -284,7 +323,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                 "text-xs capitalize",
                 conversation.aiSentiment === "positive" && "border-green-200 text-green-700 dark:border-green-800 dark:text-green-400",
                 conversation.aiSentiment === "negative" && "border-red-200 text-red-700 dark:border-red-800 dark:text-red-400",
-                conversation.aiSentiment === "neutral" && "border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-400"
+                conversation.aiSentiment === "neutral" && "border-border text-muted-foreground"
               )}
             >
               {conversation.aiSentiment}

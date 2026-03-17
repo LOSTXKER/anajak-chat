@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { NoteBubble } from "@/components/chat/note-bubble";
@@ -36,7 +35,7 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { SlaTimer } from "./sla-timer";
 import { SessionBar } from "./session-bar";
 import type { Conversation, Message, Note, ConversationEvent } from "./types";
-import { LABEL_BADGE, EVENT_LABELS } from "@/lib/constants";
+import { EVENT_LABELS } from "@/lib/constants";
 
 interface ChatViewProps {
   conversation: Conversation;
@@ -412,13 +411,13 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         )}
 
         {/* Header */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
-          <Avatar className="h-9 w-9">
+        <div className="flex items-center gap-3 border-b px-4 py-2.5">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={conversation.contact.avatarUrl ?? undefined} />
-            <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="text-sm">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{displayName}</p>
+            <p className="truncate text-sm font-medium">{displayName}</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>{conversation.channel.name}</span>
               {conversation.assignedUser && (
@@ -429,34 +428,18 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                     : conversation.assignedUser.name}
                 </span>
               )}
-              {(conversation.labels ?? []).map((l) => {
-                const info = LABEL_BADGE[l];
-                if (!info) return null;
-                return (
-                  <Badge key={l} className={cn("h-4 rounded px-1.5 py-0 text-[10px] font-medium border-0", info.className)}>
-                    {info.label}
-                  </Badge>
-                );
-              })}
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 lg:gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-1">
             <SlaTimer conversation={conversation} />
 
             <Select
               value={conversation.assignedUser?.id ?? "unassigned"}
               onValueChange={(v) => v && v !== "unassigned" && assignToAgent(v)}
             >
-              <SelectTrigger className="h-8 w-28 lg:w-36 text-xs">
-                <div className="flex items-center gap-1.5 truncate">
-                  <UserPlus className="h-3 w-3 shrink-0" />
-                  <span className="truncate">
-                    {assigningId
-                      ? "กำลังมอบ..."
-                      : conversation.assignedUser?.name ?? "มอบหมาย"}
-                  </span>
-                </div>
+              <SelectTrigger className="h-7 w-7 border-0 bg-transparent p-0 shadow-none [&>svg:last-child]:hidden" aria-label="มอบหมาย">
+                <UserPlus className="h-4 w-4 text-muted-foreground" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="unassigned" disabled>
@@ -475,19 +458,8 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
               </SelectContent>
             </Select>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hidden lg:inline-flex"
-              title="โอนแชท"
-              aria-label="โอนแชท"
-              onClick={() => setShowTransferDialog(true)}
-            >
-              <ArrowRightLeft className="h-4 w-4" />
-            </Button>
-
             <Select value={conversation.status} onValueChange={(v) => v && updateStatus(v)}>
-              <SelectTrigger className="h-8 w-24 lg:w-32 text-xs">
+              <SelectTrigger className="h-7 gap-1 rounded-full border-0 bg-muted px-2.5 text-xs font-medium shadow-none">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -545,11 +517,10 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 const evt = item.data as ConversationEvent;
                 const label = EVENT_LABELS[evt.eventType] ?? evt.eventType;
                 const actor = (evt.metadata as Record<string, unknown>)?.agentName as string | undefined;
-                const time = new Date(evt.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
                 return (
-                  <div key={`evt-${evt.id}`} className="flex justify-center py-1">
-                    <span className="text-xs text-muted-foreground italic">
-                      {time} — {label}{actor ? ` โดย ${actor}` : ""}
+                  <div key={`evt-${evt.id}`} className="flex justify-center py-0.5">
+                    <span className="text-[10px] text-muted-foreground/60">
+                      {label}{actor ? ` • ${actor}` : ""}
                     </span>
                   </div>
                 );
@@ -579,6 +550,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           onResolve={handleResolve}
           onReopen={handleReopen}
           onFollowUp={handleFollowUp}
+          onTransfer={() => setShowTransferDialog(true)}
           onSpam={handleSpam}
           onBlock={handleBlock}
           starting={startingChat}
