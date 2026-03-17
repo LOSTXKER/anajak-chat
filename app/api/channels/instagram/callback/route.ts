@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const redirectUri = `${baseUrl}/api/channels/instagram/callback`;
 
   const tokenResult = await exchangeInstagramCode(igAppId, igAppSecret, redirectUri, code);
-  if (!tokenResult || tokenResult.error) {
+  if (!tokenResult) {
     return NextResponse.redirect(`${baseUrl}/settings/channels?error=token_exchange_failed`);
   }
 
