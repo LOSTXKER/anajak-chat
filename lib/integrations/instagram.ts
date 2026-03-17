@@ -115,7 +115,7 @@ export async function exchangeInstagramCode(
   redirectUri: string,
   code: string
 ): Promise<{ accessToken: string; userId: string; error?: string } | null> {
-  const res = await fetch("https://graph.instagram.com/oauth/access_token", {
+  const res = await fetch("https://api.instagram.com/oauth/access_token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
