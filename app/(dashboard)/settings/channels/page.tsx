@@ -98,6 +98,11 @@ export default function ChannelsPage() {
   });
   const [lineConnecting, setLineConnecting] = useState(false);
 
+  // Instagram connect dialog
+  const [igDialogOpen, setIgDialogOpen] = useState(false);
+  const [igAccountId, setIgAccountId] = useState("");
+  const [igConnecting, setIgConnecting] = useState(false);
+
   // OAuth redirect loading
   const [oauthLoading, setOauthLoading] = useState<ConnectablePlatform | null>(null);
 
@@ -159,6 +164,14 @@ export default function ChannelsPage() {
       setLineDialogOpen(true);
       return;
     }
+    if (platform === "instagram") {
+      if (!connectedPlatforms.has("facebook")) {
+        toast({ title: "ต้องเชื่อมต่อ Facebook Page ก่อน", description: "Instagram DM ใช้ Page Access Token จาก Facebook Page ที่เชื่อมอยู่", variant: "destructive" });
+        return;
+      }
+      setIgDialogOpen(true);
+      return;
+    }
     setOauthLoading(platform);
     try {
       const res = await fetch(`/api/channels/${platform}/connect`);
@@ -173,6 +186,28 @@ export default function ChannelsPage() {
     } catch {
       toast({ title: "Error", description: "Connection failed", variant: "destructive" });
       setOauthLoading(null);
+    }
+  }
+
+  async function handleIgConnect() {
+    setIgConnecting(true);
+    try {
+      const res = await fetch("/api/channels/instagram/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ igAccountId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast({ title: "สำเร็จ", description: `เชื่อมต่อ Instagram "${data.name}" สำเร็จแล้ว` });
+        setIgDialogOpen(false);
+        setIgAccountId("");
+        fetchChannels();
+      } else {
+        toast({ title: "Error", description: data.error, variant: "destructive" });
+      }
+    } finally {
+      setIgConnecting(false);
     }
   }
 
@@ -327,12 +362,12 @@ export default function ChannelsPage() {
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : isConnected ? (
                         <CheckCircle className="h-4 w-4 mr-2" />
-                      ) : platform === "line" ? (
+                      ) : platform === "line" || platform === "instagram" ? (
                         <Plus className="h-4 w-4 mr-2" />
                       ) : (
                         <ExternalLink className="h-4 w-4 mr-2" />
                       )}
-                      {isConnected ? "เชื่อมต่อแล้ว" : platform === "line" ? "ใส่ Token" : "เชื่อมต่อ"}
+                      {isConnected ? "เชื่อมต่อแล้ว" : platform === "line" ? "ใส่ Token" : platform === "instagram" ? "ใส่ Account ID" : "เชื่อมต่อ"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -365,6 +400,50 @@ export default function ChannelsPage() {
           </div>
         )}
       </div>
+
+      {/* Instagram Connect Dialog */}
+      <Dialog open={igDialogOpen} onOpenChange={setIgDialogOpen}>
+        <DialogContent className="sm:max-w-md rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Instagram className="h-5 w-5 text-pink-500" />
+              เชื่อมต่อ Instagram DM
+            </DialogTitle>
+            <DialogDescription>
+              กรอก Instagram Business Account ID จาก Meta Developer Dashboard
+              (Instagram API → ขั้นตอนที่ 2 → บัญชี Instagram)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="ig-account-id">Instagram Business Account ID</Label>
+              <Input
+                id="ig-account-id"
+                className="rounded-lg"
+                placeholder="เช่น 1704146392064660"
+                value={igAccountId}
+                onChange={(e) => setIgAccountId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                ดูได้ที่ Meta Developer Dashboard → Instagram API → บัญชี Instagram ที่เพิ่มไว้
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIgDialogOpen(false)}>
+              ยกเลิก
+            </Button>
+            <Button
+              className="bg-foreground text-background hover:bg-foreground/90"
+              onClick={handleIgConnect}
+              disabled={igConnecting || !igAccountId.trim()}
+            >
+              {igConnecting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              เชื่อมต่อ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* LINE Connect Dialog */}
       <Dialog open={lineDialogOpen} onOpenChange={setLineDialogOpen}>
