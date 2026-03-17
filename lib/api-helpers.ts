@@ -59,13 +59,16 @@ export function paginatedResponse<T>(
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouteContext = { params: any };
+
 /**
  * Wraps an API handler to automatically catch ApiError and return JSON responses.
  */
 export function apiHandler(
-  handler: (request: NextRequest, context?: unknown) => Promise<NextResponse>
+  handler: (request: NextRequest, context: RouteContext) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest, context?: unknown) => {
+  return async (request: NextRequest, context: RouteContext) => {
     try {
       return await handler(request, context);
     } catch (err) {
