@@ -80,5 +80,5 @@ export async function maybeQueueLeadCapiEvent(params: LeadEventParams): Promise<
     customData: { lead_type: hasPhone ? "phone" : "email" },
     pageAccessToken: token,
     conversationId: params.conversationId,
-  }).catch(() => {});
+  }).catch((e) => console.error("[CAPI] lead event error:", e));
 }

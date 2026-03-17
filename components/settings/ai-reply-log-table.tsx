@@ -28,12 +28,12 @@ export interface ReplyLog {
 }
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  auto_sent: { label: "ส่งอัตโนมัติ", cls: "bg-green-100 text-green-700" },
-  pending_review: { label: "รอ approve", cls: "bg-yellow-100 text-yellow-700" },
-  approved: { label: "Approved", cls: "bg-blue-100 text-blue-700" },
-  edited: { label: "Edited", cls: "bg-purple-100 text-purple-700" },
-  rejected: { label: "Rejected", cls: "bg-red-100 text-red-700" },
-  escalated: { label: "Escalated", cls: "bg-orange-100 text-orange-700" },
+  auto_sent: { label: "ส่งอัตโนมัติ", cls: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400" },
+  pending_review: { label: "รอ approve", cls: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400" },
+  approved: { label: "Approved", cls: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" },
+  edited: { label: "Edited", cls: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400" },
+  rejected: { label: "Rejected", cls: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" },
+  escalated: { label: "Escalated", cls: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400" },
 };
 
 const PAGE_SIZE = 15;

@@ -63,7 +63,7 @@ export async function GET(request: Request) {
       pageId: fbCreds?.pageId ?? null,
       pageAccessToken: fbCreds?.pageAccessToken ?? null,
       appSecret,
-      verifyToken: process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN ?? "anajak_fb_verify",
+      verifyToken: process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN ?? "",
     },
     isActive: true,
   };

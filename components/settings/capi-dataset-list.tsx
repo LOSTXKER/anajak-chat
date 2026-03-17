@@ -25,8 +25,8 @@ export interface CapiDataset {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  sent: "bg-green-100 text-green-700",
-  failed: "bg-red-100 text-red-700",
+  sent: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
+  failed: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
 };
 
 const PLATFORM_LABELS: Record<string, string> = {

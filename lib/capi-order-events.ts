@@ -53,7 +53,7 @@ export async function sendOrderCapiEvent(
   if (!channelId) return;
 
   const dataset = await getActiveDatasetForChannel(channelId);
-  if (!dataset || !dataset) return;
+  if (!dataset) return;
 
   const token = await getTokenForChannel(channelId);
   if (!token) return;
@@ -90,7 +90,7 @@ export async function sendOrderCapiEvent(
     pageAccessToken: token,
     conversationId: conversation?.id,
     orderId: order.id,
-  }).catch(() => {});
+  }).catch((e) => console.error("[CAPI] order event error:", e));
 }
 
 export async function sendOrderStatusCapiEvent(
@@ -99,5 +99,5 @@ export async function sendOrderStatusCapiEvent(
 ): Promise<void> {
   const eventName = STATUS_TO_EVENT[newStatus];
   if (!eventName) return;
-  await sendOrderCapiEvent(orderId, eventName).catch(() => {});
+  await sendOrderCapiEvent(orderId, eventName).catch((e) => console.error("[CAPI] order status event error:", e));
 }

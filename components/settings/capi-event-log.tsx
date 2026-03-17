@@ -23,10 +23,10 @@ export interface CapiEvent {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  sent: "bg-green-100 text-green-700",
-  pending: "bg-yellow-100 text-yellow-700",
-  failed: "bg-red-100 text-red-700",
-  retrying: "bg-blue-100 text-blue-700",
+  sent: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
+  pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400",
+  failed: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+  retrying: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
 };
 
 const PAGE_SIZE = 15;

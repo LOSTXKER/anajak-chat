@@ -23,19 +23,3 @@ export async function createNotification(params: CreateNotificationParams) {
   });
 }
 
-export async function createNotificationForMany(
-  userIds: string[],
-  params: Omit<CreateNotificationParams, "userId">
-) {
-  if (userIds.length === 0) return;
-  await prisma.notification.createMany({
-    data: userIds.map((userId) => ({
-      orgId: params.orgId,
-      userId,
-      type: params.type,
-      title: params.title,
-      body: params.body ?? null,
-      link: params.link ?? null,
-    })),
-  });
-}

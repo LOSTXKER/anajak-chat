@@ -74,7 +74,7 @@ export default function GeneralSettingsPage() {
               {loading ? "กำลังบันทึก..." : "บันทึก"}
             </Button>
             {saved && (
-              <span className="text-sm text-green-600">บันทึกแล้ว</span>
+              <span className="text-sm text-green-600 dark:text-green-400">บันทึกแล้ว</span>
             )}
           </div>
         </CardContent>

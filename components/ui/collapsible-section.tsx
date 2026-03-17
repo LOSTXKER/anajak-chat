@@ -26,6 +26,7 @@ export function CollapsibleSection({
         <div
           role="button"
           tabIndex={0}
+          aria-expanded={open}
           onClick={() => setOpen(!open)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpen(!open); }}
           className="flex flex-1 items-center gap-1.5 cursor-pointer"

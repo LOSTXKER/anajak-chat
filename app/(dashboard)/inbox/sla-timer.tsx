@@ -52,7 +52,7 @@ export function SlaTimer({ conversation }: SlaTimerProps) {
   if (isBreached) {
     return (
       <div
-        className="flex items-center gap-1 rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+        className="flex items-center gap-1 rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400"
         title="SLA breach!"
       >
         <AlertTriangle className="h-3 w-3" />
@@ -66,8 +66,8 @@ export function SlaTimer({ conversation }: SlaTimerProps) {
       className={cn(
         "flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
         isWarning
-          ? "bg-yellow-100 text-yellow-700"
-          : "bg-green-100 text-green-700"
+          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400"
+          : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
       )}
       title={`SLA deadline: ${new Date(relevantDeadline).toLocaleString("th-TH")}`}
     >

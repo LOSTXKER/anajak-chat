@@ -30,6 +30,7 @@ export function Pagination({ page, totalPages, total, pageSize, onChange, classN
           className="h-7 w-7 rounded-md transition-colors"
           onClick={() => onChange(Math.max(page - 1, 1))}
           disabled={page === 1}
+          aria-label="หน้าก่อนหน้า"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -40,6 +41,7 @@ export function Pagination({ page, totalPages, total, pageSize, onChange, classN
           className="h-7 w-7 rounded-md transition-colors"
           onClick={() => onChange(Math.min(page + 1, totalPages))}
           disabled={page === totalPages}
+          aria-label="หน้าถัดไป"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>

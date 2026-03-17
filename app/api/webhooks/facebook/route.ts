@@ -11,7 +11,10 @@ export async function GET(request: Request) {
   const token = sp.get("hub.verify_token");
   const challenge = sp.get("hub.challenge");
 
-  const verifyToken = process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN ?? "anajak_fb_verify";
+  const verifyToken = process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN;
+  if (!verifyToken) {
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+  }
 
   if (mode === "subscribe" && token === verifyToken) {
     return new Response(challenge, { status: 200 });

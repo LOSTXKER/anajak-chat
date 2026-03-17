@@ -9,7 +9,8 @@ export const GET = apiHandler(async (request, context) => {
   const { id } = await params;
   const sp = searchParams(request);
   const cursor = sp.get("cursor");
-  const limit = parseInt(sp.get("limit") ?? "50");
+  const rawLimit = parseInt(sp.get("limit") ?? "50");
+  const limit = Math.max(1, Math.min(100, isNaN(rawLimit) ? 50 : rawLimit));
 
   const conversation = await prisma.conversation.findFirst({
     where: { id, orgId: user.orgId },

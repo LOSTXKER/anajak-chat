@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth, requirePermission, searchParams, apiHandler } from "@/lib/api-helpers";
+import { requireAuth, requirePermission, searchParams, parseDaysParam, apiHandler } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 
 export const GET = apiHandler(async (request) => {
@@ -7,7 +7,7 @@ export const GET = apiHandler(async (request) => {
   requirePermission(user, "analytics:view");
 
   const params = searchParams(request);
-  const days = parseInt(params.get("days") ?? "30");
+  const days = parseDaysParam(request);
   const platform = params.get("platform") ?? undefined;
 
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);

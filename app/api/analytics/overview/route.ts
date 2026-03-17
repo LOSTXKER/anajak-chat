@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { requireAuth, searchParams, apiHandler } from "@/lib/api-helpers";
+import { requireAuth, parseDaysParam, apiHandler } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 
 export const GET = apiHandler(async (request) => {
   const user = await requireAuth();
 
-  const params = searchParams(request);
-  const days = parseInt(params.get("days") ?? "30");
+  const days = parseDaysParam(request);
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   const [

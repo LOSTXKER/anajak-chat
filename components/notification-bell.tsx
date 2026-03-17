@@ -112,6 +112,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
         variant="ghost"
         size="icon"
         className="relative h-9 w-9"
+        aria-label="การแจ้งเตือน"
         onClick={() => {
           setOpen(!open);
           if (!open) fetchNotifications();
@@ -178,7 +179,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                       onClick={() => !notif.isRead && markRead(notif.id)}
                       className={cn(
                         "flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50",
-                        !notif.isRead && "bg-blue-50/50 hover:bg-blue-50"
+                        !notif.isRead && "bg-blue-50/50 hover:bg-blue-50 dark:bg-blue-950/30 dark:hover:bg-blue-950/50"
                       )}
                     >
                       <div className={cn("mt-0.5 shrink-0", iconColor)}>

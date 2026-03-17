@@ -35,22 +35,6 @@ export async function sendLineMessage(
   return res.ok;
 }
 
-export async function replyLineMessage(
-  credentials: LineCredentials,
-  replyToken: string,
-  messages: LineMessage[]
-): Promise<boolean> {
-  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${credentials.channelAccessToken}`,
-    },
-    body: JSON.stringify({ replyToken, messages }),
-  });
-  return res.ok;
-}
-
 export function verifyLineSignature(
   channelSecret: string,
   body: string,

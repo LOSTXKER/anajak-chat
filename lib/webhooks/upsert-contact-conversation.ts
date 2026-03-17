@@ -124,7 +124,7 @@ async function upsertConversation(params: {
       data: { totalConversations: { increment: 1 } },
     });
 
-    await applySlaToConversation(conversation.id, params.orgId, "medium", conversation.createdAt).catch(() => {});
+    await applySlaToConversation(conversation.id, params.orgId, "medium", conversation.createdAt).catch((e) => console.error("[Webhook] SLA apply error:", e));
   } else {
     const needsReopen = conversation.status === "resolved";
 
@@ -188,13 +188,13 @@ async function runPostMessageHooks(params: {
       orgId, conversationId, channelId, platform,
       contactPlatformId: platformUserId,
       messageContent: content,
-    }).catch(() => {});
+    }).catch((e) => console.error("[Webhook] CAPI lead event error:", e));
   }
 
-  await sendBusinessHoursAutoReply({ orgId, conversationId, channelId, platform, contactPlatformId: platformUserId }).catch(() => {});
+  await sendBusinessHoursAutoReply({ orgId, conversationId, channelId, platform, contactPlatformId: platformUserId }).catch((e) => console.error("[Webhook] auto-reply error:", e));
 
   if (content) {
-    await processIncomingMessage({ conversationId, messageContent: content, orgId }).catch(() => {});
+    await processIncomingMessage({ conversationId, messageContent: content, orgId }).catch((e) => console.error("[Webhook] AI processing error:", e));
   }
 }
 

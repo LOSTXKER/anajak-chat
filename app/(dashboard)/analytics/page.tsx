@@ -282,13 +282,13 @@ export default function AnalyticsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-2.5 text-right">{a.totalConversations}</td>
-                      <td className="px-4 py-2.5 text-right text-yellow-600">{a.openConversations}</td>
-                      <td className="px-4 py-2.5 text-right text-green-600">{a.resolvedConversations}</td>
+                      <td className="px-4 py-2.5 text-right text-yellow-600 dark:text-yellow-400">{a.openConversations}</td>
+                      <td className="px-4 py-2.5 text-right text-green-600 dark:text-green-400">{a.resolvedConversations}</td>
                       <td className="px-4 py-2.5 text-right">{fmtMin(a.avgFirstResponseMinutes)}</td>
                       <td className="px-4 py-2.5 text-right">
                         <span className={cn(
                           "text-xs font-medium",
-                          a.slaCompliance >= 90 ? "text-green-600" : a.slaCompliance >= 70 ? "text-yellow-600" : "text-red-600"
+                          a.slaCompliance >= 90 ? "text-green-600 dark:text-green-400" : a.slaCompliance >= 70 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"
                         )}>
                           {a.slaCompliance}%
                         </span>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth, searchParams, apiHandler } from "@/lib/api-helpers";
+import { requireAuth, searchParams, parseDaysParam, apiHandler } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import Papa from "papaparse";
 
@@ -8,7 +8,7 @@ export const GET = apiHandler(async (request) => {
 
   const params = searchParams(request);
   const type = params.get("type") ?? "conversations";
-  const days = parseInt(params.get("days") ?? "30");
+  const days = parseDaysParam(request);
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   let csvData: Record<string, unknown>[];

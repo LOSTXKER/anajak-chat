@@ -9,6 +9,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ messages: [] });
   }
 
+  const org = await prisma.organization.findUnique({ where: { id: orgId }, select: { id: true } });
+  if (!org) {
+    return NextResponse.json({ error: "Invalid organization" }, { status: 403 });
+  }
+
   const contact = await prisma.contact.findFirst({
     where: { orgId, platformId: sessionId, platform: "web" },
   });

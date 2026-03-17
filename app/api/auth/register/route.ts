@@ -1,56 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-
-const DEFAULT_ROLES = [
-  {
-    name: "owner",
-    description: "Owner — full access",
-    permissions: ["*"],
-    isSystemRole: true,
-  },
-  {
-    name: "admin",
-    description: "Admin — manage team, settings, reports",
-    permissions: [
-      "chat:view_all",
-      "chat:assign",
-      "chat:transfer",
-      "contacts:view",
-      "contacts:edit",
-      "analytics:view",
-      "settings:view",
-      "settings:edit",
-      "team:view",
-      "team:invite",
-    ],
-    isSystemRole: true,
-  },
-  {
-    name: "supervisor",
-    description: "Supervisor — oversee team chats",
-    permissions: [
-      "chat:view_all",
-      "chat:assign",
-      "chat:transfer",
-      "contacts:view",
-      "contacts:edit",
-      "analytics:view",
-    ],
-    isSystemRole: true,
-  },
-  {
-    name: "agent",
-    description: "Agent — handle assigned chats",
-    permissions: [
-      "chat:view_assigned",
-      "chat:reply",
-      "contacts:view",
-      "contacts:edit",
-    ],
-    isSystemRole: true,
-  },
-];
+import { DEFAULT_ROLES } from "@/lib/constants";
 
 export async function POST(request: Request) {
   try {

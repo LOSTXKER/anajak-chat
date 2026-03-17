@@ -156,8 +156,8 @@ export async function processIncomingMessage(params: {
         });
       }
     }
-  } catch {
-    // Silently fail AI processing to not block webhook
+  } catch (e) {
+    console.error("[AI Bot] processIncomingMessage error:", e);
   }
 }
 

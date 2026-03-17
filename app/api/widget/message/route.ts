@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const MAX_CONTENT_LENGTH = 5000;
+
 export async function POST(request: NextRequest) {
   const body = await request.json() as {
     orgId: string;
@@ -11,6 +13,15 @@ export async function POST(request: NextRequest) {
 
   if (!body.orgId || !body.sessionId || !body.content) {
     return NextResponse.json({ error: "orgId, sessionId, content required" }, { status: 400 });
+  }
+
+  if (typeof body.content !== "string" || body.content.length > MAX_CONTENT_LENGTH) {
+    return NextResponse.json({ error: `content must be a string under ${MAX_CONTENT_LENGTH} characters` }, { status: 400 });
+  }
+
+  const org = await prisma.organization.findUnique({ where: { id: body.orgId }, select: { id: true } });
+  if (!org) {
+    return NextResponse.json({ error: "Invalid organization" }, { status: 403 });
   }
 
   // Find or create the web channel for this org

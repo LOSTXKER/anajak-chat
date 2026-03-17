@@ -107,10 +107,10 @@ export default function WorkloadPage() {
                       className={cn(
                         "font-medium",
                         isOverloaded
-                          ? "text-red-600"
+                          ? "text-red-600 dark:text-red-400"
                           : isWarning
-                          ? "text-yellow-600"
-                          : "text-green-600"
+                          ? "text-yellow-600 dark:text-yellow-400"
+                          : "text-green-600 dark:text-green-400"
                       )}
                     >
                       {agent.totalActive} / {agent.maxConcurrentChats}
@@ -134,11 +134,11 @@ export default function WorkloadPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-md bg-muted/50 p-2">
-                    <p className="text-lg font-semibold text-green-600">{agent.openCount}</p>
+                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{agent.openCount}</p>
                     <p className="text-[10px] text-muted-foreground">เปิด</p>
                   </div>
                   <div className="rounded-md bg-muted/50 p-2">
-                    <p className="text-lg font-semibold text-yellow-600">{agent.pendingCount}</p>
+                    <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">{agent.pendingCount}</p>
                     <p className="text-[10px] text-muted-foreground">รอ</p>
                   </div>
                   <div className="rounded-md bg-muted/50 p-2">

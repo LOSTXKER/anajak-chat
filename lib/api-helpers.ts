@@ -39,6 +39,13 @@ export function parsePagination(request: NextRequest | Request, defaults?: { lim
   return { page, limit, skip };
 }
 
+export function parseDaysParam(request: NextRequest | Request, defaultDays = 30, max = 365): number {
+  const url = request instanceof NextRequest ? request.nextUrl : new URL(request.url);
+  const raw = parseInt(url.searchParams.get("days") ?? String(defaultDays));
+  if (isNaN(raw) || raw < 1) return defaultDays;
+  return Math.min(raw, max);
+}
+
 export function searchParams(request: NextRequest | Request) {
   return request instanceof NextRequest
     ? request.nextUrl.searchParams

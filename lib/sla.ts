@@ -2,8 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
 import { SLA_WARNING_THRESHOLD_PERCENT } from "@/lib/constants";
 
-export type SlaStatus = "ok" | "warning" | "breached" | "none";
-
 interface SlaDeadlineResult {
   firstResponseDeadline: Date | null;
   resolutionDeadline: Date | null;
@@ -19,18 +17,6 @@ export function computeSlaDeadlines(
     firstResponseDeadline: new Date(createdMs + firstResponseMinutes * 60 * 1000),
     resolutionDeadline: new Date(createdMs + resolutionMinutes * 60 * 1000),
   };
-}
-
-export function checkSlaStatus(
-  deadline: Date | null,
-  warningThresholdPercent = SLA_WARNING_THRESHOLD_PERCENT
-): SlaStatus {
-  if (!deadline) return "none";
-  const now = Date.now();
-  const deadlineMs = deadline.getTime();
-  if (now >= deadlineMs) return "breached";
-  // We need the total span to compute percentage; assume warning at absolute 20% remaining
-  return "ok"; // Simplified: specific warning handled by SlaTimer component via deadline proximity
 }
 
 /**
@@ -109,7 +95,7 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
         title: "SLA Breach! ต้องการการตอบกลับทันที",
         body: `การสนทนา priority ${conv.priority} เกิน SLA deadline แล้ว`,
         link: `/inbox`,
-      }).catch(() => {});
+      }).catch((e) => console.error("[SLA] notification error:", e));
     }
 
     // Auto-escalate to supervisor
@@ -138,7 +124,7 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
         title: "แชทถูก escalate มาให้คุณ (SLA Breach)",
         body: `การสนทนา priority ${conv.priority} เกิน SLA deadline`,
         link: `/inbox`,
-      }).catch(() => {});
+      }).catch((e) => console.error("[SLA] notification error:", e));
     }
   }
 
@@ -192,7 +178,7 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
           title: "SLA Warning — ใกล้ถึงกำหนดแล้ว",
           body: `การสนทนา priority ${conv.priority} กำลังจะเกิน SLA ในอีกไม่นาน`,
           link: `/inbox`,
-        }).catch(() => {});
+        }).catch((e) => console.error("[SLA] notification error:", e));
       }
     }
   }

@@ -173,7 +173,7 @@ export function ConversationList({
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onRefresh}>
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onRefresh} aria-label="รีเฟรช">
             <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
           </Button>
         </div>

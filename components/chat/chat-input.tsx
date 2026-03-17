@@ -68,11 +68,11 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
   return (
     <>
       {showNoteInput && (
-        <div className="border-t bg-yellow-50 p-3">
+        <div className="border-t bg-yellow-50 p-3 dark:bg-yellow-950/40 dark:border-yellow-800">
           <div className="flex gap-2">
             <Textarea
               placeholder="เขียน internal note..."
-              className="min-h-[60px] resize-none bg-yellow-50 text-sm border-yellow-200 focus-visible:ring-yellow-400"
+              className="min-h-[60px] resize-none bg-yellow-50 text-sm border-yellow-200 focus-visible:ring-yellow-400 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-100"
               value={noteInput}
               onChange={(e) => setNoteInput(e.target.value)}
             />
@@ -116,6 +116,7 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
               className="h-8 w-8 bg-accent text-white rounded-md"
               onClick={() => handleSend()}
               disabled={sending || !input.trim()}
+              aria-label="ส่งข้อความ"
             >
               {sending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -128,16 +129,16 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
               variant="ghost"
               className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setShowMediaPicker(true)}
-              title="แนบสื่อ"
+              aria-label="แนบสื่อ"
             >
               <Paperclip className="h-4 w-4" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              className={cn("h-8 w-8 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700")}
+              className={cn("h-8 w-8 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
               onClick={() => setShowNoteInput(!showNoteInput)}
-              title="เพิ่ม note"
+              aria-label="เพิ่ม note"
             >
               <StickyNote className="h-4 w-4" />
             </Button>

@@ -65,8 +65,8 @@ export function ErpConfigForm({
           className={cn(
             "mb-4 flex items-center gap-2 rounded-xl border p-3 text-sm",
             testResult.success
-              ? "border-green-200 bg-green-50 text-green-700"
-              : "border-red-200 bg-red-50 text-red-700"
+              ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
+              : "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
           )}
         >
           {testResult.success ? (

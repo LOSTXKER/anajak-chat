@@ -82,19 +82,6 @@ export interface InstagramWebhookBody {
   }>;
 }
 
-export async function getInstagramAccountName(pageAccessToken: string, igAccountId: string): Promise<string | null> {
-  try {
-    const res = await fetch(
-      `${META_GRAPH_BASE_URL}/${igAccountId}?fields=username&access_token=${pageAccessToken}`
-    );
-    if (!res.ok) return null;
-    const data = await res.json() as { username: string };
-    return data.username;
-  } catch {
-    return null;
-  }
-}
-
 export function buildInstagramOAuthUrl(
   igAppId: string,
   redirectUri: string,
