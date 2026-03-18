@@ -146,7 +146,7 @@ export default function ContactsPage() {
                   >
                     <div className={cn(
                       "h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-sm font-medium overflow-hidden",
-                      c.avatarUrl ? "bg-muted" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
+                      c.avatarUrl ? "bg-muted" : "bg-zinc-200 text-zinc-700 dark:bg-muted dark:text-foreground/80"
                     )}>
                       {c.avatarUrl ? (
                         <img src={c.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -157,7 +157,7 @@ export default function ContactsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm truncate">{c.displayName ?? "ไม่ระบุชื่อ"}</p>
-                        <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0", PLATFORM_BADGE_COLORS[c.platform] ?? "bg-gray-100 dark:bg-gray-800")}>
+                        <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-medium shrink-0", PLATFORM_BADGE_COLORS[c.platform] ?? "bg-gray-100 dark:bg-card")}>
                           {c.platform}
                         </span>
                       </div>
@@ -198,7 +198,7 @@ export default function ContactsPage() {
               </Button>
               <div className={cn(
                 "h-10 w-10 rounded-full flex items-center justify-center text-sm font-medium overflow-hidden",
-                selected.avatarUrl ? "bg-muted" : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"
+                selected.avatarUrl ? "bg-muted" : "bg-zinc-200 text-zinc-700 dark:bg-muted dark:text-foreground/80"
               )}>
                 {selected.avatarUrl ? (
                   <img src={selected.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -286,7 +286,7 @@ export default function ContactsPage() {
                       <div key={event.id + event.type} className="flex gap-4 relative">
                         <div className={cn(
                           "h-7 w-7 rounded-full border-2 border-background flex items-center justify-center shrink-0 z-10",
-                          event.type === "conversation" ? "bg-blue-100 dark:bg-blue-950" : event.type === "order" ? "bg-green-100 dark:bg-green-950" : "bg-yellow-100 dark:bg-yellow-950"
+                          event.type === "conversation" ? "bg-blue-100 dark:bg-blue-950/40" : event.type === "order" ? "bg-green-100 dark:bg-green-950/40" : "bg-yellow-100 dark:bg-yellow-950/40"
                         )}>
                           {event.type === "conversation" ? (
                             <MessageSquare className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -306,7 +306,7 @@ export default function ContactsPage() {
                                 สนทนา ({event.platform as string})
                                 <span className={cn(
                                   "ml-2 rounded-full px-1.5 py-0.5 text-[10px]",
-                                  event.status === "resolved" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400"
+                                  event.status === "resolved" ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400"
                                 )}>{event.status as string}</span>
                               </p>
                               {typeof event.firstMessage === "string" && (
@@ -327,8 +327,8 @@ export default function ContactsPage() {
                                 <span className="ml-2 text-xs text-muted-foreground">{fmtBaht(event.amount as number)}</span>
                                 <span className={cn(
                                   "ml-2 rounded-full px-1.5 py-0.5 text-[10px]",
-                                  event.status === "delivered" ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400" :
-                                  event.status === "cancelled" ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400" : "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+                                  event.status === "delivered" ? "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400" :
+                                  event.status === "cancelled" ? "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400" : "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
                                 )}>{event.status as string}</span>
                               </p>
                             </div>

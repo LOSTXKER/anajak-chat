@@ -45,11 +45,11 @@ const CATEGORIES = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
-  greeting: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  pricing: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  shipping: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  closing: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  custom: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  greeting: "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground",
+  pricing: "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground",
+  shipping: "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground",
+  closing: "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground",
+  custom: "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground",
 };
 
 const emptyForm = { name: "", content: "", category: "custom" as Template["category"], shortcut: "" };

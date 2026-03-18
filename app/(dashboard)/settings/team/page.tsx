@@ -208,7 +208,7 @@ export default function TeamSettingsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 rounded-full px-2 py-0.5 text-xs font-medium">
+                  <span className="bg-zinc-100 text-zinc-700 dark:bg-card dark:text-foreground/80 rounded-full px-2 py-0.5 text-xs font-medium">
                     {user.role.name}
                   </span>
                   <Badge variant={user.isActive ? "default" : "outline"} className={user.isActive ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800" : ""}>

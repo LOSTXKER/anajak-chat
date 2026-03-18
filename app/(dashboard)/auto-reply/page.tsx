@@ -471,7 +471,7 @@ export default function AutoReplyPage() {
             </div>
 
             {/* Chat preview area */}
-            <div className="flex-1 overflow-y-auto bg-[#f5f5f5] dark:bg-[#0c0c0f]">
+            <div className="flex-1 overflow-y-auto bg-muted/30 dark:bg-background">
               <div className="max-w-xl mx-auto py-5 px-6">
                 <p className="text-xs text-muted-foreground mb-4">ข้อความ ({pattern.messages.length}/{pattern.messages.length} ข้อมูล)</p>
 
@@ -489,7 +489,7 @@ export default function AutoReplyPage() {
                     {pattern.messages.map((msg, idx) => (
                       <div key={idx} className="group relative flex gap-2.5">
                         {/* Bot avatar */}
-                        <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0 mt-0.5">
                           <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </div>
 
@@ -497,10 +497,10 @@ export default function AutoReplyPage() {
                         <div className="flex-1 min-w-0">
                           <div className="cursor-pointer transition-all hover:scale-[1.01]" onClick={() => openEditMsg(idx)}>
                             {msg.type === "text" && (
-                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 p-4 max-w-md shadow-sm border border-zinc-200 dark:border-zinc-700">
+                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-card p-4 max-w-md shadow-sm border border-zinc-200 dark:border-border">
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text || <span className="text-muted-foreground italic">คลิกเพื่อเพิ่มข้อความ...</span>}</p>
                                 {msg.buttons && msg.buttons.length > 0 && (
-                                  <div className="mt-3 space-y-1.5 border-t border-zinc-100 dark:border-zinc-700 pt-3">
+                                  <div className="mt-3 space-y-1.5 border-t border-zinc-100 dark:border-border pt-3">
                                     {msg.buttons.map((btn, bi) => (
                                       <div key={bi} className="w-full rounded-xl bg-green-500 text-white text-center text-sm font-medium py-2.5 px-4 hover:bg-green-600 transition-colors">{btn.label || "ปุ่ม"}</div>
                                     ))}
@@ -511,21 +511,21 @@ export default function AutoReplyPage() {
                             {msg.type === "image" && (
                               msg.imageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={msg.imageUrl} alt="" className="max-w-sm rounded-2xl rounded-tl-sm shadow-sm object-cover border border-zinc-200 dark:border-zinc-700" />
+                                <img src={msg.imageUrl} alt="" className="max-w-sm rounded-2xl rounded-tl-sm shadow-sm object-cover border border-zinc-200 dark:border-border" />
                               ) : (
-                                <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-10 flex flex-col items-center justify-center max-w-[240px] shadow-sm">
-                                  <Image className="h-10 w-10 text-zinc-300 dark:text-zinc-600 mb-2" />
+                                <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-card border border-zinc-200 dark:border-border p-10 flex flex-col items-center justify-center max-w-[240px] shadow-sm">
+                                  <Image className="h-10 w-10 text-zinc-300 dark:text-muted-foreground/40 mb-2" />
                                   <span className="text-xs text-muted-foreground">คลิกเพื่อเพิ่มรูปภาพ</span>
                                 </div>
                               )
                             )}
                             {msg.type === "card" && (
-                              <div className="rounded-2xl rounded-tl-sm border border-zinc-200 dark:border-zinc-700 max-w-sm overflow-hidden shadow-sm bg-white dark:bg-zinc-800">
+                              <div className="rounded-2xl rounded-tl-sm border border-zinc-200 dark:border-border max-w-sm overflow-hidden shadow-sm bg-white dark:bg-card">
                                 {msg.cardImageUrl ? (
                                   // eslint-disable-next-line @next/next/no-img-element
                                   <img src={msg.cardImageUrl} alt="" className="w-full h-40 object-cover" />
                                 ) : (
-                                  <div className="w-full h-32 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center"><Image className="h-10 w-10 text-zinc-300 dark:text-zinc-600" /></div>
+                                  <div className="w-full h-32 bg-zinc-100 dark:bg-muted flex items-center justify-center"><Image className="h-10 w-10 text-zinc-300 dark:text-muted-foreground/40" /></div>
                                 )}
                                 <div className="p-4 space-y-1.5">
                                   <p className="font-semibold">{msg.cardTitle || "หัวข้อการ์ด"}</p>
@@ -546,7 +546,7 @@ export default function AutoReplyPage() {
                               </div>
                             )}
                             {msg.type === "file" && (
-                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 max-w-xs shadow-sm flex items-center gap-3">
+                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-card border border-zinc-200 dark:border-border p-4 max-w-xs shadow-sm flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-blue-500" /></div>
                                 <div>
                                   <p className="text-sm font-medium">{msg.fileName || "ไฟล์แนบ"}</p>
@@ -555,7 +555,7 @@ export default function AutoReplyPage() {
                               </div>
                             )}
                             {msg.type === "video" && (
-                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 max-w-xs shadow-sm flex items-center gap-3">
+                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-card border border-zinc-200 dark:border-border p-4 max-w-xs shadow-sm flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center shrink-0"><Video className="h-5 w-5 text-purple-500" /></div>
                                 <div>
                                   <p className="text-sm font-medium">วิดีโอ</p>
@@ -568,10 +568,10 @@ export default function AutoReplyPage() {
 
                         {/* Hover actions */}
                         <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pt-1">
-                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3 text-muted-foreground" /></button>
-                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3 text-muted-foreground" /></button>
-                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3 text-muted-foreground" /></button>
-                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3 text-red-500" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-card border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-secondary transition-colors" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3 text-muted-foreground" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-card border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-secondary transition-colors" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3 text-muted-foreground" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-card border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-secondary transition-colors" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3 text-muted-foreground" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-card border shadow-sm flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3 text-red-500" /></button>
                         </div>
                       </div>
                     ))}
@@ -579,7 +579,7 @@ export default function AutoReplyPage() {
                 )}
 
                 {/* Quick Reply */}
-                <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-border">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-medium text-muted-foreground">Quick Reply ({(pattern.quickReplies ?? []).length}/13 ข้อมูล)</span>
                     <Button variant="ghost" size="sm" className="text-xs text-green-600 dark:text-green-400 hover:text-green-700" onClick={addQuickReply}>
@@ -590,7 +590,7 @@ export default function AutoReplyPage() {
                   {(pattern.quickReplies ?? []).length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {(pattern.quickReplies ?? []).map((qr, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-4 py-2 shadow-sm group/qr hover:border-green-300 dark:hover:border-green-700 transition-colors">
+                        <div key={idx} className="flex items-center gap-1.5 rounded-full bg-white dark:bg-card border border-zinc-200 dark:border-border px-4 py-2 shadow-sm group/qr hover:border-green-300 dark:hover:border-green-700/50 transition-colors">
                           <Input className="h-5 w-20 border-0 p-0 text-xs font-medium focus-visible:ring-0 bg-transparent" value={qr.label} onChange={(e) => updateQuickReply(idx, { label: e.target.value, value: e.target.value })} placeholder="ชื่อปุ่ม" />
                           <button onClick={() => removeQuickReply(idx)} className="opacity-0 group-hover/qr:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
                         </div>

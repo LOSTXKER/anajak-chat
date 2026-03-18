@@ -140,11 +140,11 @@ export function ChatInput({
   return (
     <>
       {showNoteInput && (
-        <div className="border-t bg-yellow-50 p-3 dark:bg-yellow-950/40 dark:border-yellow-800">
+        <div className="border-t bg-yellow-50 p-3 dark:bg-yellow-950/40 dark:border-yellow-700/50">
           <div className="flex gap-2">
             <Textarea
               placeholder="เขียน internal note..."
-              className="min-h-[60px] resize-none bg-yellow-50 text-sm border-yellow-200 focus-visible:ring-yellow-400 dark:bg-yellow-950/40 dark:border-yellow-800 dark:text-yellow-100"
+              className="min-h-[60px] resize-none bg-yellow-50 text-sm border-yellow-200 focus-visible:ring-yellow-400 dark:bg-yellow-950/40 dark:border-yellow-700/50 dark:text-yellow-100"
               value={noteInput}
               onChange={(e) => setNoteInput(e.target.value)}
             />
@@ -167,7 +167,7 @@ export function ChatInput({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 rounded-full border-green-200 bg-green-50 px-3 text-xs font-medium text-green-700 hover:bg-green-100 hover:border-green-300 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400 dark:hover:bg-green-950/60"
+              className="h-7 gap-1.5 rounded-full border-green-200 bg-green-50 px-3 text-xs font-medium text-green-700 hover:bg-green-100 hover:border-green-300 dark:border-green-700/50 dark:bg-green-950/40 dark:text-green-400 dark:hover:bg-green-950/60"
               onClick={onResolve}
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
@@ -190,7 +190,7 @@ export function ChatInput({
           <Button
             size="icon"
             variant="ghost"
-            className={cn("h-7 w-7 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
+            className={cn("h-7 w-7 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300")}
             onClick={() => setShowNoteInput(!showNoteInput)}
             aria-label="เพิ่ม note"
             title="Internal note"

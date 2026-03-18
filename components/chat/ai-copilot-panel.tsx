@@ -177,8 +177,8 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
   }, [chatMessages]);
 
   const sentimentConfig = {
-    positive: { label: "เชิงบวก", color: "border-green-200 text-green-700 bg-green-50 dark:border-green-800 dark:text-green-400 dark:bg-green-950/40" },
-    negative: { label: "เชิงลบ", color: "border-red-200 text-red-700 bg-red-50 dark:border-red-800 dark:text-red-400 dark:bg-red-950/40" },
+    positive: { label: "เชิงบวก", color: "border-green-200 text-green-700 bg-green-50 dark:border-green-700/50 dark:text-green-400 dark:bg-green-950/40" },
+    negative: { label: "เชิงลบ", color: "border-red-200 text-red-700 bg-red-50 dark:border-red-700/50 dark:text-red-400 dark:bg-red-950/40" },
     neutral: { label: "กลางๆ", color: "border-border text-muted-foreground bg-muted" },
   };
 
@@ -387,7 +387,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
                 msg.role === "user"
                   ? "bg-accent text-accent-foreground rounded-br-sm"
                   : msg.isError
-                    ? "bg-red-50 text-red-700 border border-red-200 rounded-bl-sm dark:bg-red-950/40 dark:text-red-400 dark:border-red-800"
+                    ? "bg-red-50 text-red-700 border border-red-200 rounded-bl-sm dark:bg-red-950/40 dark:text-red-400 dark:border-red-700/50"
                     : "bg-muted rounded-bl-sm"
               )}>
                 {msg.isError && <AlertCircle className="h-3 w-3 inline mr-1" />}

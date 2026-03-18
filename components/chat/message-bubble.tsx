@@ -31,7 +31,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
     return (
       <div className="flex gap-2 justify-start group/bubble">
         <Avatar className="h-7 w-7 shrink-0 self-end">
-          <AvatarFallback className="text-xs bg-violet-100 text-violet-600 dark:bg-violet-900 dark:text-violet-300">AI</AvatarFallback>
+          <AvatarFallback className="text-xs bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300">AI</AvatarFallback>
         </Avatar>
         <div className="max-w-[70%]">
           <div className="rounded-2xl rounded-bl-sm bg-card border border-border px-3 py-2 text-sm transition-colors hover:border-border/80">

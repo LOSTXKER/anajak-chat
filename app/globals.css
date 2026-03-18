@@ -85,39 +85,39 @@
 }
 
 .dark {
-  --background: #09090B;
-  --foreground: #FAFAFA;
-  --card: #18181B;
-  --card-foreground: #FAFAFA;
-  --popover: #18181B;
-  --popover-foreground: #FAFAFA;
-  --primary: #FAFAFA;
-  --primary-foreground: #18181B;
-  --secondary: #27272A;
-  --secondary-foreground: #FAFAFA;
-  --muted: #27272A;
-  --muted-foreground: #A1A1AA;
+  --background: #111113;
+  --foreground: #ededef;
+  --card: #1c1c1f;
+  --card-foreground: #ededef;
+  --popover: #1c1c1f;
+  --popover-foreground: #ededef;
+  --primary: #ededef;
+  --primary-foreground: #1c1c1f;
+  --secondary: #2a2a2f;
+  --secondary-foreground: #ededef;
+  --muted: #25252a;
+  --muted-foreground: #8b8b95;
   --accent: #3B82F6;
   --accent-foreground: #FFFFFF;
-  --destructive: #EF4444;
-  --border: #27272A;
-  --input: #27272A;
-  --ring: #FAFAFA;
+  --destructive: #ef4444;
+  --border: #2e2e32;
+  --input: #25252a;
+  --ring: #ededef;
 
-  --chart-1: #FAFAFA;
+  --chart-1: #ededef;
   --chart-2: #3B82F6;
-  --chart-3: #A1A1AA;
-  --chart-4: #71717A;
-  --chart-5: #52525B;
+  --chart-3: #8b8b95;
+  --chart-4: #6b6b75;
+  --chart-5: #4a4a52;
 
-  --sidebar: #09090B;
-  --sidebar-foreground: #FAFAFA;
+  --sidebar: #141416;
+  --sidebar-foreground: #ededef;
   --sidebar-primary: #3B82F6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #27272A;
-  --sidebar-accent-foreground: #FAFAFA;
-  --sidebar-border: #27272A;
-  --sidebar-ring: #FAFAFA;
+  --sidebar-accent: #25252a;
+  --sidebar-accent-foreground: #ededef;
+  --sidebar-border: #2e2e32;
+  --sidebar-ring: #ededef;
 }
 
 @layer base {
@@ -136,5 +136,5 @@
   background-color: #FAFAFA;
 }
 .dark .chat-messages-bg {
-  background-color: #0F0F12;
+  background-color: #151517;
 }

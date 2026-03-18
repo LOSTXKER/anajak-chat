@@ -243,7 +243,7 @@ export default function KnowledgeBasePage() {
                     <tr key={a.id} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
                       <td className="px-3 py-2.5 font-medium max-w-[220px] truncate">{a.title}</td>
                       <td className="px-3 py-2.5">
-                        <span className="rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 px-2 py-0.5 text-[10px] font-medium">
+                        <span className="rounded-full bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground px-2 py-0.5 text-[10px] font-medium">
                           {CATEGORIES.find((c) => c.value === a.category)?.label ?? a.category}
                         </span>
                       </td>

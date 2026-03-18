@@ -12,7 +12,7 @@ export interface NoteBubbleProps {
 export function NoteBubble({ note }: NoteBubbleProps) {
   return (
     <div className="mx-auto max-w-[80%]">
-      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 dark:border-yellow-800 dark:bg-yellow-950/40">
+      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 dark:border-yellow-700/50 dark:bg-yellow-950/40">
         <div className="mb-1 flex items-center gap-1.5">
           <StickyNote className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
           <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">โน้ตภายใน</span>

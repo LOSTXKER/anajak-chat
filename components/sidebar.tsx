@@ -124,7 +124,7 @@ function UserMenu({ user }: { user: UserInfo }) {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted">
         <Avatar className="h-7 w-7">
-          <AvatarFallback className="bg-zinc-100 text-zinc-600 text-xs font-medium dark:bg-zinc-800 dark:text-zinc-400">
+          <AvatarFallback className="bg-zinc-100 text-zinc-600 text-xs font-medium dark:bg-card dark:text-muted-foreground">
             {initials}
           </AvatarFallback>
         </Avatar>

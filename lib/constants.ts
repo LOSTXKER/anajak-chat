@@ -15,7 +15,7 @@ export const SLA_WARNING_THRESHOLD_PERCENT = 20;
 export const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   pending: { label: "รอรับ", className: "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
   open: { label: "กำลังดูแล", className: "bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
-  resolved: { label: "เสร็จสิ้น", className: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-500" },
+  resolved: { label: "เสร็จสิ้น", className: "bg-zinc-100 text-zinc-500 dark:bg-card dark:text-muted-foreground/70" },
 };
 
 // ─── Conversation Label Badges ────────────────────────────────────────────────
@@ -23,7 +23,7 @@ export const LABEL_BADGE: Record<string, { label: string; className: string }> =
   missed: { label: "ไม่ได้รับ", className: "bg-orange-100/80 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" },
   follow_up: { label: "ติดตาม", className: "bg-violet-100/80 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400" },
   spam: { label: "สแปม", className: "bg-red-100/80 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
-  blocked: { label: "บล็อก", className: "bg-zinc-200 text-zinc-600 dark:bg-zinc-700/50 dark:text-zinc-400" },
+  blocked: { label: "บล็อก", className: "bg-zinc-200 text-zinc-600 dark:bg-muted dark:text-muted-foreground" },
 };
 
 // ─── Default SLA Config ──────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ export const EVENT_LABELS: Record<string, string> = {
 };
 
 // ─── Platform Badge Colors ────────────────────────────────────────────────────
-const PLATFORM_BADGE_BASE = "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400";
+const PLATFORM_BADGE_BASE = "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground";
 export const PLATFORM_BADGE_COLORS: Record<string, string> = {
   facebook: PLATFORM_BADGE_BASE,
   instagram: PLATFORM_BADGE_BASE,
@@ -63,4 +63,4 @@ export const PLATFORM_BADGE_COLORS: Record<string, string> = {
   web: PLATFORM_BADGE_BASE,
   manual: PLATFORM_BADGE_BASE,
 };
-export const PLATFORM_BADGE_FALLBACK = "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400";
+export const PLATFORM_BADGE_FALLBACK = "bg-gray-100 text-gray-700 dark:bg-card dark:text-muted-foreground";

@@ -117,7 +117,7 @@ export function SyncLogTable({
                       {TYPE_LABELS[log.type] ?? log.type}
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground">
                         {log.direction === "inbound" ? "← in" : "→ out"}
                       </span>
                     </td>
