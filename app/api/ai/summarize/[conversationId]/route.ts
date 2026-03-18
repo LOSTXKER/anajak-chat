@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth, apiHandler, jsonError } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { summarizeConversation } from "@/lib/gemini";
+import type { Sentiment } from "@/lib/generated/prisma/client";
 
 export const POST = apiHandler(async (_req, context) => {
   const user = await requireAuth();
@@ -26,12 +27,20 @@ export const POST = apiHandler(async (_req, context) => {
       content: m.content!,
     }));
 
-  const summary = await summarizeConversation(history);
+  const analysis = await summarizeConversation(history);
 
   await prisma.conversation.update({
     where: { id: conversationId },
-    data: { aiSummary: summary },
+    data: {
+      aiSummary: analysis.summary,
+      aiSentiment: analysis.sentiment as Sentiment,
+      aiIntent: analysis.intent,
+    },
   });
 
-  return NextResponse.json({ summary });
+  return NextResponse.json({
+    summary: analysis.summary,
+    sentiment: analysis.sentiment,
+    intent: analysis.intent,
+  });
 });

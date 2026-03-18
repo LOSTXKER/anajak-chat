@@ -111,14 +111,14 @@ export function ConversationList({
   const hasActiveFilter = labelFilter !== "" || channelFilter !== "";
 
   return (
-    <div className="flex h-full w-full lg:w-72 shrink-0 flex-col border-r">
+    <div className="flex h-full w-full lg:w-80 shrink-0 flex-col border-r">
       {/* Status tabs */}
       <div className="flex border-b" role="tablist">
         {([
           { value: "all" as const, label: "ทั้งหมด" },
           { value: "pending" as const, label: "รอรับ", count: statusCounts.pending, alert: newPendingAlert },
           { value: "open" as const, label: "กำลังดูแล", count: statusCounts.open },
-          { value: "resolved" as const, label: "เสร็จสิ้น" },
+          { value: "resolved" as const, label: "เสร็จสิ้น", count: statusCounts.resolved },
         ]).map((tab) => (
           <button
             key={tab.value}
@@ -222,15 +222,15 @@ export function ConversationList({
                   key={conv.id}
                   onClick={() => onSelectConversation(conv.id)}
                   className={cn(
-                    "w-full rounded-lg p-2.5 text-left transition-colors",
+                    "w-full rounded-lg p-2.5 text-left transition-colors border-l-2",
                     isSelected
-                      ? "bg-accent/10"
-                      : "hover:bg-muted/30"
+                      ? "bg-accent/10 border-l-accent"
+                      : "border-l-transparent hover:bg-muted/30"
                   )}
                 >
                   <div className="flex gap-2.5">
                     <div className="relative shrink-0">
-                      <Avatar className="h-9 w-9">
+                      <Avatar className="h-10 w-10">
                         <AvatarImage src={conv.contact.avatarUrl ?? undefined} />
                         <AvatarFallback className="text-sm">{initial}</AvatarFallback>
                       </Avatar>

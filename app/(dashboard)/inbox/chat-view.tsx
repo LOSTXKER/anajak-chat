@@ -9,6 +9,10 @@ import {
   AlertTriangle,
   Lock,
   BookmarkPlus,
+  MoreHorizontal,
+  Ban,
+  FileDown,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,6 +37,8 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { NoteBubble } from "@/components/chat/note-bubble";
 import { ContactSidebar } from "@/components/chat/contact-sidebar";
 import { ChatInput } from "@/components/chat/chat-input";
+import { AiCopilotPanel } from "@/components/chat/ai-copilot-panel";
+import { Sheet, SheetTrigger, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import type { Conversation, Message, Note, ConversationEvent } from "./types";
 import { EVENT_LABELS, STATUS_BADGE } from "@/lib/constants";
 
@@ -294,6 +300,12 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
   }
 
   const [startingChat, setStartingChat] = useState(false);
+  const [pendingInsert, setPendingInsert] = useState<string | undefined>();
+  const [mobileAiOpen, setMobileAiOpen] = useState(false);
+
+  const handleInsertReply = useCallback((text: string) => {
+    setPendingInsert(text);
+  }, []);
 
   async function handleStartChat() {
     setStartingChat(true);
@@ -399,91 +411,78 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         )}
 
         {/* Header */}
-        <div className="flex items-center gap-3 border-b px-4 py-2.5">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center gap-3 border-b px-4 py-2">
+          <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={conversation.contact.avatarUrl ?? undefined} />
             <AvatarFallback className="text-sm">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{displayName}</p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{conversation.channel.name}</span>
-              {conversation.assignedUser && (
-                <span className="flex items-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  {conversation.assignedUser.id === currentUserId.current
-                    ? "ฉัน"
-                    : conversation.assignedUser.name}
-                </span>
-              )}
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-medium">{displayName}</p>
+              <span className="text-xs text-muted-foreground capitalize shrink-0">{conversation.channel.platform}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
-            <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_BADGE[conversation.status]?.className ?? "bg-muted text-muted-foreground")}>
-              {STATUS_BADGE[conversation.status]?.label ?? conversation.status}
+          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0", STATUS_BADGE[conversation.status]?.className ?? "bg-muted text-muted-foreground")}>
+            {STATUS_BADGE[conversation.status]?.label ?? conversation.status}
+          </span>
+
+          {conversation.assignedUser && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 border rounded-full px-2 py-0.5">
+              <Lock className="h-3 w-3" />
+              {conversation.assignedUser.id === currentUserId.current ? "ฉัน" : conversation.assignedUser.name}
             </span>
+          )}
 
-            <div className="ml-1 flex items-center border-l pl-2 gap-0.5">
-              {/* Assign */}
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
-                      />
-                    }
-                  >
-                    <UserPlus className="h-4 w-4" />
-                  </TooltipTrigger>
-                  <TooltipContent>ตั้งผู้ดูแลแชทนี้</TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent align="end" className="w-48">
-                  {agents.map((agent) => (
-                    <DropdownMenuItem
-                      key={agent.id}
-                      onClick={() => assignToAgent(agent.id)}
-                    >
-                      <span className="flex items-center gap-1.5">
-                        {agent.name}
-                        {agent.isAvailable === false && (
-                          <span className="text-xs text-red-500 dark:text-red-400 font-medium">ไม่ว่าง</span>
-                        )}
-                        {conversation.assignedUser?.id === agent.id && (
-                          <span className="text-xs text-muted-foreground">(ปัจจุบัน)</span>
-                        )}
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+          {/* Mobile AI button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 lg:hidden"
+            onClick={() => setMobileAiOpen(true)}
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
 
-              {/* Transfer */}
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowTransferDialog(true)} />
-                  }
-                >
-                  <ArrowRightLeft className="h-4 w-4" />
-                </TooltipTrigger>
-                <TooltipContent>ส่งต่อแชทให้คนอื่นดูแลแทน</TooltipContent>
-              </Tooltip>
-
-              {/* Follow-up */}
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFollowUp} />
-                  }
-                >
-                  <BookmarkPlus className="h-4 w-4" />
-                </TooltipTrigger>
-                <TooltipContent>ติดตามแชทนี้</TooltipContent>
-              </Tooltip>
-            </div>
-          </div>
+          {/* Actions dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" />}>
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {agents.map((agent) => (
+                <DropdownMenuItem key={agent.id} onClick={() => assignToAgent(agent.id)}>
+                  <UserPlus className="h-3.5 w-3.5 mr-2" />
+                  <span className="flex-1 truncate">{agent.name}</span>
+                  {conversation.assignedUser?.id === agent.id && (
+                    <span className="text-xs text-muted-foreground ml-1">(ปัจจุบัน)</span>
+                  )}
+                </DropdownMenuItem>
+              ))}
+              <div className="my-1 border-t" />
+              <DropdownMenuItem onClick={() => setShowTransferDialog(true)}>
+                <ArrowRightLeft className="h-3.5 w-3.5 mr-2" />
+                โอนแชท
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleFollowUp}>
+                <BookmarkPlus className="h-3.5 w-3.5 mr-2" />
+                ติดตาม
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSpam}>
+                <Ban className="h-3.5 w-3.5 mr-2" />
+                สแปม
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBlock}>
+                <Ban className="h-3.5 w-3.5 mr-2 text-destructive" />
+                บล็อก
+              </DropdownMenuItem>
+              <div className="my-1 border-t" />
+              <DropdownMenuItem onClick={() => window.open(`/api/conversations/${conversation.id}/export?format=excel`, "_blank")}>
+                <FileDown className="h-3.5 w-3.5 mr-2" />
+                ส่งออก Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Messages */}
@@ -514,16 +513,14 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
             timeline.map((item, idx) => {
               if (item.kind === "date") {
                 return (
-                  <div key={`date-${item.date}`} className="flex items-center gap-3 py-2">
-                    <div className="flex-1 border-t" />
-                    <span className="text-xs font-medium text-muted-foreground px-2">
+                  <div key={`date-${item.date}`} className="flex justify-center py-3">
+                    <span className="rounded-full bg-muted px-3 py-0.5 text-[11px] font-medium text-muted-foreground">
                       {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
                         day: "2-digit",
-                        month: "2-digit",
+                        month: "short",
                         year: "numeric",
                       })}
                     </span>
-                    <div className="flex-1 border-t" />
                   </div>
                 );
               }
@@ -571,10 +568,25 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           onResolve={handleResolve}
           onReopen={handleReopen}
           starting={startingChat}
+          externalInput={pendingInsert}
+          onExternalInputConsumed={() => setPendingInsert(undefined)}
         />
       </div>
 
-      <ContactSidebar conversation={conversation} onSpam={handleSpam} onBlock={handleBlock} />
+      <ContactSidebar conversation={conversation} onSpam={handleSpam} onBlock={handleBlock} onInsertReply={handleInsertReply} />
+
+      {/* Mobile AI Copilot Sheet */}
+      <Sheet open={mobileAiOpen} onOpenChange={setMobileAiOpen}>
+        <SheetContent side="right" className="p-0 w-full sm:max-w-sm">
+          <SheetTitle className="px-4 pt-4 pb-2 flex items-center gap-2 text-sm">
+            <Sparkles className="h-4 w-4" />
+            AI Copilot
+          </SheetTitle>
+          <div className="flex-1 overflow-hidden h-[calc(100%-3rem)]">
+            <AiCopilotPanel conversation={conversation} onInsertReply={(text) => { handleInsertReply(text); setMobileAiOpen(false); }} />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Transfer dialog */}
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>

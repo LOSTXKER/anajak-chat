@@ -29,12 +29,12 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
 
   if (isBot) {
     return (
-      <div className="flex gap-2 justify-start">
+      <div className="flex gap-2 justify-start group/bubble">
         <Avatar className="h-7 w-7 shrink-0 self-end">
-          <AvatarFallback className="text-xs bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">B</AvatarFallback>
+          <AvatarFallback className="text-xs bg-violet-100 text-violet-600 dark:bg-violet-900 dark:text-violet-300">AI</AvatarFallback>
         </Avatar>
         <div className="max-w-[70%]">
-          <div className="rounded-2xl rounded-bl-sm bg-card border border-border px-3 py-2 text-sm">
+          <div className="rounded-2xl rounded-bl-sm bg-card border border-border px-3 py-2 text-sm transition-colors hover:border-border/80">
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground text-left">
@@ -46,7 +46,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
   }
 
   return (
-    <div className={cn("flex gap-2", isContact ? "justify-start" : "justify-end")}>
+    <div className={cn("flex gap-2 group/bubble", isContact ? "justify-start" : "justify-end")}>
       {isContact && (
         <Avatar className="h-7 w-7 shrink-0 self-end">
           <AvatarImage src={contactAvatar} />
@@ -56,10 +56,10 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
       <div className={cn("max-w-[70%]", isContact ? "items-start" : "items-end")}>
         <div
           className={cn(
-            "rounded-2xl px-3 py-2 text-sm",
+            "rounded-2xl px-3 py-2 text-sm transition-colors",
             isContact
-              ? "rounded-bl-sm bg-card border border-border text-foreground"
-              : "rounded-br-sm bg-accent text-accent-foreground"
+              ? "rounded-bl-sm bg-card border border-border text-foreground hover:border-border/80"
+              : "rounded-br-sm bg-accent/90 text-accent-foreground hover:bg-accent"
           )}
         >
           {message.contentType === "image" && message.mediaUrl ? (
@@ -67,7 +67,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
             <img
               src={message.mediaUrl}
               alt="image"
-              className="max-w-[200px] rounded-lg"
+              className="max-w-[240px] rounded-lg"
               loading="lazy"
             />
           ) : message.contentType === "file" && message.mediaUrl ? (

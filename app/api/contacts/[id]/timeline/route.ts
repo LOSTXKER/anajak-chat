@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, jsonError, apiHandler } from "@/lib/api-helpers";
+import { requireAuth, jsonError, apiHandler, searchParams as getSearchParams } from "@/lib/api-helpers";
 
-export const GET = apiHandler(async (_req, context) => {
+export const GET = apiHandler(async (req, context) => {
   const user = await requireAuth();
   const { params } = context as { params: Promise<{ id: string }> };
   const { id } = await params;
+  const sp = getSearchParams(req);
+  const limit = Math.min(100, Math.max(1, parseInt(sp.get("limit") ?? "50")));
 
   const contact = await prisma.contact.findFirst({
     where: { id, orgId: user.orgId },
@@ -16,7 +18,7 @@ export const GET = apiHandler(async (_req, context) => {
     prisma.conversation.findMany({
       where: { contactId: id, orgId: user.orgId },
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: limit,
       select: {
         id: true,
         status: true,
@@ -32,7 +34,7 @@ export const GET = apiHandler(async (_req, context) => {
     prisma.order.findMany({
       where: { contactId: id, orgId: user.orgId },
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: limit,
       select: {
         id: true,
         orderNumber: true,
@@ -50,7 +52,7 @@ export const GET = apiHandler(async (_req, context) => {
         noteableId: id,
       },
       orderBy: { createdAt: "desc" },
-      take: 20,
+      take: Math.min(limit, 20),
       select: {
         id: true,
         content: true,

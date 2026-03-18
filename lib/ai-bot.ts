@@ -6,7 +6,7 @@ import { isWithinBusinessHours, extractBusinessHours } from "@/lib/business-hour
 import { AI_BOT_ERP_TIMEOUT } from "@/lib/constants";
 import { sendPlatformMessage } from "@/lib/integrations/send-message";
 import { createNotification } from "@/lib/notifications";
-import type { AiBotMode } from "@/lib/generated/prisma/client";
+import type { AiBotMode, Sentiment } from "@/lib/generated/prisma/client";
 
 export async function processIncomingMessage(params: {
   conversationId: string;
@@ -97,6 +97,14 @@ export async function processIncomingMessage(params: {
       shopName: org.name,
       persona: botConfig.persona,
     });
+
+    // Persist sentiment to conversation
+    if (result.sentiment) {
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { aiSentiment: result.sentiment as Sentiment },
+      });
+    }
 
     // Check escalation rules
     const shouldEscalate =

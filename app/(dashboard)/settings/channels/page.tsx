@@ -12,6 +12,7 @@ import {
   XCircle,
   Loader2,
   ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,7 +80,7 @@ const PLATFORM_META = {
   },
 };
 
-const AVAILABLE_PLATFORMS = ["facebook", "instagram", "line"] as const;
+const AVAILABLE_PLATFORMS = ["facebook", "instagram", "line", "whatsapp"] as const;
 type ConnectablePlatform = typeof AVAILABLE_PLATFORMS[number];
 
 export default function ChannelsPage() {
@@ -100,6 +101,9 @@ export default function ChannelsPage() {
 
   // OAuth redirect loading
   const [oauthLoading, setOauthLoading] = useState<ConnectablePlatform | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<Record<string, { ok: boolean; error?: string }>>({});
+  const [reconnectingId, setReconnectingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchChannels();
@@ -125,6 +129,7 @@ export default function ChannelsPage() {
     const map: Record<string, string> = {
       facebook_connected: "Facebook Page เชื่อมต่อสำเร็จแล้ว",
       instagram_connected: "Instagram Account เชื่อมต่อสำเร็จแล้ว",
+      whatsapp_connected: "WhatsApp Business เชื่อมต่อสำเร็จแล้ว",
     };
     return map[key] ?? "เชื่อมต่อสำเร็จ";
   }
@@ -137,6 +142,8 @@ export default function ChannelsPage() {
       no_instagram_account: "ไม่พบ Instagram Business Account ที่เชื่อมกับ Page นี้",
       pages_fetch_failed: "ดึงข้อมูล Pages ไม่สำเร็จ",
       page_already_connected: "เพจนี้ถูกเชื่อมต่อโดยบัญชีอื่นแล้ว",
+      waba_fetch_failed: "ดึงข้อมูล WhatsApp Business Account ไม่สำเร็จ",
+      no_waba: "ไม่พบ WhatsApp Business Account ในบัญชีนี้",
     };
     return map[key] ?? "เกิดข้อผิดพลาด กรุณาลองใหม่";
   }
@@ -159,7 +166,7 @@ export default function ChannelsPage() {
       setLineDialogOpen(true);
       return;
     }
-    setOauthLoading(platform);
+    setOauthLoading(platform as ConnectablePlatform);
     try {
       const res = await fetch(`/api/channels/${platform}/connect`);
       if (res.ok) {
@@ -195,6 +202,41 @@ export default function ChannelsPage() {
       }
     } finally {
       setLineConnecting(false);
+    }
+  }
+
+  async function handleReconnect(channel: Channel) {
+    setReconnectingId(channel.id);
+    try {
+      const res = await fetch(`/api/channels/${channel.id}/reconnect`, { method: "POST" });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        toast({ title: "Reconnect ไม่สำเร็จ", description: data.error, variant: "destructive" });
+        setReconnectingId(null);
+      }
+    } catch {
+      toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+      setReconnectingId(null);
+    }
+  }
+
+  async function handleTestChannel(channel: Channel) {
+    setTestingId(channel.id);
+    try {
+      const res = await fetch(`/api/channels/${channel.id}/test`, { method: "POST" });
+      const data = (await res.json()) as { ok: boolean; error?: string };
+      setTestResults((prev) => ({ ...prev, [channel.id]: data }));
+      toast({
+        title: data.ok ? "การเชื่อมต่อปกติ" : "การเชื่อมต่อมีปัญหา",
+        description: data.ok ? `${channel.name} ทำงานปกติ` : data.error,
+        variant: data.ok ? "default" : "destructive",
+      });
+    } catch {
+      toast({ title: "ทดสอบไม่สำเร็จ", variant: "destructive" });
+    } finally {
+      setTestingId(null);
     }
   }
 
@@ -254,7 +296,35 @@ export default function ChannelsPage() {
                       </span>
                     </div>
                   </CardHeader>
-                  <CardFooter className="pt-2">
+                  <CardFooter className="pt-2 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleTestChannel(channel)}
+                      disabled={testingId === channel.id}
+                    >
+                      {testingId === channel.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                      )}
+                      ทดสอบ
+                    </Button>
+                    {testResults[channel.id] && !testResults[channel.id].ok && channel.platform !== "line" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleReconnect(channel)}
+                        disabled={reconnectingId === channel.id}
+                      >
+                        {reconnectingId === channel.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : (
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                        )}
+                        Reconnect
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -332,36 +402,14 @@ export default function ChannelsPage() {
                       ) : (
                         <ExternalLink className="h-4 w-4 mr-2" />
                       )}
-                      {isConnected ? "เชื่อมต่อแล้ว" : platform === "line" ? "ใส่ Token" : "เชื่อมต่อ"}
+                      {isConnected ? "เชื่อมต่อแล้ว" : platform === "line" ? "ใส่ Token" : "เชื่อมต่อ Meta"}
                     </Button>
                   </CardFooter>
                 </Card>
               );
             })}
 
-            {/* WhatsApp - coming soon */}
-            <Card className="rounded-xl border bg-card opacity-50">
-              <CardHeader className="pb-2">
-                <div className="flex items-center gap-3">
-                  <div className={`rounded-xl p-2.5 ${PLATFORM_META.whatsapp.bg}`}>
-                    <MessageCircle className={`h-5 w-5 ${PLATFORM_META.whatsapp.color}`} />
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm">{PLATFORM_META.whatsapp.label}</CardTitle>
-                    <span className="mt-1 inline-flex bg-gray-100 text-gray-600 rounded-full px-2 py-0.5 text-xs font-medium dark:bg-gray-800 dark:text-gray-400">เร็วๆ นี้</span>
-                  </div>
-                </div>
-                <CardDescription className="text-xs mt-2">
-                  {PLATFORM_META.whatsapp.description}
-                </CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button size="sm" variant="outline" className="w-full" disabled>
-                  <XCircle className="h-4 w-4 mr-2" />
-                  ยังไม่พร้อมใช้งาน
-                </Button>
-              </CardFooter>
-            </Card>
+            
           </div>
         )}
       </div>

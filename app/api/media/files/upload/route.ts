@@ -30,6 +30,16 @@ export const POST = apiHandler(async (request) => {
 
   if (!file) return jsonError("No file provided", 400);
 
+  const ALLOWED_MIME_PREFIXES = ["image/", "video/", "audio/", "application/pdf", "application/vnd", "application/msword", "text/"];
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+  if (!ALLOWED_MIME_PREFIXES.some((p) => file.type.startsWith(p))) {
+    return jsonError(`File type "${file.type}" is not allowed`, 400);
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return jsonError(`File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`, 400);
+  }
+
   const supabase = await createServiceClient();
 
   const ext = file.name.split(".").pop() ?? "bin";

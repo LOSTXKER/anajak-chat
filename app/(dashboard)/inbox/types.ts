@@ -7,6 +7,7 @@ export interface ConversationContact {
   phone: string | null;
   email: string | null;
   tags: string[];
+  segment?: string | null;
 }
 
 export interface ConversationChannel {
@@ -38,6 +39,7 @@ export interface Conversation {
   sourceAdId: string | null;
   aiSummary: string | null;
   aiSentiment: string | null;
+  aiIntent: string | null;
   slaFirstResponseDeadline: string | null;
   slaBreachedAt: string | null;
   slaResponseMinutes?: number;

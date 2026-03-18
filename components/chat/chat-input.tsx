@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Send,
   Paperclip,
@@ -32,6 +32,8 @@ export interface ChatInputProps {
   onResolve?: () => void;
   onReopen?: () => void;
   starting?: boolean;
+  externalInput?: string;
+  onExternalInputConsumed?: () => void;
 }
 
 export function ChatInput({
@@ -45,6 +47,8 @@ export function ChatInput({
   onResolve,
   onReopen,
   starting,
+  externalInput,
+  onExternalInputConsumed,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -54,6 +58,14 @@ export function ChatInput({
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (externalInput) {
+      setInput(externalInput);
+      onExternalInputConsumed?.();
+      textareaRef.current?.focus();
+    }
+  }, [externalInput, onExternalInputConsumed]);
 
   async function handleSend(content?: string, mediaUrl?: string, mediaFileId?: string) {
     const text = content ?? input.trim();
