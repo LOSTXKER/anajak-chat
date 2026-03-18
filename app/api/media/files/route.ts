@@ -6,7 +6,7 @@ export const GET = apiHandler(async (request) => {
   const user = await requireAuth();
 
   const params = searchParams(request);
-  const folderId = params.get("folderId") ?? null;
+  const folderId = params.get("folderId") || null;
   const fileType = params.get("fileType");
   const search = params.get("search") ?? "";
   const { page, limit, skip } = parsePagination(request, { limit: 48 });

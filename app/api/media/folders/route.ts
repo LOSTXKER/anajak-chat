@@ -6,7 +6,7 @@ export const GET = apiHandler(async (request) => {
   const user = await requireAuth();
 
   const params = searchParams(request);
-  const parentId = params.get("parentId") ?? null;
+  const parentId = params.get("parentId") || null;
 
   const folders = await prisma.mediaFolder.findMany({
     where: {
