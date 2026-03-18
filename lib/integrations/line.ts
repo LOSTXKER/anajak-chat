@@ -136,13 +136,24 @@ export async function deleteRichMenu(
 
 export async function listRichMenus(
   credentials: LineCredentials
-): Promise<Array<{ richMenuId: string; name: string; chatBarText: string; selected: boolean; areas: RichMenuArea[] }>> {
+): Promise<Array<{ richMenuId: string; name: string; chatBarText: string; selected: boolean; size: { width: number; height: number }; areas: RichMenuArea[] }>> {
   const res = await fetch("https://api.line.me/v2/bot/richmenu/list", {
     headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
   });
   if (!res.ok) return [];
-  const data = (await res.json()) as { richmenus: Array<{ richMenuId: string; name: string; chatBarText: string; selected: boolean; areas: RichMenuArea[] }> };
+  const data = (await res.json()) as { richmenus: Array<{ richMenuId: string; name: string; chatBarText: string; selected: boolean; size: { width: number; height: number }; areas: RichMenuArea[] }> };
   return data.richmenus ?? [];
+}
+
+export async function getRichMenuImage(
+  credentials: LineCredentials,
+  richMenuId: string
+): Promise<ArrayBuffer | null> {
+  const res = await fetch(`https://api-data.line.me/v2/bot/richmenu/${richMenuId}/content`, {
+    headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
+  });
+  if (!res.ok) return null;
+  return res.arrayBuffer();
 }
 
 export async function getDefaultRichMenuId(
