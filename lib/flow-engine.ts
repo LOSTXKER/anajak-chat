@@ -1,24 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { sendPlatformMessage } from "@/lib/integrations/send-message";
-import { sendLineMessage, buildLineButtonMessage, type LineCredentials } from "@/lib/integrations/line";
+import { sendAutoReplyMessage, type AutoReplyMessage } from "@/lib/integrations/send-message";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-interface FlowButton {
-  label: string;
-  postbackData: string;
-}
-
-type FlowStep =
-  | { type: "send_message"; content: string; buttons?: FlowButton[] }
-  | { type: "send_image"; imageUrl: string; caption?: string }
-  | { type: "condition"; field: "message" | "tag" | "segment"; operator: "contains" | "equals" | "not_contains"; value: string; gotoStep: number; elseStep: number }
-  | { type: "wait_reply"; timeoutSeconds?: number }
-  | { type: "assign_agent"; agentId: string }
-  | { type: "set_tag"; tag: string }
-  | { type: "delay"; seconds: number }
-  | { type: "ai_reply" }
-  | { type: "end_flow" };
 
 interface FlowTrigger {
   type: "first_message" | "keyword" | "postback";
@@ -26,11 +9,23 @@ interface FlowTrigger {
   data?: string;
 }
 
+interface QuickReplyItem {
+  label: string;
+  action: "message" | "postback";
+  value: string;
+}
+
+interface AutoReplyPattern {
+  messages: AutoReplyMessage[];
+  quickReplies?: QuickReplyItem[];
+  assignToHuman?: boolean;
+}
+
 // ─── Main Entry Point ────────────────────────────────────────────────────────
 
 /**
- * Process a flow for an incoming message. Returns true if a flow was triggered
- * (callers should skip AI bot when true).
+ * Process auto-reply patterns for an incoming message.
+ * Returns true if a pattern was triggered (callers should skip AI bot).
  */
 export async function processFlowForMessage(params: {
   conversationId: string;
@@ -41,19 +36,6 @@ export async function processFlowForMessage(params: {
 }): Promise<boolean> {
   const { conversationId, messageContent, orgId, eventType = "message", postbackData } = params;
 
-  // Check for active session first
-  const activeSession = await prisma.flowSession.findFirst({
-    where: { conversationId, status: "active" },
-    include: { flow: true },
-  });
-
-  if (activeSession) {
-    const steps = activeSession.flow.steps as FlowStep[];
-    await executeFromStep(activeSession.id, steps, activeSession.currentStep, conversationId, messageContent, postbackData);
-    return true;
-  }
-
-  // No active session — find matching flow
   const flows = await prisma.chatFlow.findMany({
     where: { orgId, isActive: true },
     orderBy: { priority: "desc" },
@@ -71,11 +53,14 @@ export async function processFlowForMessage(params: {
     const trigger = flow.trigger as unknown as FlowTrigger;
 
     if (matchesTrigger(trigger, messageContent, eventType, postbackData, conversation.createdAt)) {
+      const pattern = flow.steps as unknown as AutoReplyPattern;
+      if (!pattern?.messages?.length) continue;
+
       const session = await prisma.flowSession.create({
         data: { flowId: flow.id, conversationId },
       });
-      const steps = flow.steps as FlowStep[];
-      await executeFromStep(session.id, steps, 0, conversationId, messageContent, postbackData);
+
+      await executeAutoReply(session.id, pattern, conversationId);
       return true;
     }
   }
@@ -96,7 +81,7 @@ function matchesTrigger(
     case "first_message": {
       if (!conversationCreatedAt) return false;
       const ageMs = Date.now() - conversationCreatedAt.getTime();
-      return ageMs < 60_000; // within 1 minute of creation
+      return ageMs < 60_000;
     }
     case "keyword":
       return (trigger.keywords ?? []).some((kw) =>
@@ -109,162 +94,56 @@ function matchesTrigger(
   }
 }
 
-// ─── Step Execution ──────────────────────────────────────────────────────────
+// ─── Auto-Reply Execution ────────────────────────────────────────────────────
 
-async function executeFromStep(
+async function executeAutoReply(
   sessionId: string,
-  steps: FlowStep[],
-  startIdx: number,
-  conversationId: string,
-  messageContent: string,
-  postbackData?: string
+  pattern: AutoReplyPattern,
+  conversationId: string
 ) {
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     include: {
-      contact: { select: { id: true, platformId: true, tags: true, segment: true } },
+      contact: { select: { id: true, platformId: true } },
       channel: { select: { platform: true, credentials: true } },
     },
   });
   if (!conversation) return;
 
-  let i = startIdx;
-  const maxSteps = 20; // prevent infinite loops
-  let executedCount = 0;
+  const { platform, credentials } = conversation.channel;
+  const recipientId = conversation.contact.platformId;
 
-  while (i < steps.length && executedCount < maxSteps) {
-    const step = steps[i];
-    executedCount++;
+  for (const msg of pattern.messages) {
+    try {
+      await sendAutoReplyMessage({ platform, credentials, recipientId, message: msg });
 
-    switch (step.type) {
-      case "send_message": {
-        if (step.buttons?.length && conversation.channel.platform === "line") {
-          const creds = conversation.channel.credentials as unknown as LineCredentials;
-          const flexMsg = buildLineButtonMessage(step.content, step.buttons.map((b) => ({
-            label: b.label,
-            type: "postback" as const,
-            data: b.postbackData,
-          })));
-          await sendLineMessage(creds, conversation.contact.platformId, [flexMsg as never]);
-        } else {
-          await sendPlatformMessage({
-            platform: conversation.channel.platform,
-            credentials: conversation.channel.credentials,
-            recipientId: conversation.contact.platformId,
-            text: step.content,
-          });
-        }
+      const contentType = msg.type === "image" ? "image" : msg.type === "video" ? "file" : "text";
+      const content = msg.text ?? msg.cardTitle ?? msg.fileName ?? (msg.type === "sticker" ? "[Sticker]" : null);
 
-        await prisma.message.create({
-          data: {
-            conversationId,
-            senderType: "bot",
-            content: step.content,
-            contentType: "text",
-            metadata: { source: "flow", sessionId },
-          },
-        });
-        i++;
-        break;
-      }
-
-      case "send_image": {
-        await sendPlatformMessage({
-          platform: conversation.channel.platform,
-          credentials: conversation.channel.credentials,
-          recipientId: conversation.contact.platformId,
-          imageUrl: step.imageUrl,
-        });
-        await prisma.message.create({
-          data: {
-            conversationId,
-            senderType: "bot",
-            content: step.caption ?? null,
-            contentType: "image",
-            mediaUrl: step.imageUrl,
-            metadata: { source: "flow", sessionId },
-          },
-        });
-        i++;
-        break;
-      }
-
-      case "condition": {
-        let fieldValue = "";
-        if (step.field === "message") fieldValue = messageContent;
-        else if (step.field === "tag") fieldValue = (conversation.contact.tags ?? []).join(",");
-        else if (step.field === "segment") fieldValue = conversation.contact.segment ?? "";
-
-        let match = false;
-        if (step.operator === "contains") match = fieldValue.toLowerCase().includes(step.value.toLowerCase());
-        else if (step.operator === "equals") match = fieldValue.toLowerCase() === step.value.toLowerCase();
-        else if (step.operator === "not_contains") match = !fieldValue.toLowerCase().includes(step.value.toLowerCase());
-
-        i = match ? step.gotoStep : step.elseStep;
-        break;
-      }
-
-      case "wait_reply": {
-        await prisma.flowSession.update({
-          where: { id: sessionId },
-          data: { currentStep: i + 1 },
-        });
-        return; // pause — next message will resume
-      }
-
-      case "assign_agent": {
-        const agentId = step.agentId === "auto" ? undefined : step.agentId;
-        if (agentId) {
-          await prisma.conversation.update({
-            where: { id: conversationId },
-            data: { assignedTo: agentId, status: "open" },
-          });
-        }
-        i++;
-        break;
-      }
-
-      case "set_tag": {
-        const currentTags = conversation.contact.tags ?? [];
-        if (!currentTags.includes(step.tag)) {
-          await prisma.contact.update({
-            where: { id: conversation.contact.id },
-            data: { tags: [...currentTags, step.tag] },
-          });
-        }
-        i++;
-        break;
-      }
-
-      case "delay": {
-        await new Promise((r) => setTimeout(r, Math.min(step.seconds, 10) * 1000));
-        i++;
-        break;
-      }
-
-      case "ai_reply": {
-        // Delegate to AI bot — mark session complete and let AI handle
-        await prisma.flowSession.update({
-          where: { id: sessionId },
-          data: { status: "completed", completedAt: new Date(), currentStep: i },
-        });
-        return; // AI bot will handle from here
-      }
-
-      case "end_flow":
-      default: {
-        await prisma.flowSession.update({
-          where: { id: sessionId },
-          data: { status: "completed", completedAt: new Date(), currentStep: i },
-        });
-        return;
-      }
+      await prisma.message.create({
+        data: {
+          conversationId,
+          senderType: "bot",
+          content,
+          contentType,
+          mediaUrl: msg.imageUrl ?? msg.fileUrl ?? msg.videoUrl ?? null,
+          metadata: { source: "auto_reply", sessionId },
+        },
+      });
+    } catch (e) {
+      console.error("[AutoReply] send message error:", e);
     }
   }
 
-  // Reached end of steps
+  if (pattern.assignToHuman) {
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { status: "open" },
+    });
+  }
+
   await prisma.flowSession.update({
     where: { id: sessionId },
-    data: { status: "completed", completedAt: new Date(), currentStep: i },
+    data: { status: "completed", completedAt: new Date(), currentStep: pattern.messages.length },
   });
 }
