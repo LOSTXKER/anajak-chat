@@ -73,8 +73,11 @@ export default function TemplatesPage() {
   async function fetchTemplates() {
     setLoading(true);
     try {
-      const res = await fetch("/api/templates");
-      if (res.ok) setTemplates(await res.json());
+      const res = await fetch("/api/templates?limit=100");
+      if (res.ok) {
+        const data = await res.json();
+        setTemplates(Array.isArray(data) ? data : data.templates ?? []);
+      }
     } finally {
       setLoading(false);
     }

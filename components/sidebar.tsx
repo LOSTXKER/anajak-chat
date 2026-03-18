@@ -29,6 +29,10 @@ import {
   Menu,
   ChevronDown,
   Bot,
+  BookOpen,
+  MessageCircle,
+  LayoutGrid,
+  Sparkles,
 } from "lucide-react";
 
 interface UserInfo {
@@ -49,7 +53,14 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   { href: "/inbox", label: "กล่องข้อความ", icon: MessageSquare },
   { href: "/contacts", label: "รายชื่อ", icon: Users },
-  { href: "/auto-reply", label: "รูปแบบตอบกลับอัตโนมัติ", icon: Bot },
+];
+
+const CONTENT_NAV: NavItem[] = [
+  { href: "/auto-reply", label: "ตอบกลับอัตโนมัติ", icon: Bot },
+  { href: "/templates", label: "ข้อความด่วน", icon: MessageCircle },
+  { href: "/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
+  { href: "/ai-bot", label: "AI Bot", icon: Sparkles },
+  { href: "/line-rich-menu", label: "LINE Rich Menu", icon: LayoutGrid },
 ];
 
 const TOOLS_NAV: NavItem[] = [
@@ -155,6 +166,7 @@ function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () 
 
       <ScrollArea className="flex-1 py-2">
         <NavGroup label="หลัก" items={MAIN_NAV} onClick={onNavClick} />
+        <NavGroup label="เนื้อหาและบอท" items={CONTENT_NAV} onClick={onNavClick} />
         <NavGroup label="เครื่องมือ" items={TOOLS_NAV} onClick={onNavClick} />
 
         <div className="mb-4">
