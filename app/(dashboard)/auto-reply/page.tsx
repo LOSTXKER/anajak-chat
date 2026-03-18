@@ -470,13 +470,13 @@ export default function AutoReplyPage() {
               </div>
             </div>
 
-            {/* Messages as chat preview */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="max-w-2xl mx-auto py-4 px-5">
-                <div className="text-xs text-muted-foreground mb-3">ข้อความ ({pattern.messages.length}/{pattern.messages.length} ข้อมูล)</div>
+            {/* Chat preview area */}
+            <div className="flex-1 overflow-y-auto bg-[#f5f5f5] dark:bg-[#0c0c0f]">
+              <div className="max-w-xl mx-auto py-5 px-6">
+                <p className="text-xs text-muted-foreground mb-4">ข้อความ ({pattern.messages.length}/{pattern.messages.length} ข้อมูล)</p>
 
                 {pattern.messages.length === 0 ? (
-                  <div className="flex flex-col items-center py-16 text-center">
+                  <div className="flex flex-col items-center py-16 text-center rounded-2xl bg-card border">
                     <MessageSquare className="h-10 w-10 text-muted-foreground/20 mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">ยังไม่มีข้อความ</p>
                     <Button variant="outline" onClick={() => setShowTypeSelector(true)}>
@@ -485,77 +485,93 @@ export default function AutoReplyPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {pattern.messages.map((msg, idx) => (
-                      <div key={idx} className="group relative">
-                        {/* Action buttons - float right on hover */}
-                        <div className="absolute -right-2 top-0 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3" /></Button>
-                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3" /></Button>
-                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3" /></Button>
-                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm text-destructive" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3" /></Button>
+                      <div key={idx} className="group relative flex gap-2.5">
+                        {/* Bot avatar */}
+                        <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center shrink-0 mt-0.5">
+                          <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
                         </div>
 
-                        {/* Chat bubble preview */}
-                        <div className="cursor-pointer hover:opacity-90 transition-opacity" onClick={() => openEditMsg(idx)}>
-                          {msg.type === "text" && (
-                            <div className="rounded-2xl rounded-bl-sm bg-card border border-border p-3 max-w-md shadow-sm">
-                              <p className="text-sm whitespace-pre-wrap">{msg.text || <span className="text-muted-foreground italic">ยังไม่มีข้อความ — คลิกเพื่อแก้ไข</span>}</p>
-                              {msg.buttons && msg.buttons.length > 0 && (
-                                <div className="mt-2 space-y-1.5">
-                                  {msg.buttons.map((btn, bi) => (
-                                    <div key={bi} className="w-full rounded-lg bg-accent text-accent-foreground text-center text-xs font-medium py-2 px-4">{btn.label || "ปุ่ม"}</div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {msg.type === "image" && (
-                            msg.imageUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={msg.imageUrl} alt="" className="max-w-xs rounded-2xl rounded-bl-sm border shadow-sm object-cover" />
-                            ) : (
-                              <div className="rounded-2xl rounded-bl-sm bg-card border p-8 flex items-center justify-center max-w-[200px] shadow-sm"><Image className="h-8 w-8 text-muted-foreground/30" /></div>
-                            )
-                          )}
-                          {msg.type === "card" && (
-                            <div className="rounded-2xl border max-w-xs overflow-hidden shadow-sm bg-card">
-                              {msg.cardImageUrl ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={msg.cardImageUrl} alt="" className="w-full h-36 object-cover" />
-                              ) : (
-                                <div className="w-full h-28 bg-muted flex items-center justify-center"><Image className="h-8 w-8 text-muted-foreground/20" /></div>
-                              )}
-                              <div className="p-3 space-y-1">
-                                <p className="text-sm font-semibold">{msg.cardTitle || "หัวข้อ"}</p>
-                                {msg.cardText && <p className="text-xs text-muted-foreground">{msg.cardText}</p>}
-                                {msg.cardButtons && msg.cardButtons.length > 0 && (
-                                  <div className="pt-1 space-y-1">
-                                    {msg.cardButtons.map((btn, bi) => (
-                                      <div key={bi} className="w-full rounded-lg bg-accent text-accent-foreground text-center text-xs font-medium py-1.5">{btn.label || "ปุ่ม"}</div>
+                        {/* Bubble */}
+                        <div className="flex-1 min-w-0">
+                          <div className="cursor-pointer transition-all hover:scale-[1.01]" onClick={() => openEditMsg(idx)}>
+                            {msg.type === "text" && (
+                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 p-4 max-w-md shadow-sm border border-zinc-200 dark:border-zinc-700">
+                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text || <span className="text-muted-foreground italic">คลิกเพื่อเพิ่มข้อความ...</span>}</p>
+                                {msg.buttons && msg.buttons.length > 0 && (
+                                  <div className="mt-3 space-y-1.5 border-t border-zinc-100 dark:border-zinc-700 pt-3">
+                                    {msg.buttons.map((btn, bi) => (
+                                      <div key={bi} className="w-full rounded-xl bg-green-500 text-white text-center text-sm font-medium py-2.5 px-4 hover:bg-green-600 transition-colors">{btn.label || "ปุ่ม"}</div>
                                     ))}
                                   </div>
                                 )}
                               </div>
-                            </div>
-                          )}
-                          {msg.type === "sticker" && (
-                            <div className="rounded-2xl rounded-bl-sm bg-card border p-4 max-w-[120px] shadow-sm flex items-center justify-center">
-                              <Smile className="h-12 w-12 text-muted-foreground/40" />
-                            </div>
-                          )}
-                          {msg.type === "file" && (
-                            <div className="rounded-2xl rounded-bl-sm bg-card border p-3 max-w-xs shadow-sm flex items-center gap-2">
-                              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-                              <span className="text-sm truncate">{msg.fileName || msg.fileUrl || "ไฟล์แนบ"}</span>
-                            </div>
-                          )}
-                          {msg.type === "video" && (
-                            <div className="rounded-2xl rounded-bl-sm bg-card border p-3 max-w-xs shadow-sm flex items-center gap-2">
-                              <Video className="h-5 w-5 text-muted-foreground shrink-0" />
-                              <span className="text-sm truncate">{msg.videoUrl || "วิดีโอ"}</span>
-                            </div>
-                          )}
+                            )}
+                            {msg.type === "image" && (
+                              msg.imageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={msg.imageUrl} alt="" className="max-w-sm rounded-2xl rounded-tl-sm shadow-sm object-cover border border-zinc-200 dark:border-zinc-700" />
+                              ) : (
+                                <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-10 flex flex-col items-center justify-center max-w-[240px] shadow-sm">
+                                  <Image className="h-10 w-10 text-zinc-300 dark:text-zinc-600 mb-2" />
+                                  <span className="text-xs text-muted-foreground">คลิกเพื่อเพิ่มรูปภาพ</span>
+                                </div>
+                              )
+                            )}
+                            {msg.type === "card" && (
+                              <div className="rounded-2xl rounded-tl-sm border border-zinc-200 dark:border-zinc-700 max-w-sm overflow-hidden shadow-sm bg-white dark:bg-zinc-800">
+                                {msg.cardImageUrl ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={msg.cardImageUrl} alt="" className="w-full h-40 object-cover" />
+                                ) : (
+                                  <div className="w-full h-32 bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center"><Image className="h-10 w-10 text-zinc-300 dark:text-zinc-600" /></div>
+                                )}
+                                <div className="p-4 space-y-1.5">
+                                  <p className="font-semibold">{msg.cardTitle || "หัวข้อการ์ด"}</p>
+                                  {msg.cardText && <p className="text-sm text-muted-foreground leading-relaxed">{msg.cardText}</p>}
+                                  {msg.cardButtons && msg.cardButtons.length > 0 && (
+                                    <div className="pt-2 space-y-1.5">
+                                      {msg.cardButtons.map((btn, bi) => (
+                                        <div key={bi} className="w-full rounded-xl bg-green-500 text-white text-center text-sm font-medium py-2.5">{btn.label || "ปุ่ม"}</div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                            {msg.type === "sticker" && (
+                              <div className="max-w-[100px]">
+                                <Smile className="h-16 w-16 text-yellow-400" />
+                              </div>
+                            )}
+                            {msg.type === "file" && (
+                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 max-w-xs shadow-sm flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0"><FileText className="h-5 w-5 text-blue-500" /></div>
+                                <div>
+                                  <p className="text-sm font-medium">{msg.fileName || "ไฟล์แนบ"}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{msg.fileUrl || "คลิกเพื่อตั้งค่า"}</p>
+                                </div>
+                              </div>
+                            )}
+                            {msg.type === "video" && (
+                              <div className="rounded-2xl rounded-tl-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 max-w-xs shadow-sm flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center shrink-0"><Video className="h-5 w-5 text-purple-500" /></div>
+                                <div>
+                                  <p className="text-sm font-medium">วิดีโอ</p>
+                                  <p className="text-xs text-muted-foreground truncate">{msg.videoUrl || "คลิกเพื่อตั้งค่า"}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Hover actions */}
+                        <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pt-1">
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3 text-muted-foreground" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3 text-muted-foreground" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3 text-muted-foreground" /></button>
+                          <button className="h-6 w-6 rounded-full bg-white dark:bg-zinc-800 border shadow-sm flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3 text-red-500" /></button>
                         </div>
                       </div>
                     ))}
@@ -563,10 +579,10 @@ export default function AutoReplyPage() {
                 )}
 
                 {/* Quick Reply */}
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted-foreground">Quick Reply ({(pattern.quickReplies ?? []).length}/13 ข้อมูล)</span>
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-accent" onClick={addQuickReply}>
+                <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-medium text-muted-foreground">Quick Reply ({(pattern.quickReplies ?? []).length}/13 ข้อมูล)</span>
+                    <Button variant="ghost" size="sm" className="text-xs text-green-600 dark:text-green-400 hover:text-green-700" onClick={addQuickReply}>
                       <Plus className="h-3 w-3 mr-1" />
                       เพิ่ม Quick reply
                     </Button>
@@ -574,8 +590,8 @@ export default function AutoReplyPage() {
                   {(pattern.quickReplies ?? []).length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {(pattern.quickReplies ?? []).map((qr, idx) => (
-                        <div key={idx} className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 shadow-sm group/qr">
-                          <Input className="h-5 w-20 border-0 p-0 text-xs font-medium focus-visible:ring-0" value={qr.label} onChange={(e) => updateQuickReply(idx, { label: e.target.value, value: e.target.value })} placeholder="ชื่อปุ่ม" />
+                        <div key={idx} className="flex items-center gap-1.5 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-4 py-2 shadow-sm group/qr hover:border-green-300 dark:hover:border-green-700 transition-colors">
+                          <Input className="h-5 w-20 border-0 p-0 text-xs font-medium focus-visible:ring-0 bg-transparent" value={qr.label} onChange={(e) => updateQuickReply(idx, { label: e.target.value, value: e.target.value })} placeholder="ชื่อปุ่ม" />
                           <button onClick={() => removeQuickReply(idx)} className="opacity-0 group-hover/qr:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
                         </div>
                       ))}
