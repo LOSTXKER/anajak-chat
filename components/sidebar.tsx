@@ -28,6 +28,7 @@ import {
   LogOut,
   Menu,
   ChevronDown,
+  Bot,
 } from "lucide-react";
 
 interface UserInfo {
@@ -48,6 +49,7 @@ interface NavItem {
 const MAIN_NAV: NavItem[] = [
   { href: "/inbox", label: "กล่องข้อความ", icon: MessageSquare },
   { href: "/contacts", label: "รายชื่อ", icon: Users },
+  { href: "/auto-reply", label: "รูปแบบตอบกลับอัตโนมัติ", icon: Bot },
 ];
 
 const TOOLS_NAV: NavItem[] = [

@@ -318,11 +318,14 @@ export default function ChatFlowsPage() {
             <p className="text-xs text-muted-foreground text-center py-8">ยังไม่มีรูปแบบ</p>
           ) : (
             flows.map((flow) => (
-              <button
+              <div
                 key={flow.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedId(flow.id)}
+                onKeyDown={(e) => { if (e.key === "Enter") setSelectedId(flow.id); }}
                 className={cn(
-                  "w-full text-left rounded-lg px-3 py-2 text-sm transition-colors group",
+                  "w-full text-left rounded-lg px-3 py-2 text-sm transition-colors group cursor-pointer",
                   selectedId === flow.id ? "bg-accent/10 border-l-2 border-accent" : "hover:bg-muted/50 border-l-2 border-transparent"
                 )}
               >
@@ -339,9 +342,9 @@ export default function ChatFlowsPage() {
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <Badge variant="outline" className="text-[10px] px-1 py-0">{TRIGGER_LABELS[flow.trigger.type] ?? flow.trigger.type}</Badge>
-                  <span className="text-[10px] text-muted-foreground">{pattern.messages?.length ?? 0} ข้อความ</span>
+                  <span className="text-[10px] text-muted-foreground">{(flow.steps as AutoReplyPattern)?.messages?.length ?? 0} ข้อความ</span>
                 </div>
-              </button>
+              </div>
             ))
           )}
         </div>
