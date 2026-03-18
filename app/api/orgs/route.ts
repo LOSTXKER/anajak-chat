@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_ROLES } from "@/lib/constants";
+import { DEFAULT_ROLES, DEFAULT_SLA_CONFIG } from "@/lib/constants";
 
 async function getAuthUser() {
   const supabase = await createClient();
@@ -61,6 +61,16 @@ export async function POST(request: Request) {
 
     await prisma.orgMembership.create({
       data: { userId: authUser.id, orgId: org.id, roleId: ownerRole.id },
+    });
+
+    await prisma.slaConfig.create({
+      data: {
+        orgId: org.id,
+        priority: DEFAULT_SLA_CONFIG.priority,
+        firstResponseMinutes: DEFAULT_SLA_CONFIG.responseMinutes,
+        resolutionMinutes: 0,
+        isActive: true,
+      },
     });
 
     return NextResponse.json({ id: org.id, name: org.name }, { status: 201 });

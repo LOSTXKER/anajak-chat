@@ -337,7 +337,7 @@ export default function MediaLibraryPage() {
                       <div className="flex flex-col items-center gap-2">
                         <FolderOpen className="h-10 w-10 text-muted-foreground" />
                         <p className="text-xs font-medium text-center truncate w-full">{folder.name}</p>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {folder._count.files} ไฟล์ · {folder._count.children} โฟลเดอร์
                         </p>
                       </div>
@@ -396,7 +396,7 @@ export default function MediaLibraryPage() {
                           {/* Info */}
                           <div className="p-2">
                             <p className="text-xs font-medium truncate">{file.originalName}</p>
-                            <p className="text-[10px] text-muted-foreground">{formatBytes(file.fileSize)}</p>
+                            <p className="text-xs text-muted-foreground">{formatBytes(file.fileSize)}</p>
                           </div>
 
                           {/* Hover actions */}

@@ -26,9 +26,10 @@ import type { Conversation } from "@/app/(dashboard)/inbox/types";
 export interface ContactSidebarProps {
   conversation: Conversation;
   onSpam?: () => void;
+  onBlock?: () => void;
 }
 
-export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
+export function ContactSidebar({ conversation, onSpam, onBlock }: ContactSidebarProps) {
   const { contact } = conversation;
   const displayName = contact.displayName ?? contact.platformId;
 
@@ -120,7 +121,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                 <button
                   role="menuitem"
                   onClick={() => handleExport("excel")}
-                  className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
+                  className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm hover:bg-muted transition-colors"
                 >
                   <FileSpreadsheet className="h-3.5 w-3.5" />
                   ส่งออกแชทเป็น Excel
@@ -128,22 +129,34 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
                 <button
                   role="menuitem"
                   onClick={() => handleExport("zip")}
-                  className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs hover:bg-muted transition-colors"
+                  className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm hover:bg-muted transition-colors"
                 >
                   <FolderArchive className="h-3.5 w-3.5" />
                   ส่งออกแชทเป็น Zip
                 </button>
-                {onSpam && (
+                {(onSpam || onBlock) && (
                   <>
                     <div className="my-1 border-t" />
-                    <button
-                      role="menuitem"
-                      onClick={() => { setShowMenu(false); onSpam(); }}
-                      className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                    >
-                      <Ban className="h-3.5 w-3.5" />
-                      กำหนดเป็นสแปม
-                    </button>
+                    {onSpam && (
+                      <button
+                        role="menuitem"
+                        onClick={() => { setShowMenu(false); onSpam(); }}
+                        className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                      >
+                        <Ban className="h-3.5 w-3.5" />
+                        สแปม
+                      </button>
+                    )}
+                    {onBlock && (
+                      <button
+                        role="menuitem"
+                        onClick={() => { setShowMenu(false); onBlock(); }}
+                        className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        <Ban className="h-3.5 w-3.5" />
+                        บล็อก
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -224,7 +237,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
               </>
             )}
             <div className="pt-1 border-t">
-              <p className="text-[10px] text-muted-foreground/60 font-mono break-all">{contact.platformId}</p>
+              <p className="text-xs text-muted-foreground/60 font-mono break-all">{contact.platformId}</p>
             </div>
           </div>
         </CollapsibleSection>
@@ -297,7 +310,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
         {/* Ad Source */}
         {conversation.sourceAdId && (
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">แหล่งโฆษณา</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">แหล่งโฆษณา</p>
             <Badge variant="outline" className="text-xs">
               {conversation.sourceAdId}
             </Badge>
@@ -316,7 +329,7 @@ export function ContactSidebar({ conversation, onSpam }: ContactSidebarProps) {
         {/* Sentiment */}
         {conversation.aiSentiment && (
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">ความรู้สึก</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">ความรู้สึก</p>
             <Badge
               variant="outline"
               className={cn(

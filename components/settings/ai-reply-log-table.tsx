@@ -124,7 +124,7 @@ export function AIReplyLogTable({
                   <tr key={log.id} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
                     <td className="px-3 py-2.5 text-xs">
                       {log.conversation.contact.displayName ?? "ไม่ระบุ"}
-                      <span className="ml-1 text-muted-foreground text-[10px]">({log.conversation.contact.platform})</span>
+                      <span className="ml-1 text-muted-foreground text-xs">({log.conversation.contact.platform})</span>
                     </td>
                     <td className="px-3 py-2.5 max-w-[200px]">
                       {editingLog?.id === log.id ? (

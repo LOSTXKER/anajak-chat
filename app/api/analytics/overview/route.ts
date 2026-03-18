@@ -32,7 +32,7 @@ export const GET = apiHandler(async (request) => {
         createdAt: { gte: since },
         firstResponseAt: { not: null },
       },
-      select: { createdAt: true, firstResponseAt: true },
+      select: { lastMessageAt: true, firstResponseAt: true },
     }),
     prisma.conversation.count({
       where: {
@@ -46,7 +46,8 @@ export const GET = apiHandler(async (request) => {
   const avgFirstResponseMinutes =
     firstResponses.length > 0
       ? firstResponses.reduce((acc, c) => {
-          const diff = (c.firstResponseAt!.getTime() - c.createdAt.getTime()) / 60000;
+          const base = c.lastMessageAt ?? c.firstResponseAt!;
+          const diff = (c.firstResponseAt!.getTime() - base.getTime()) / 60000;
           return acc + diff;
         }, 0) / firstResponses.length
       : null;

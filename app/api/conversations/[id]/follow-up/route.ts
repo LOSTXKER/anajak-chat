@@ -18,9 +18,16 @@ export const POST = apiHandler(async (_request, { params }) => {
     ? conversation.labels
     : [...conversation.labels, "follow_up"];
 
+  const now = new Date();
   await prisma.conversation.update({
     where: { id },
-    data: { status: "resolved", labels },
+    data: {
+      status: "resolved",
+      labels,
+      ...(!conversation.resolvedAt && { resolvedAt: now }),
+      ...(!conversation.firstResponseAt && { firstResponseAt: now }),
+      slaFirstResponseDeadline: null,
+    },
   });
 
   await prisma.conversationEvent.create({

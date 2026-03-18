@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth, requirePermission, apiHandler } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
-
-const DEFAULT_SLA = [
-  { priority: "urgent", firstResponseMinutes: 2, resolutionMinutes: 30 },
-  { priority: "high", firstResponseMinutes: 5, resolutionMinutes: 60 },
-  { priority: "medium", firstResponseMinutes: 15, resolutionMinutes: 240 },
-  { priority: "low", firstResponseMinutes: 60, resolutionMinutes: 1440 },
-] as const;
+import { applySlaToPendingConversations } from "@/lib/sla";
 
 export const GET = apiHandler(async () => {
   const user = await requireAuth();
@@ -17,19 +11,20 @@ export const GET = apiHandler(async () => {
     orderBy: { priority: "asc" },
   });
 
-  // Return defaults if no configs exist yet
   if (configs.length === 0) {
-    return NextResponse.json(
-      DEFAULT_SLA.map((d) => ({
-        ...d,
+    return NextResponse.json([
+      {
         id: null,
         orgId: user.orgId,
+        priority: "medium",
+        firstResponseMinutes: 15,
+        resolutionMinutes: 0,
         isActive: true,
         escalateTo: null,
         createdAt: null,
         updatedAt: null,
-      }))
-    );
+      },
+    ]);
   }
 
   return NextResponse.json(configs);
@@ -42,10 +37,11 @@ export const PUT = apiHandler(async (request) => {
   const body = await request.json() as Array<{
     priority: "urgent" | "high" | "medium" | "low";
     firstResponseMinutes: number;
-    resolutionMinutes: number;
     isActive: boolean;
     escalateTo?: string | null;
   }>;
+
+  let appliedCount = 0;
 
   for (const item of body) {
     await prisma.slaConfig.upsert({
@@ -59,18 +55,25 @@ export const PUT = apiHandler(async (request) => {
         orgId: user.orgId,
         priority: item.priority,
         firstResponseMinutes: item.firstResponseMinutes,
-        resolutionMinutes: item.resolutionMinutes,
+        resolutionMinutes: 0,
         isActive: item.isActive ?? true,
         escalateTo: item.escalateTo ?? null,
       },
       update: {
         firstResponseMinutes: item.firstResponseMinutes,
-        resolutionMinutes: item.resolutionMinutes,
+        resolutionMinutes: 0,
         isActive: item.isActive ?? true,
         escalateTo: item.escalateTo ?? null,
       },
     });
+
+    if (item.isActive && item.priority === "medium") {
+      appliedCount = await applySlaToPendingConversations(
+        user.orgId,
+        item.firstResponseMinutes
+      );
+    }
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, appliedCount });
 });

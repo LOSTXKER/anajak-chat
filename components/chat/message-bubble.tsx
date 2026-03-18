@@ -37,7 +37,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
           <div className="rounded-2xl rounded-bl-sm bg-card border border-border px-3 py-2 text-sm">
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
           </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground text-left">
+          <p className="mt-0.5 text-xs text-muted-foreground text-left">
             {format(new Date(message.createdAt), "HH:mm")}
           </p>
         </div>
@@ -86,7 +86,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
         </div>
         <p
           className={cn(
-            "mt-0.5 text-[10px] text-muted-foreground",
+            "mt-0.5 text-xs text-muted-foreground",
             isContact ? "text-left" : "text-right"
           )}
         >

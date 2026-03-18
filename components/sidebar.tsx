@@ -61,7 +61,7 @@ function NavGroup({ label, items, onClick }: { label: string; items: NavItem[]; 
 
   return (
     <div className="mb-4">
-      <p className="mb-1 px-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+      <p className="mb-1 px-3 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
         {label}
       </p>
       <div className="flex flex-col">
@@ -74,7 +74,7 @@ function NavGroup({ label, items, onClick }: { label: string; items: NavItem[]; 
               onClick={onClick}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "relative flex items-center gap-3 px-3 py-2 text-[13px] transition-colors",
+                "relative flex items-center gap-3 px-3 py-2 text-sm transition-colors",
                 isActive
                   ? "font-semibold text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -111,13 +111,13 @@ function UserMenu({ user }: { user: UserInfo }) {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted">
         <Avatar className="h-7 w-7">
-          <AvatarFallback className="bg-zinc-100 text-zinc-600 text-[10px] font-medium dark:bg-zinc-800 dark:text-zinc-400">
+          <AvatarFallback className="bg-zinc-100 text-zinc-600 text-xs font-medium dark:bg-zinc-800 dark:text-zinc-400">
             {initials}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 text-left min-w-0">
-          <p className="truncate text-[13px] font-medium leading-none">{user.name}</p>
-          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{user.roleName}</p>
+          <p className="truncate text-sm font-medium leading-none">{user.name}</p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">{user.roleName}</p>
         </div>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
@@ -156,7 +156,7 @@ function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () 
         <NavGroup label="เครื่องมือ" items={TOOLS_NAV} onClick={onNavClick} />
 
         <div className="mb-4">
-          <p className="mb-1 px-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground/60">
+          <p className="mb-1 px-3 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
             จัดการ
           </p>
           <Link
@@ -164,7 +164,7 @@ function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () 
             onClick={onNavClick}
             aria-current={isSettingsActive ? "page" : undefined}
             className={cn(
-              "relative flex items-center gap-3 px-3 py-2 text-[13px] transition-colors",
+              "relative flex items-center gap-3 px-3 py-2 text-sm transition-colors",
               isSettingsActive
                 ? "font-semibold text-foreground"
                 : "text-muted-foreground hover:text-foreground"

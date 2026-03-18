@@ -8,19 +8,44 @@ import {
   Loader2,
   X,
   StickyNote,
+  CheckCircle2,
+  RotateCcw,
+  Lock,
+  SmilePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { TemplatePicker } from "@/app/(dashboard)/inbox/template-picker";
 import { MediaPickerModal } from "@/app/(dashboard)/inbox/media-picker";
+import { SlaTimer } from "@/app/(dashboard)/inbox/sla-timer";
+import type { Conversation } from "@/app/(dashboard)/inbox/types";
 
 export interface ChatInputProps {
   onSendMessage: (content?: string, mediaUrl?: string, mediaFileId?: string) => Promise<void>;
   onSaveNote: (content: string) => Promise<void>;
+  conversation: Conversation;
+  status: "pending" | "open" | "resolved";
+  isLockedByOther: boolean;
+  lockedByName?: string;
+  onStartChat?: () => void;
+  onResolve?: () => void;
+  onReopen?: () => void;
+  starting?: boolean;
 }
 
-export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
+export function ChatInput({
+  onSendMessage,
+  onSaveNote,
+  conversation,
+  status,
+  isLockedByOther,
+  lockedByName,
+  onStartChat,
+  onResolve,
+  onReopen,
+  starting,
+}: ChatInputProps) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -65,6 +90,41 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
     }
   }
 
+  if (status === "pending") {
+    return (
+      <div className="border-t px-4 py-3">
+        <Button className="w-full h-10" onClick={onStartChat} disabled={starting}>
+          {starting ? "กำลังเริ่ม..." : "เริ่มแชท"}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "resolved") {
+    return (
+      <div className="flex items-center justify-between border-t px-4 py-2.5">
+        <span className="text-sm text-muted-foreground">
+          แชทนี้เสร็จสิ้นแล้ว
+        </span>
+        <Button variant="outline" size="sm" className="h-9 px-4 text-sm font-medium" onClick={onReopen} disabled={starting}>
+          <RotateCcw className="mr-1.5 h-4 w-4" />
+          เปิดอีกครั้ง
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "open" && isLockedByOther) {
+    return (
+      <div className="flex items-center gap-2 border-t px-4 py-2.5">
+        <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-sm text-muted-foreground">
+          ดูแลโดย {lockedByName}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <>
       {showNoteInput && (
@@ -88,8 +148,59 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
         </div>
       )}
 
-      <div className="border-t p-3">
-        {showTemplates && (
+      {/* Action bar */}
+      <div className="flex items-center justify-between border-t px-3 py-1.5">
+        <div className="flex items-center gap-2">
+          {onResolve && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 rounded-full border-green-200 bg-green-50 px-3 text-xs font-medium text-green-700 hover:bg-green-100 hover:border-green-300 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400 dark:hover:bg-green-950/60"
+              onClick={onResolve}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              เสร็จสิ้น
+            </Button>
+          )}
+          <SlaTimer conversation={conversation} variant="bar" />
+        </div>
+        <div className="flex items-center gap-0.5">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setShowTemplates(!showTemplates)}
+            aria-label="เลือก template"
+            title="เลือก template"
+          >
+            <SmilePlus className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn("h-7 w-7 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
+            onClick={() => setShowNoteInput(!showNoteInput)}
+            aria-label="เพิ่ม note"
+            title="Internal note"
+          >
+            <StickyNote className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setShowMediaPicker(true)}
+            aria-label="แนบสื่อ"
+            title="แนบไฟล์"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Template picker */}
+      {showTemplates && (
+        <div className="border-t px-3 py-2">
           <TemplatePicker
             onSelect={(content) => {
               setInput(content);
@@ -98,52 +209,34 @@ export function ChatInput({ onSendMessage, onSaveNote }: ChatInputProps) {
             }}
             onClose={() => setShowTemplates(false)}
           />
-        )}
-        <div className="flex items-end gap-2">
-          <div className="relative flex-1">
-            <Textarea
-              ref={textareaRef}
-              placeholder="พิมพ์ข้อความ... (/ สำหรับ template)"
-              className="min-h-[40px] max-h-[120px] resize-none rounded-xl text-sm"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
-          <div className="flex items-center gap-1 pb-0.5">
-            <Button
-              size="icon"
-              variant="ghost"
-              className={cn("h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300")}
-              onClick={() => setShowNoteInput(!showNoteInput)}
-              aria-label="เพิ่ม note"
-            >
-              <StickyNote className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 lg:h-7 lg:w-7 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setShowMediaPicker(true)}
-              aria-label="แนบสื่อ"
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              className="h-8 w-8 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
-              onClick={() => handleSend()}
-              disabled={sending || !input.trim()}
-              aria-label="ส่งข้อความ"
-            >
-              {sending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          </div>
         </div>
+      )}
+
+      {/* Input area */}
+      <div className="flex items-end gap-2 border-t px-3 py-2">
+        <div className="relative flex-1">
+          <Textarea
+            ref={textareaRef}
+            placeholder="พิมพ์ข้อความ..."
+            className="min-h-[40px] max-h-[120px] resize-none rounded-xl text-sm"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
+        <Button
+          size="icon"
+          className="mb-0.5 h-9 w-9 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
+          onClick={() => handleSend()}
+          disabled={sending || !input.trim()}
+          aria-label="ส่งข้อความ"
+        >
+          {sending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       {showMediaPicker && (

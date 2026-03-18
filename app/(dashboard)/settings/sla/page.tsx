@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 
 interface SlaConfig {
   firstResponseMinutes: number;
-  resolutionMinutes: number;
   isActive: boolean;
 }
 
@@ -18,7 +17,6 @@ export default function SLAPage() {
   const { toast } = useToast();
   const [config, setConfig] = useState<SlaConfig>({
     firstResponseMinutes: 15,
-    resolutionMinutes: 240,
     isActive: true,
   });
   const [loading, setLoading] = useState(true);
@@ -27,12 +25,11 @@ export default function SLAPage() {
   useEffect(() => {
     fetch("/api/settings/sla")
       .then((r) => r.json())
-      .then((data: Array<{ priority: string; firstResponseMinutes: number; resolutionMinutes: number; isActive: boolean }>) => {
+      .then((data: Array<{ priority: string; firstResponseMinutes: number; isActive: boolean }>) => {
         const medium = data.find((d) => d.priority === "medium");
         if (medium) {
           setConfig({
             firstResponseMinutes: medium.firstResponseMinutes,
-            resolutionMinutes: medium.resolutionMinutes,
             isActive: medium.isActive,
           });
         }
@@ -50,13 +47,16 @@ export default function SLAPage() {
           {
             priority: "medium",
             firstResponseMinutes: config.firstResponseMinutes,
-            resolutionMinutes: config.resolutionMinutes,
             isActive: config.isActive,
           },
         ]),
       });
       if (res.ok) {
-        toast({ title: "บันทึก SLA แล้ว" });
+        const data = await res.json();
+        const msg = data.appliedCount > 0
+          ? `บันทึก SLA แล้ว (ตั้งเวลาให้แชท ${data.appliedCount} รายการที่เปิดอยู่)`
+          : "บันทึก SLA แล้ว";
+        toast({ title: msg });
       } else {
         const err = (await res.json()) as { error: string };
         toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
@@ -89,7 +89,7 @@ export default function SLAPage() {
             ตั้งค่า SLA
           </h1>
           <p className="text-sm text-muted-foreground">
-            กำหนดเวลาตอบกลับและแก้ไขสำหรับทุกการสนทนา
+            กำหนดเวลาตอบกลับลูกค้าสำหรับทุกการสนทนา
           </p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
@@ -118,61 +118,38 @@ export default function SLAPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">เวลาตอบกลับครั้งแรก</label>
-            <p className="text-xs text-muted-foreground">ระยะเวลาที่ต้องตอบกลับลูกค้า</p>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min={1}
-                className="h-10 w-24 text-sm rounded-lg"
-                value={config.firstResponseMinutes}
-                onChange={(e) =>
-                  setConfig((prev) => ({ ...prev, firstResponseMinutes: parseInt(e.target.value) || 1 }))
-                }
-                disabled={!config.isActive}
-              />
-              <span className="text-sm text-muted-foreground">นาที</span>
-            </div>
-            {config.isActive && (
-              <p className="text-xs text-muted-foreground">
-                = {formatDuration(config.firstResponseMinutes)}
-              </p>
-            )}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">เวลาตอบกลับ</label>
+          <p className="text-xs text-muted-foreground">
+            ระยะเวลาสูงสุดที่ต้องตอบกลับลูกค้าแต่ละข้อความ
+          </p>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={1}
+              className="h-10 w-24 text-sm rounded-lg"
+              value={config.firstResponseMinutes}
+              onChange={(e) =>
+                setConfig((prev) => ({ ...prev, firstResponseMinutes: parseInt(e.target.value) || 1 }))
+              }
+              disabled={!config.isActive}
+            />
+            <span className="text-sm text-muted-foreground">นาที</span>
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">เวลาแก้ไขปัญหา</label>
-            <p className="text-xs text-muted-foreground">ระยะเวลาที่ต้องแก้ไขเสร็จสิ้น</p>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                min={1}
-                className="h-10 w-24 text-sm rounded-lg"
-                value={config.resolutionMinutes}
-                onChange={(e) =>
-                  setConfig((prev) => ({ ...prev, resolutionMinutes: parseInt(e.target.value) || 1 }))
-                }
-                disabled={!config.isActive}
-              />
-              <span className="text-sm text-muted-foreground">นาที</span>
-            </div>
-            {config.isActive && (
-              <p className="text-xs text-muted-foreground">
-                = {formatDuration(config.resolutionMinutes)}
-              </p>
-            )}
-          </div>
+          {config.isActive && (
+            <p className="text-xs text-muted-foreground">
+              = {formatDuration(config.firstResponseMinutes)}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="mt-6 rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground space-y-1">
         <p className="font-medium text-foreground">วิธีการทำงานของ SLA</p>
-        <p>• เมื่อมีข้อความใหม่เข้ามา ระบบจะเริ่มนับเวลา SLA</p>
+        <p>• เมื่อลูกค้าส่งข้อความมา ระบบจะเริ่มนับเวลา SLA ถอยหลัง</p>
+        <p>• เมื่อ Agent ตอบกลับ SLA จะหยุดนับ (จนกว่าลูกค้าจะส่งข้อความใหม่)</p>
         <p>• เมื่อเหลือเวลาน้อยกว่า 20% → แสดงสีเหลืองใน Inbox</p>
-        <p>• เมื่อเกินกำหนดตอบกลับ → แสดงสีแดง + ติดป้าย "ไม่ได้รับ" อัตโนมัติ</p>
-        <p>• เมื่อเกินกำหนดแก้ไข → ส่ง notification แจ้งเตือน</p>
+        <p>• เมื่อเกินกำหนด → แสดงสีแดง + ติดป้าย &quot;ไม่ได้รับ&quot; + แจ้งเตือนอัตโนมัติ</p>
         <p>• ระบบตรวจสอบ SLA ทุก 5 นาที</p>
       </div>
     </div>

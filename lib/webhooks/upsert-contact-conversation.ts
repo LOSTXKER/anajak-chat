@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { autoAssignConversation } from "@/lib/assignment";
-import { applySlaToConversation } from "@/lib/sla";
+import { setSlaDeadline } from "@/lib/sla";
 import { isWithinBusinessHours, extractBusinessHours } from "@/lib/business-hours";
 import { sendPlatformMessage } from "@/lib/integrations/send-message";
 import { maybeQueueLeadCapiEvent } from "@/lib/capi-lead-events";
@@ -48,6 +48,11 @@ export async function upsertContactAndConversation(params: UpsertParams) {
   const message = await createInboundMessage({
     conversationId: conversation.id, content, contentType, mediaUrl, platformMessageId, metadata,
   });
+
+  // Set SLA deadline every time a customer sends a message
+  await setSlaDeadline(conversation.id, orgId, message.createdAt).catch(
+    (e) => console.error("[Webhook] SLA set error:", e)
+  );
 
   // Fire-and-forget side effects
   await runPostMessageHooks({ orgId, channelId, platform, platformUserId, conversationId: conversation.id, content });
@@ -123,8 +128,6 @@ async function upsertConversation(params: {
       where: { id: params.contactId },
       data: { totalConversations: { increment: 1 } },
     });
-
-    await applySlaToConversation(conversation.id, params.orgId, "medium", conversation.createdAt).catch((e) => console.error("[Webhook] SLA apply error:", e));
   } else {
     const needsReopen = conversation.status === "resolved";
 
@@ -136,6 +139,11 @@ async function upsertConversation(params: {
           status: "pending" as const,
           assignedTo: null,
           labels: [],
+          startedAt: null,
+          slaFirstResponseDeadline: null,
+          slaBreachedAt: null,
+          slaWarningAt: null,
+          firstResponseAt: null,
         }),
       },
     });

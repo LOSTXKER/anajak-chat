@@ -16,7 +16,7 @@ export function NoteBubble({ note }: NoteBubbleProps) {
         <div className="mb-1 flex items-center gap-1.5">
           <StickyNote className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
           <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">โน้ตภายใน</span>
-          <span className="ml-auto text-[10px] text-yellow-600 dark:text-yellow-400">
+          <span className="ml-auto text-xs text-yellow-600 dark:text-yellow-400">
             {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true, locale: th })}
           </span>
         </div>

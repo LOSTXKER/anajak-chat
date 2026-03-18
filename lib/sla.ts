@@ -1,22 +1,63 @@
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
-import { SLA_WARNING_THRESHOLD_PERCENT } from "@/lib/constants";
+import { SLA_WARNING_THRESHOLD_PERCENT, DEFAULT_SLA_CONFIG } from "@/lib/constants";
 
-interface SlaDeadlineResult {
-  firstResponseDeadline: Date | null;
-  resolutionDeadline: Date | null;
+/**
+ * Compute response deadline from a given start time.
+ */
+export function computeResponseDeadline(startTime: Date, responseMinutes: number): Date {
+  return new Date(startTime.getTime() + responseMinutes * 60 * 1000);
 }
 
-export function computeSlaDeadlines(
-  conversationCreatedAt: Date,
-  firstResponseMinutes: number,
-  resolutionMinutes: number
-): SlaDeadlineResult {
-  const createdMs = conversationCreatedAt.getTime();
-  return {
-    firstResponseDeadline: new Date(createdMs + firstResponseMinutes * 60 * 1000),
-    resolutionDeadline: new Date(createdMs + resolutionMinutes * 60 * 1000),
-  };
+/**
+ * Get SLA response minutes for an org (from config or default).
+ */
+export async function getSlaMinutes(orgId: string): Promise<number | null> {
+  const config = await prisma.slaConfig.findFirst({
+    where: { orgId, priority: "medium", isActive: true },
+  });
+
+  if (config) return config.firstResponseMinutes;
+  return DEFAULT_SLA_CONFIG.responseMinutes;
+}
+
+/**
+ * Set SLA deadline on a conversation. Called when:
+ * - A new conversation is created (customer sends first message)
+ * - A customer sends a new message while waiting for agent reply
+ */
+export async function setSlaDeadline(
+  conversationId: string,
+  orgId: string,
+  messageTime: Date
+): Promise<void> {
+  const minutes = await getSlaMinutes(orgId);
+  if (!minutes) return;
+
+  const deadline = computeResponseDeadline(messageTime, minutes);
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: {
+      slaFirstResponseDeadline: deadline,
+      slaBreachedAt: null,
+      slaWarningAt: null,
+    },
+  });
+}
+
+/**
+ * Clear SLA deadline when agent responds.
+ */
+export async function clearSlaDeadline(conversationId: string): Promise<void> {
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: {
+      slaFirstResponseDeadline: null,
+      slaBreachedAt: null,
+      slaWarningAt: null,
+    },
+  });
 }
 
 /**
@@ -29,48 +70,32 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
 
   if (slaConfigs.length === 0) return;
 
-  const configMap = new Map(slaConfigs.map((c) => [c.priority, c]));
   const now = new Date();
 
-  // Find open conversations past their SLA deadlines
   const conversations = await prisma.conversation.findMany({
     where: {
       orgId,
       status: { in: ["open", "pending"] },
       slaBreachedAt: null,
-      OR: [
-        { slaFirstResponseDeadline: { lte: now } },
-        { slaResolutionDeadline: { lte: now } },
-      ],
+      slaFirstResponseDeadline: { lte: now },
     },
     select: {
       id: true,
       status: true,
       priority: true,
       assignedTo: true,
-      firstResponseAt: true,
       slaFirstResponseDeadline: true,
-      slaResolutionDeadline: true,
     },
   });
 
+  const configMap = new Map(slaConfigs.map((c) => [c.priority, c]));
+
   for (const conv of conversations) {
     const config = configMap.get(conv.priority);
-    if (!config) continue;
-
-    const isFirstResponseBreached =
-      !conv.firstResponseAt &&
-      conv.slaFirstResponseDeadline &&
-      conv.slaFirstResponseDeadline <= now;
-
-    const isResolutionBreached =
-      conv.slaResolutionDeadline && conv.slaResolutionDeadline <= now;
-
-    if (!isFirstResponseBreached && !isResolutionBreached) continue;
 
     const breachData: Record<string, unknown> = { slaBreachedAt: now };
 
-    if (isFirstResponseBreached && conv.status === "pending") {
+    if (conv.status === "pending") {
       const existing = await prisma.conversation.findUnique({
         where: { id: conv.id },
         select: { labels: true },
@@ -86,20 +111,18 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
       data: breachData,
     });
 
-    // Notify assigned agent
     if (conv.assignedTo) {
       await createNotification({
         orgId,
         userId: conv.assignedTo,
         type: "sla_breach",
         title: "SLA Breach! ต้องการการตอบกลับทันที",
-        body: `การสนทนา priority ${conv.priority} เกิน SLA deadline แล้ว`,
+        body: `การสนทนายังไม่ได้รับการตอบกลับและเกิน SLA แล้ว`,
         link: `/inbox`,
       }).catch((e) => console.error("[SLA] notification error:", e));
     }
 
-    // Auto-escalate to supervisor
-    if (config.escalateTo) {
+    if (config?.escalateTo) {
       await prisma.conversation.update({
         where: { id: conv.id },
         data: { assignedTo: config.escalateTo },
@@ -122,47 +145,40 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
         userId: config.escalateTo,
         type: "sla_breach",
         title: "แชทถูก escalate มาให้คุณ (SLA Breach)",
-        body: `การสนทนา priority ${conv.priority} เกิน SLA deadline`,
+        body: `การสนทนายังไม่ได้รับการตอบกลับและเกิน SLA`,
         link: `/inbox`,
       }).catch((e) => console.error("[SLA] notification error:", e));
     }
   }
 
-  // Update warning status (80% of time elapsed)
+  // Warning: conversations approaching deadline
   const warningConvs = await prisma.conversation.findMany({
     where: {
       orgId,
       status: { in: ["open", "pending"] },
       slaBreachedAt: null,
       slaWarningAt: null,
-      OR: [
-        { slaFirstResponseDeadline: { not: null } },
-        { slaResolutionDeadline: { not: null } },
-      ],
+      slaFirstResponseDeadline: { not: null },
     },
     select: {
       id: true,
       priority: true,
       assignedTo: true,
-      createdAt: true,
-      firstResponseAt: true,
       slaFirstResponseDeadline: true,
-      slaResolutionDeadline: true,
     },
   });
 
   for (const conv of warningConvs) {
-    const deadline = conv.firstResponseAt
-      ? conv.slaResolutionDeadline
-      : (conv.slaFirstResponseDeadline ?? conv.slaResolutionDeadline);
+    if (!conv.slaFirstResponseDeadline) continue;
 
-    if (!deadline) continue;
+    const minutes = await getSlaMinutes(orgId);
+    if (!minutes) continue;
 
-    const createdMs = conv.createdAt.getTime();
-    const deadlineMs = deadline.getTime();
-    const totalDuration = deadlineMs - createdMs;
-    const elapsed = now.getTime() - createdMs;
-    const percentElapsed = totalDuration > 0 ? (elapsed / totalDuration) * 100 : 0;
+    const totalDurationMs = minutes * 60 * 1000;
+    const deadlineMs = conv.slaFirstResponseDeadline.getTime();
+    const startMs = deadlineMs - totalDurationMs;
+    const elapsed = now.getTime() - startMs;
+    const percentElapsed = totalDurationMs > 0 ? (elapsed / totalDurationMs) * 100 : 0;
 
     if (percentElapsed >= 100 - SLA_WARNING_THRESHOLD_PERCENT) {
       await prisma.conversation.update({
@@ -176,7 +192,7 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
           userId: conv.assignedTo,
           type: "sla_warning",
           title: "SLA Warning — ใกล้ถึงกำหนดแล้ว",
-          body: `การสนทนา priority ${conv.priority} กำลังจะเกิน SLA ในอีกไม่นาน`,
+          body: `การสนทนากำลังจะเกิน SLA ในอีกไม่นาน`,
           link: `/inbox`,
         }).catch((e) => console.error("[SLA] notification error:", e));
       }
@@ -185,31 +201,34 @@ export async function processSlaBreaches(orgId: string): Promise<void> {
 }
 
 /**
- * Apply SLA deadlines to a newly created conversation.
+ * Retroactively apply SLA deadlines to all open/pending conversations
+ * that don't have a deadline yet.
  */
-export async function applySlaToConversation(
-  conversationId: string,
+export async function applySlaToPendingConversations(
   orgId: string,
-  priority: string,
-  createdAt: Date
-): Promise<void> {
-  const config = await prisma.slaConfig.findFirst({
-    where: { orgId, priority: priority as "urgent" | "high" | "medium" | "low", isActive: true },
-  });
-
-  if (!config) return;
-
-  const { firstResponseDeadline, resolutionDeadline } = computeSlaDeadlines(
-    createdAt,
-    config.firstResponseMinutes,
-    config.resolutionMinutes
-  );
-
-  await prisma.conversation.update({
-    where: { id: conversationId },
-    data: {
-      slaFirstResponseDeadline: firstResponseDeadline,
-      slaResolutionDeadline: resolutionDeadline,
+  responseMinutes: number
+): Promise<number> {
+  const conversations = await prisma.conversation.findMany({
+    where: {
+      orgId,
+      status: { in: ["open", "pending"] },
+      slaFirstResponseDeadline: null,
+      firstResponseAt: null,
     },
+    select: { id: true, lastMessageAt: true, createdAt: true },
   });
+
+  if (conversations.length === 0) return 0;
+
+  for (const conv of conversations) {
+    const baseTime = conv.lastMessageAt ?? conv.createdAt;
+    const deadline = computeResponseDeadline(baseTime, responseMinutes);
+
+    await prisma.conversation.update({
+      where: { id: conv.id },
+      data: { slaFirstResponseDeadline: deadline },
+    });
+  }
+
+  return conversations.length;
 }

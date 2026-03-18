@@ -15,9 +15,9 @@ export const GET = apiHandler(async (request) => {
   const search = sp.get("search") ?? "";
   const { page, limit, skip } = parsePagination(request, { limit: 30 });
 
-  const where = {
+  const where: Record<string, unknown> = {
     orgId: user.orgId,
-    ...(status && status !== "all" ? { status: status as "open" | "pending" | "resolved" | "closed" } : {}),
+    ...(status && status !== "all" ? { status: status as "open" | "pending" | "resolved" } : {}),
     ...(label ? { labels: { has: label } } : {}),
     ...(platform ? { channel: { platform: platform as "facebook" | "instagram" | "line" | "whatsapp" | "web" } } : {}),
     ...(tag ? { contact: { tags: { has: tag } } } : {}),
@@ -32,7 +32,7 @@ export const GET = apiHandler(async (request) => {
       : {}),
   };
 
-  const [conversations, total] = await Promise.all([
+  const [conversations, total, statusCountRows, slaConfig] = await Promise.all([
     prisma.conversation.findMany({
       where,
       orderBy: { lastMessageAt: "desc" },
@@ -73,6 +73,15 @@ export const GET = apiHandler(async (request) => {
       },
     }),
     prisma.conversation.count({ where }),
+    prisma.conversation.groupBy({
+      by: ["status"],
+      where: { orgId: user.orgId },
+      _count: true,
+    }),
+    prisma.slaConfig.findFirst({
+      where: { orgId: user.orgId, priority: "medium", isActive: true },
+      select: { firstResponseMinutes: true },
+    }),
   ]);
 
   const convIds = conversations.map((c) => c.id);
@@ -99,15 +108,30 @@ export const GET = apiHandler(async (request) => {
 
   const unreadMap = new Map(unreadRows.map((r) => [r.conversation_id, Number(r.count)]));
 
+  const slaResponseMinutes = slaConfig?.firstResponseMinutes ?? 15;
+
   const enriched = conversations.map(({ reads: _reads, ...c }) => ({
     ...c,
     unreadCount: unreadMap.get(c.id) ?? 0,
+    slaResponseMinutes,
   }));
+
+  const counts = {
+    pending: 0,
+    open: 0,
+    resolved: 0,
+  };
+  for (const row of statusCountRows) {
+    if (row.status in counts) {
+      counts[row.status as keyof typeof counts] = row._count;
+    }
+  }
 
   return NextResponse.json({
     conversations: enriched,
     total,
     page,
     totalPages: Math.ceil(total / limit),
+    counts,
   });
 });

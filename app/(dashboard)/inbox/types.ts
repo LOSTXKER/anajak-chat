@@ -25,7 +25,7 @@ export interface ConversationLastMessage {
 export interface Conversation {
   id: string;
   orgId: string;
-  status: "pending" | "open" | "resolved" | "closed";
+  status: "pending" | "open" | "resolved";
   priority: "low" | "medium" | "high" | "urgent";
   labels: string[];
   contact: ConversationContact;
@@ -39,8 +39,8 @@ export interface Conversation {
   aiSummary: string | null;
   aiSentiment: string | null;
   slaFirstResponseDeadline: string | null;
-  slaResolutionDeadline: string | null;
   slaBreachedAt: string | null;
+  slaResponseMinutes?: number;
   unreadCount: number;
 }
 

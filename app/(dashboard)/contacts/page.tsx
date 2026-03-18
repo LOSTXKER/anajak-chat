@@ -165,7 +165,7 @@ export default function ContactsPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs font-medium">{fmtBaht(Number(c.totalRevenue))}</p>
-                      <p className="text-[10px] text-muted-foreground">{c.totalOrders} ออเดอร์</p>
+                      <p className="text-xs text-muted-foreground">{c.totalOrders} ออเดอร์</p>
                     </div>
                   </div>
                 ))}

@@ -37,7 +37,7 @@ export function CollapsibleSection({
             <ChevronRight className="h-3 w-3 text-muted-foreground" />
           )}
           <Icon className="h-3 w-3 text-muted-foreground" />
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold flex-1 text-left">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex-1 text-left">
             {title}
           </span>
         </div>

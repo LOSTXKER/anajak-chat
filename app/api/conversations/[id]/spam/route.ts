@@ -20,7 +20,12 @@ export const POST = apiHandler(async (_request, { params }) => {
 
   await prisma.conversation.update({
     where: { id },
-    data: { status: "resolved", labels },
+    data: {
+      status: "resolved",
+      labels,
+      ...(!conversation.resolvedAt && { resolvedAt: new Date() }),
+      slaFirstResponseDeadline: null,
+    },
   });
 
   await prisma.conversationEvent.create({

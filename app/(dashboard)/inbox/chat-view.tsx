@@ -8,16 +8,17 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   Lock,
+  BookmarkPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -32,10 +33,8 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { NoteBubble } from "@/components/chat/note-bubble";
 import { ContactSidebar } from "@/components/chat/contact-sidebar";
 import { ChatInput } from "@/components/chat/chat-input";
-import { SlaTimer } from "./sla-timer";
-import { SessionBar } from "./session-bar";
 import type { Conversation, Message, Note, ConversationEvent } from "./types";
-import { EVENT_LABELS } from "@/lib/constants";
+import { EVENT_LABELS, STATUS_BADGE } from "@/lib/constants";
 
 interface ChatViewProps {
   conversation: Conversation;
@@ -296,17 +295,6 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
 
   const [startingChat, setStartingChat] = useState(false);
 
-  async function updateStatus(status: string) {
-    const res = await fetch(`/api/conversations/${conversation.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      onConversationUpdate({ id: conversation.id, status: status as Conversation["status"] });
-    }
-  }
-
   async function handleStartChat() {
     setStartingChat(true);
     try {
@@ -432,43 +420,69 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           </div>
 
           <div className="flex items-center gap-1">
-            <SlaTimer conversation={conversation} />
+            <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_BADGE[conversation.status]?.className ?? "bg-muted text-muted-foreground")}>
+              {STATUS_BADGE[conversation.status]?.label ?? conversation.status}
+            </span>
 
-            <Select
-              value={conversation.assignedUser?.id ?? "unassigned"}
-              onValueChange={(v) => v && v !== "unassigned" && assignToAgent(v)}
-            >
-              <SelectTrigger className="h-7 w-7 border-0 bg-transparent p-0 shadow-none [&>svg:last-child]:hidden" aria-label="มอบหมาย">
-                <UserPlus className="h-4 w-4 text-muted-foreground" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="unassigned" disabled>
-                  -- เลือกผู้รับผิดชอบ --
-                </SelectItem>
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    <span className="flex items-center gap-1.5">
-                      {agent.name}
-                      {agent.isAvailable === false && (
-                        <span className="text-[10px] text-red-500 dark:text-red-400 font-medium">ไม่ว่าง</span>
-                      )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="ml-1 flex items-center border-l pl-2 gap-0.5">
+              {/* Assign */}
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <DropdownMenuTrigger
+                        render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
+                      />
+                    }
+                  >
+                    <UserPlus className="h-4 w-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>ตั้งผู้ดูแลแชทนี้</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-48">
+                  {agents.map((agent) => (
+                    <DropdownMenuItem
+                      key={agent.id}
+                      onClick={() => assignToAgent(agent.id)}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {agent.name}
+                        {agent.isAvailable === false && (
+                          <span className="text-xs text-red-500 dark:text-red-400 font-medium">ไม่ว่าง</span>
+                        )}
+                        {conversation.assignedUser?.id === agent.id && (
+                          <span className="text-xs text-muted-foreground">(ปัจจุบัน)</span>
+                        )}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-            <Select value={conversation.status} onValueChange={(v) => v && updateStatus(v)}>
-              <SelectTrigger className="h-7 gap-1 rounded-full border-0 bg-muted px-2.5 text-xs font-medium shadow-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">รอรับ</SelectItem>
-                <SelectItem value="open">กำลังดูแล</SelectItem>
-                <SelectItem value="resolved">เสร็จสิ้น</SelectItem>
-                <SelectItem value="closed">ปิด</SelectItem>
-              </SelectContent>
-            </Select>
+              {/* Transfer */}
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowTransferDialog(true)} />
+                  }
+                >
+                  <ArrowRightLeft className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent>ส่งต่อแชทให้คนอื่นดูแลแทน</TooltipContent>
+              </Tooltip>
+
+              {/* Follow-up */}
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFollowUp} />
+                  }
+                >
+                  <BookmarkPlus className="h-4 w-4" />
+                </TooltipTrigger>
+                <TooltipContent>ติดตามแชทนี้</TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </div>
 
@@ -519,7 +533,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 const actor = (evt.metadata as Record<string, unknown>)?.agentName as string | undefined;
                 return (
                   <div key={`evt-${evt.id}`} className="flex justify-center py-0.5">
-                    <span className="text-[10px] text-muted-foreground/60">
+                    <span className="text-xs text-muted-foreground/60">
                       {label}{actor ? ` • ${actor}` : ""}
                     </span>
                   </div>
@@ -542,26 +556,25 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Session bar + Input area */}
-        <SessionBar
+        {/* Unified input / status area */}
+        <ChatInput
+          onSendMessage={sendMessage}
+          onSaveNote={saveNote}
           conversation={conversation}
-          currentUserId={currentUserId.current}
+          status={conversation.status}
+          isLockedByOther={
+            conversation.assignedUser !== null &&
+            conversation.assignedUser.id !== currentUserId.current
+          }
+          lockedByName={conversation.assignedUser?.name}
           onStartChat={handleStartChat}
           onResolve={handleResolve}
           onReopen={handleReopen}
-          onFollowUp={handleFollowUp}
-          onTransfer={() => setShowTransferDialog(true)}
-          onSpam={handleSpam}
-          onBlock={handleBlock}
           starting={startingChat}
         />
-        {conversation.status === "open" &&
-         (!conversation.assignedUser || conversation.assignedUser.id === currentUserId.current) && (
-          <ChatInput onSendMessage={sendMessage} onSaveNote={saveNote} />
-        )}
       </div>
 
-      <ContactSidebar conversation={conversation} onSpam={handleSpam} />
+      <ContactSidebar conversation={conversation} onSpam={handleSpam} onBlock={handleBlock} />
 
       {/* Transfer dialog */}
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>

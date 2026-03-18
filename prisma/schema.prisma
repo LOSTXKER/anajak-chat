@@ -291,6 +291,7 @@ model Conversation {
   igsid               String?
   ctwaClid            String?            @map("ctwa_clid")
   isReturningCustomer Boolean            @default(false) @map("is_returning_customer")
+  startedAt           DateTime?          @map("started_at")
   firstResponseAt     DateTime?          @map("first_response_at")
   resolvedAt          DateTime?          @map("resolved_at")
   aiSummary           String?            @map("ai_summary")

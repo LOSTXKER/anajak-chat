@@ -212,7 +212,7 @@ export default function AdsPage() {
                               <ExternalLink className="h-3 w-3" />
                             </a>
                           </div>
-                          <span className="text-[10px] text-muted-foreground font-mono">
+                          <span className="text-xs text-muted-foreground font-mono">
                             {ad.adId.slice(0, 15)}...
                           </span>
                         </td>

@@ -14,7 +14,6 @@ export const GET = apiHandler(async () => {
       OR: [
         { slaBreachedAt: { not: null } },
         { slaFirstResponseDeadline: { lte: new Date(now.getTime() + 20 * 60 * 1000) } },
-        { slaResolutionDeadline: { lte: new Date(now.getTime() + 20 * 60 * 1000) } },
       ],
     },
     orderBy: { slaFirstResponseDeadline: "asc" },

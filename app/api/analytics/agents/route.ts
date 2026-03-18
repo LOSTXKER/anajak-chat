@@ -20,6 +20,7 @@ export const GET = apiHandler(async (request) => {
           id: true,
           status: true,
           firstResponseAt: true,
+          lastMessageAt: true,
           createdAt: true,
           resolvedAt: true,
           slaBreachedAt: true,
@@ -37,7 +38,8 @@ export const GET = apiHandler(async (request) => {
       withResponse.length > 0
         ? Math.round(
             withResponse.reduce((acc, c) => {
-              return acc + (c.firstResponseAt!.getTime() - c.createdAt.getTime()) / 60000;
+              const base = c.lastMessageAt ?? c.createdAt;
+              return acc + (c.firstResponseAt!.getTime() - base.getTime()) / 60000;
             }, 0) / withResponse.length
           )
         : null;

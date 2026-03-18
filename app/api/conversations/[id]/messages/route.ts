@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendPlatformMessage } from "@/lib/integrations/send-message";
 import { requireAuth, searchParams, jsonError, apiHandler } from "@/lib/api-helpers";
+import { clearSlaDeadline } from "@/lib/sla";
 
 export const GET = apiHandler(async (request, context) => {
   const user = await requireAuth();
@@ -67,10 +68,13 @@ export const POST = apiHandler(async (request, context) => {
   await prisma.conversation.update({
     where: { id },
     data: {
-      lastMessageAt: new Date(),
       ...(!conversation.firstResponseAt && { firstResponseAt: new Date() }),
     },
   });
+
+  await clearSlaDeadline(id).catch(
+    (e) => console.error("[Messages] SLA clear error:", e)
+  );
 
   try {
     await sendPlatformMessage({

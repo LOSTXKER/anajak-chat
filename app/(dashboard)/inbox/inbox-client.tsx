@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { cn } from "@/lib/utils";
 import { ConversationList } from "./conversation-list";
-import type { MainTab, StatusFilter, LabelFilter, ChannelFilter } from "./conversation-list";
+import type { MainTab, LabelFilter, ChannelFilter } from "./conversation-list";
 import { ChatView } from "./chat-view";
 import { createClient } from "@/lib/supabase/client";
 import type { Conversation } from "./types";
@@ -15,57 +15,46 @@ export default function InboxPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mainTab, setMainTab] = useState<MainTab>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [mainTab, setMainTab] = useState<MainTab>("pending");
   const [labelFilter, setLabelFilter] = useState<LabelFilter>("");
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("");
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [statusCounts, setStatusCounts] = useState({ pending: 0, open: 0, resolved: 0 });
+  const [newPendingAlert, setNewPendingAlert] = useState(false);
+  const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const realtimeDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const mainTabRef = useRef(mainTab);
-  const statusFilterRef = useRef(statusFilter);
   const labelFilterRef = useRef(labelFilter);
   const channelFilterRef = useRef(channelFilter);
   const searchRef = useRef(search);
-  const currentUserIdRef = useRef(currentUserId);
 
   mainTabRef.current = mainTab;
-  statusFilterRef.current = statusFilter;
   labelFilterRef.current = labelFilter;
   channelFilterRef.current = channelFilter;
   searchRef.current = search;
-  currentUserIdRef.current = currentUserId;
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id ?? null);
-    });
-  }, []);
 
   const fetchConversations = useCallback(
     async (opts: {
       search: string;
-      status: StatusFilter;
       label: LabelFilter;
       channel: ChannelFilter;
       tab: MainTab;
-      userId: string | null;
     }) => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        if (opts.status !== "all") params.set("status", opts.status);
+        if (opts.tab !== "all") params.set("status", opts.tab);
         if (opts.label) params.set("label", opts.label);
         if (opts.channel) params.set("platform", opts.channel);
         if (opts.search) params.set("search", opts.search);
-        if (opts.tab === "inbox" && opts.userId) params.set("assignedTo", opts.userId);
 
         const res = await fetch(`/api/conversations?${params}`);
         if (res.ok) {
           const data = await res.json();
           setConversations(data.conversations);
+          if (data.counts) setStatusCounts(data.counts);
         }
       } finally {
         setLoading(false);
@@ -77,19 +66,20 @@ export default function InboxPage() {
   const refetch = useCallback(() => {
     fetchConversations({
       search: searchRef.current,
-      status: statusFilterRef.current,
       label: labelFilterRef.current,
       channel: channelFilterRef.current,
       tab: mainTabRef.current,
-      userId: currentUserIdRef.current,
     });
   }, [fetchConversations]);
 
   useEffect(() => {
-    if (currentUserId !== null || mainTab !== "inbox") {
-      refetch();
-    }
-  }, [mainTab, statusFilter, labelFilter, channelFilter, currentUserId, refetch]);
+    refetch();
+  }, [mainTab, labelFilter, channelFilter, refetch]);
+
+  const debouncedRefetch = useCallback(() => {
+    if (realtimeDebounce.current) clearTimeout(realtimeDebounce.current);
+    realtimeDebounce.current = setTimeout(() => refetch(), 300);
+  }, [refetch]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -100,58 +90,26 @@ export default function InboxPage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "conversations" },
         () => {
-          refetch();
+          if (mainTabRef.current !== "pending" && mainTabRef.current !== "all") {
+            setNewPendingAlert(true);
+          }
+          debouncedRefetch();
         }
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "conversations" },
-        (payload) => {
-          const updated = payload.new as Record<string, unknown>;
-          const id = updated.id as string;
-          const status = updated.status as string | undefined;
-          const labels = updated.labels as string[] | undefined;
-          const assignedTo = updated.assigned_to as string | null | undefined;
-          const rawDate = updated.last_message_at as string | null;
-          const normalized = rawDate
-            ? rawDate.endsWith("Z") || rawDate.includes("+")
-              ? rawDate
-              : rawDate + "Z"
-            : null;
-          const lastMessageAt =
-            normalized && !isNaN(Date.parse(normalized))
-              ? new Date(normalized).toISOString()
-              : null;
-
-          setConversations((prev) => {
-            const exists = prev.find((c) => c.id === id);
-            if (!exists) return prev;
-            return prev.map((c) =>
-              c.id === id
-                ? {
-                    ...c,
-                    ...(lastMessageAt && { lastMessageAt }),
-                    ...(status && { status: status as Conversation["status"] }),
-                    ...(labels && { labels }),
-                    ...(assignedTo !== undefined && {
-                      assignedUser: assignedTo
-                        ? c.assignedUser?.id === assignedTo
-                          ? c.assignedUser
-                          : { id: assignedTo, name: assignedTo, avatarUrl: null }
-                        : null,
-                    }),
-                  }
-                : c
-            );
-          });
+        () => {
+          debouncedRefetch();
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      if (realtimeDebounce.current) clearTimeout(realtimeDebounce.current);
     };
-  }, [refetch]);
+  }, [debouncedRefetch]);
 
   function handleSearchChange(value: string) {
     setSearch(value);
@@ -159,18 +117,26 @@ export default function InboxPage() {
     searchTimeout.current = setTimeout(() => {
       fetchConversations({
         search: value,
-        status: statusFilter,
         label: labelFilter,
         channel: channelFilter,
         tab: mainTab,
-        userId: currentUserId,
       });
     }, 400);
+  }
+
+  function handleMainTabChange(tab: MainTab) {
+    setMainTab(tab);
+    if (tab === "pending" || tab === "all") {
+      setNewPendingAlert(false);
+    }
   }
 
   function handleConversationUpdate(updated: Partial<Conversation> & { id: string }) {
     setConversations((prev) =>
       prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c))
+    );
+    setSelectedConv((prev) =>
+      prev && prev.id === updated.id ? { ...prev, ...updated } : prev
     );
   }
 
@@ -182,13 +148,18 @@ export default function InboxPage() {
     );
   }, []);
 
-  const selected = conversations.find((c) => c.id === selectedId) ?? null;
+  const foundInList = conversations.find((c) => c.id === selectedId);
+  const selected = foundInList ?? selectedConv;
+
+  useEffect(() => {
+    if (foundInList) setSelectedConv(foundInList);
+  }, [foundInList]);
 
   return (
     <div className="flex h-full overflow-hidden">
       {/* Conversation list - full width on mobile when no conversation selected, fixed width on desktop */}
       <div className={cn(
-        "shrink-0 lg:block",
+        "shrink-0 h-full lg:block",
         selected ? "hidden lg:block" : "w-full lg:w-auto"
       )}>
         <ConversationList
@@ -196,19 +167,20 @@ export default function InboxPage() {
           selectedId={selectedId}
           loading={loading}
           mainTab={mainTab}
-          statusFilter={statusFilter}
           labelFilter={labelFilter}
           channelFilter={channelFilter}
           search={search}
-          currentUserId={currentUserId}
+          statusCounts={statusCounts}
+          newPendingAlert={newPendingAlert}
           onSelectConversation={(id) => {
             setSelectedId(id);
+            const conv = conversations.find((c) => c.id === id);
+            if (conv) setSelectedConv({ ...conv, unreadCount: 0 });
             setConversations((prev) =>
               prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c))
             );
           }}
-          onMainTabChange={setMainTab}
-          onStatusFilterChange={setStatusFilter}
+          onMainTabChange={handleMainTabChange}
           onLabelFilterChange={setLabelFilter}
           onChannelFilterChange={setChannelFilter}
           onSearchChange={handleSearchChange}
@@ -224,7 +196,7 @@ export default function InboxPage() {
           <div className="flex h-full flex-col">
             {/* Mobile back button */}
             <div className="flex items-center gap-2 border-b px-3 py-2 lg:hidden">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedId(null)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedId(null); setSelectedConv(null); }}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-medium truncate">

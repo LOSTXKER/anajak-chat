@@ -14,9 +14,15 @@ export const POST = apiHandler(async (_request, { params }) => {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const now = new Date();
   await prisma.conversation.update({
     where: { id },
-    data: { status: "resolved", resolvedAt: new Date() },
+    data: {
+      status: "resolved",
+      resolvedAt: now,
+      ...(!conversation.firstResponseAt && { firstResponseAt: now }),
+      slaFirstResponseDeadline: null,
+    },
   });
 
   await prisma.conversationEvent.create({

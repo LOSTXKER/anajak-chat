@@ -24,6 +24,7 @@ export const GET = apiHandler(async (request) => {
         status: true,
         priority: true,
         createdAt: true,
+        lastMessageAt: true,
         resolvedAt: true,
         firstResponseAt: true,
         sourceAdId: true,
@@ -46,7 +47,7 @@ export const GET = apiHandler(async (request) => {
       source_placement: r.sourcePlacement ?? "",
       sla_breached: r.slaBreachedAt ? "yes" : "no",
       first_response_minutes: r.firstResponseAt
-        ? Math.round((r.firstResponseAt.getTime() - r.createdAt.getTime()) / 60000)
+        ? Math.round((r.firstResponseAt.getTime() - (r.lastMessageAt ?? r.createdAt).getTime()) / 60000)
         : "",
       created_at: r.createdAt.toISOString(),
       resolved_at: r.resolvedAt?.toISOString() ?? "",

@@ -39,7 +39,8 @@ export const GET = apiHandler(async () => {
     const avgResponseMs =
       respondedConvs.length > 0
         ? respondedConvs.reduce((sum, c) => {
-            return sum + (new Date(c.firstResponseAt!).getTime() - new Date(c.createdAt).getTime());
+            const base = c.lastMessageAt ?? c.createdAt;
+            return sum + (new Date(c.firstResponseAt!).getTime() - new Date(base).getTime());
           }, 0) / respondedConvs.length
         : null;
 

@@ -11,8 +11,6 @@ import {
   Search,
   RefreshCw,
   SlidersHorizontal,
-  Inbox,
-  MessagesSquare,
 } from "lucide-react";
 import { SkeletonConversation } from "@/components/skeleton";
 import { EmptyState } from "@/components/empty-state";
@@ -21,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FilterDropdown } from "@/components/ui/filter-dropdown";
+import { STATUS_BADGE, LABEL_BADGE } from "@/lib/constants";
+import { SlaTimer } from "./sla-timer";
 import type { Conversation } from "./types";
 
 const PLATFORM_ICONS = {
@@ -41,18 +41,9 @@ const PLATFORM_COLORS = {
   manual: "text-muted-foreground",
 };
 
-export type MainTab = "all" | "inbox";
-export type StatusFilter = "all" | "pending" | "open" | "resolved" | "closed";
+export type MainTab = "all" | "pending" | "open" | "resolved";
 export type LabelFilter = "" | "missed" | "follow_up" | "spam" | "blocked";
 export type ChannelFilter = "" | "facebook" | "instagram" | "line" | "whatsapp" | "web";
-
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "สถานะทั้งหมด" },
-  { value: "pending", label: "รอรับ" },
-  { value: "open", label: "กำลังดูแล" },
-  { value: "resolved", label: "เสร็จสิ้น" },
-  { value: "closed", label: "ปิด" },
-];
 
 const LABEL_OPTIONS: { value: LabelFilter; label: string }[] = [
   { value: "", label: "ป้ายทั้งหมด" },
@@ -77,14 +68,13 @@ interface ConversationListProps {
   selectedId: string | null;
   loading: boolean;
   mainTab: MainTab;
-  statusFilter: StatusFilter;
   labelFilter: LabelFilter;
   channelFilter: ChannelFilter;
   search: string;
-  currentUserId: string | null;
+  statusCounts: { pending: number; open: number; resolved: number };
+  newPendingAlert: boolean;
   onSelectConversation: (id: string) => void;
   onMainTabChange: (tab: MainTab) => void;
-  onStatusFilterChange: (status: StatusFilter) => void;
   onLabelFilterChange: (label: LabelFilter) => void;
   onChannelFilterChange: (channel: ChannelFilter) => void;
   onSearchChange: (value: string) => void;
@@ -97,14 +87,13 @@ export function ConversationList({
   selectedId,
   loading,
   mainTab,
-  statusFilter,
   labelFilter,
   channelFilter,
   search,
-  currentUserId,
+  statusCounts,
+  newPendingAlert,
   onSelectConversation,
   onMainTabChange,
-  onStatusFilterChange,
   onLabelFilterChange,
   onChannelFilterChange,
   onSearchChange,
@@ -119,49 +108,41 @@ export function ConversationList({
     return last.content ?? "";
   }, []);
 
-  const inboxCount = conversations.filter(
-    (c) => c.assignedUser?.id === currentUserId
-  ).length;
-
-  const hasActiveFilter = statusFilter !== "all" || labelFilter !== "" || channelFilter !== "";
+  const hasActiveFilter = labelFilter !== "" || channelFilter !== "";
 
   return (
-    <div className="flex w-full lg:w-72 shrink-0 flex-col border-r">
-      {/* Main tabs */}
+    <div className="flex h-full w-full lg:w-72 shrink-0 flex-col border-r">
+      {/* Status tabs */}
       <div className="flex border-b" role="tablist">
-        <button
-          role="tab"
-          aria-selected={mainTab === "all"}
-          onClick={() => onMainTabChange("all")}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors",
-            mainTab === "all"
-              ? "border-b-2 border-accent text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <MessagesSquare className="h-4 w-4" />
-          แชททั้งหมด
-        </button>
-        <button
-          role="tab"
-          aria-selected={mainTab === "inbox"}
-          onClick={() => onMainTabChange("inbox")}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors relative",
-            mainTab === "inbox"
-              ? "border-b-2 border-accent text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Inbox className="h-4 w-4" />
-          อินบ็อกซ์
-          {inboxCount > 0 && (
-            <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
-              {inboxCount}
-            </span>
-          )}
-        </button>
+        {([
+          { value: "all" as const, label: "ทั้งหมด" },
+          { value: "pending" as const, label: "รอรับ", count: statusCounts.pending, alert: newPendingAlert },
+          { value: "open" as const, label: "กำลังดูแล", count: statusCounts.open },
+          { value: "resolved" as const, label: "เสร็จสิ้น" },
+        ]).map((tab) => (
+          <button
+            key={tab.value}
+            role="tab"
+            aria-selected={mainTab === tab.value}
+            onClick={() => onMainTabChange(tab.value)}
+            className={cn(
+              "relative flex flex-1 items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors",
+              mainTab === tab.value
+                ? "border-b-2 border-accent text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+            {"count" in tab && tab.count !== undefined && tab.count > 0 && (
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                {tab.count}
+              </span>
+            )}
+            {"alert" in tab && tab.alert && (
+              <span className="absolute right-1 top-1.5 h-2 w-2 rounded-full bg-red-500" />
+            )}
+          </button>
+        ))}
       </div>
 
       {/* Search + Filters */}
@@ -184,11 +165,6 @@ export function ConversationList({
         <div className="flex items-center gap-1 flex-wrap">
           <SlidersHorizontal className="h-3 w-3 text-muted-foreground shrink-0" />
           <FilterDropdown
-            value={statusFilter}
-            options={STATUS_OPTIONS}
-            onChange={onStatusFilterChange}
-          />
-          <FilterDropdown
             value={channelFilter}
             options={CHANNEL_OPTIONS}
             onChange={onChannelFilterChange}
@@ -201,11 +177,10 @@ export function ConversationList({
           {hasActiveFilter && (
             <button
               onClick={() => {
-                onStatusFilterChange("all");
                 onLabelFilterChange("");
                 onChannelFilterChange("");
               }}
-              className="text-[10px] text-muted-foreground hover:text-foreground ml-auto"
+              className="text-xs text-muted-foreground hover:text-foreground ml-auto"
             >
               ล้าง
             </button>
@@ -224,7 +199,7 @@ export function ConversationList({
         ) : conversations.length === 0 ? (
           <EmptyState
             icon={MessageSquare}
-            message={mainTab === "inbox" ? "ไม่มีแชทในอินบ็อกซ์" : "ไม่มีการสนทนา"}
+            message={mainTab === "pending" ? "ไม่มีแชทรอรับ" : mainTab === "open" ? "ไม่มีแชทที่กำลังดูแล" : mainTab === "resolved" ? "ไม่มีแชทที่เสร็จสิ้น" : "ไม่มีการสนทนา"}
             className="border-0 py-12"
           />
         ) : (
@@ -267,14 +242,18 @@ export function ConversationList({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className={cn("truncate text-sm", unread > 0 ? "font-semibold text-foreground" : "font-medium")}>{displayName}</span>
-                        {conv.lastMessageAt && !isNaN(Date.parse(conv.lastMessageAt)) && (
-                          <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
-                            {formatDistanceToNow(new Date(conv.lastMessageAt), {
-                              addSuffix: false,
-                              locale: th,
-                            })}
-                          </span>
-                        )}
+                        <span className="ml-auto shrink-0">
+                          {conv.status === "pending" ? (
+                            <SlaTimer conversation={conv} variant="compact" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(
+                                new Date(conv.lastMessageAt ?? conv.createdAt),
+                                { addSuffix: false, locale: th }
+                              )}
+                            </span>
+                          )}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-1.5 mt-0.5">
@@ -282,6 +261,26 @@ export function ConversationList({
                         {unread > 0 && (
                           <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
                         )}
+                      </div>
+
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        <span className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", STATUS_BADGE[conv.status]?.className ?? "bg-muted text-muted-foreground")}>
+                          {STATUS_BADGE[conv.status]?.label ?? conv.status}
+                        </span>
+                        {conv.labels?.map((label) => {
+                          const badge = LABEL_BADGE[label];
+                          if (!badge) return null;
+                          return (
+                            <span key={label} className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", badge.className)}>
+                              {badge.label}
+                            </span>
+                          );
+                        })}
+                        {conv.contact.tags?.slice(0, 2).map((tag) => (
+                          <span key={tag} className="rounded-full px-1.5 py-px text-[10px] font-medium bg-muted text-foreground">
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>

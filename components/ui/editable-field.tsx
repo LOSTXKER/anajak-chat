@@ -41,7 +41,7 @@ export function EditableField({
   if (editing) {
     return (
       <div className="space-y-1">
-        <p className="text-[10px] text-muted-foreground">{label}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
         <Input
           ref={inputRef}
           type={type}
@@ -64,7 +64,7 @@ export function EditableField({
       onClick={() => setEditing(true)}
       className="w-full text-left group space-y-0.5"
     >
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
         <span className={cn("text-xs truncate", value ? "text-foreground" : "text-muted-foreground italic")}>

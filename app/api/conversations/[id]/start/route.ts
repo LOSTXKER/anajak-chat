@@ -14,7 +14,7 @@ export const POST = apiHandler(async (_request, { params }) => {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const startable = ["pending", "resolved", "closed"];
+  const startable = ["pending", "resolved"];
   if (!startable.includes(conversation.status)) {
     return NextResponse.json({ error: "Cannot start from current status" }, { status: 400 });
   }
@@ -25,6 +25,8 @@ export const POST = apiHandler(async (_request, { params }) => {
       status: "open",
       assignedTo: user.id,
       labels: [],
+      startedAt: new Date(),
+      firstResponseAt: null,
     },
     include: {
       assignedUser: { select: { id: true, name: true, avatarUrl: true } },
@@ -44,5 +46,6 @@ export const POST = apiHandler(async (_request, { params }) => {
     status: updated.status,
     assignedUser: updated.assignedUser,
     labels: updated.labels,
+    slaFirstResponseDeadline: updated.slaFirstResponseDeadline,
   });
 });

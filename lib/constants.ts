@@ -16,7 +16,6 @@ export const STATUS_BADGE: Record<string, { label: string; className: string }> 
   pending: { label: "รอรับ", className: "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
   open: { label: "กำลังดูแล", className: "bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
   resolved: { label: "เสร็จสิ้น", className: "bg-zinc-100 text-zinc-500 dark:bg-zinc-800/50 dark:text-zinc-500" },
-  closed: { label: "ปิด", className: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800/50 dark:text-zinc-600" },
 };
 
 // ─── Conversation Label Badges ────────────────────────────────────────────────
@@ -25,6 +24,12 @@ export const LABEL_BADGE: Record<string, { label: string; className: string }> =
   follow_up: { label: "ติดตาม", className: "bg-violet-100/80 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400" },
   spam: { label: "สแปม", className: "bg-red-100/80 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
   blocked: { label: "บล็อก", className: "bg-zinc-200 text-zinc-600 dark:bg-zinc-700/50 dark:text-zinc-400" },
+};
+
+// ─── Default SLA Config ──────────────────────────────────────────────────────
+export const DEFAULT_SLA_CONFIG = {
+  priority: "medium" as const,
+  responseMinutes: 15,
 };
 
 // ─── Default Roles ────────────────────────────────────────────────────────────

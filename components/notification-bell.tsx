@@ -197,7 +197,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                         {notif.body && (
                           <p className="text-xs text-muted-foreground truncate">{notif.body}</p>
                         )}
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(notif.createdAt), {
                             addSuffix: true,
                             locale: th,

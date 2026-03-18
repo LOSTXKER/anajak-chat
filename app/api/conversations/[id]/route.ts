@@ -40,6 +40,7 @@ export const PATCH = apiHandler(async (request, context) => {
       ...(body.assignedTo !== undefined && { assignedTo: body.assignedTo }),
       ...(body.priority !== undefined && { priority: body.priority }),
       ...(body.status === "resolved" && !conversation.resolvedAt && { resolvedAt: new Date() }),
+      ...(body.status === "resolved" && { slaFirstResponseDeadline: null }),
     },
     include: {
       contact: true,

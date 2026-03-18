@@ -135,17 +135,17 @@ export default function WorkloadPage() {
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-md bg-muted/50 p-2">
                     <p className="text-lg font-semibold text-green-600 dark:text-green-400">{agent.openCount}</p>
-                    <p className="text-[10px] text-muted-foreground">เปิด</p>
+                    <p className="text-xs text-muted-foreground">เปิด</p>
                   </div>
                   <div className="rounded-md bg-muted/50 p-2">
                     <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">{agent.pendingCount}</p>
-                    <p className="text-[10px] text-muted-foreground">รอ</p>
+                    <p className="text-xs text-muted-foreground">รอ</p>
                   </div>
                   <div className="rounded-md bg-muted/50 p-2">
                     <p className="text-lg font-semibold text-muted-foreground">
                       {formatResponseTime(agent.avgResponseMs)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">เวลาตอบ</p>
+                    <p className="text-xs text-muted-foreground">เวลาตอบ</p>
                   </div>
                 </div>
               </div>
