@@ -398,71 +398,73 @@ export default function AutoReplyPage() {
           </div>
         ) : (
           <>
-            {/* Header bar */}
-            <div className="flex items-center gap-3 border-b px-5 py-2.5 shrink-0">
-              <span className="text-xs text-muted-foreground shrink-0">แก้ไขข้อความตอบกลับ</span>
-              <div className="flex items-center gap-2 flex-1">
-                <span className="text-xs text-muted-foreground">ชื่อรูปแบบ *</span>
-                <Input value={selected.name} onChange={(e) => updateSelected({ name: e.target.value })} className="h-8 text-sm font-medium max-w-xs" />
+            {/* ── Row 1: Title + Settings ── */}
+            <div className="border-b px-6 py-4 shrink-0 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-base font-semibold">แก้ไขข้อความตอบกลับ</h2>
+                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5">Message ID : {selected.id}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Switch checked={selected.isActive} onCheckedChange={() => handleToggle(selected.id)} />
+                    <span className="text-xs text-muted-foreground">{selected.isActive ? "เปิด" : "ปิด"}</span>
+                  </div>
+                  <Button size="sm" onClick={saveSelected} disabled={saving}>
+                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
+                    บันทึก
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <Tooltip>
-                  <TooltipTrigger render={<span className="text-[10px] text-muted-foreground font-mono" />}>
-                    Message ID : {selected.id.slice(0, 10)}...
-                  </TooltipTrigger>
-                  <TooltipContent>{selected.id}</TooltipContent>
-                </Tooltip>
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 flex-1 max-w-md">
+                  <Label className="text-xs text-muted-foreground shrink-0 w-20">ชื่อรูปแบบ *</Label>
+                  <Input value={selected.name} onChange={(e) => updateSelected({ name: e.target.value })} className="h-9" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground shrink-0">Trigger</Label>
+                  <Select value={selected.trigger.type} onValueChange={(v) => updateSelected({ trigger: { ...selected.trigger, type: (v ?? "keyword") as FlowTrigger["type"] } })}>
+                    <SelectTrigger className="h-9 text-xs w-32"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="first_message">ข้อความแรก</SelectItem>
+                      <SelectItem value="keyword">คีย์เวิร์ด</SelectItem>
+                      <SelectItem value="postback">กดปุ่ม</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {selected.trigger.type === "keyword" && (
+                    <Input className="h-9 text-xs w-44" value={selected.trigger.keywords?.join(", ") ?? ""} onChange={(e) => updateSelected({ trigger: { ...selected.trigger, keywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean) } })} placeholder="คีย์เวิร์ดคั่นด้วย ," />
+                  )}
+                  {selected.trigger.type === "postback" && (
+                    <Input className="h-9 text-xs w-44" value={selected.trigger.data ?? ""} onChange={(e) => updateSelected({ trigger: { ...selected.trigger, data: e.target.value } })} placeholder="Postback data" />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
                 <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" checked={pattern.assignToHuman ?? false} onChange={(e) => updatePattern({ assignToHuman: e.target.checked })} className="h-3.5 w-3.5 rounded" />
-                  <span className="text-xs text-muted-foreground">ส่งต่อแอดมิน</span>
+                  <input type="checkbox" checked={pattern.assignToHuman ?? false} onChange={(e) => updatePattern({ assignToHuman: e.target.checked })} className="h-3.5 w-3.5 rounded accent-accent" />
+                  <span className="text-xs text-muted-foreground">ส่งต่อให้แอดมินดูแลต่อ</span>
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" checked disabled className="h-3.5 w-3.5 rounded" />
-                  <span className="text-xs text-muted-foreground">สำหรับใช้งานเป็นตัวแทน</span>
-                </label>
-                <Switch checked={selected.isActive} onCheckedChange={() => handleToggle(selected.id)} />
-                <span className="text-xs text-muted-foreground">{selected.isActive ? "เปิด" : "ปิด"}</span>
-                <Button size="sm" onClick={saveSelected} disabled={saving}>
-                  {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
-                  บันทึก
-                </Button>
               </div>
             </div>
 
-            {/* Trigger + Platform tabs */}
-            <div className="flex items-center border-b shrink-0">
-              <div className="flex items-center gap-2 px-5 py-2 border-r">
-                <span className="text-xs text-muted-foreground">Trigger:</span>
-                <Select value={selected.trigger.type} onValueChange={(v) => updateSelected({ trigger: { ...selected.trigger, type: (v ?? "keyword") as FlowTrigger["type"] } })}>
-                  <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="first_message">ข้อความแรก</SelectItem>
-                    <SelectItem value="keyword">คีย์เวิร์ด</SelectItem>
-                    <SelectItem value="postback">กดปุ่ม</SelectItem>
-                  </SelectContent>
-                </Select>
-                {selected.trigger.type === "keyword" && (
-                  <Input className="h-7 text-xs w-40" value={selected.trigger.keywords?.join(", ") ?? ""} onChange={(e) => updateSelected({ trigger: { ...selected.trigger, keywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean) } })} placeholder="คีย์เวิร์ด..." />
-                )}
-                {selected.trigger.type === "postback" && (
-                  <Input className="h-7 text-xs w-40" value={selected.trigger.data ?? ""} onChange={(e) => updateSelected({ trigger: { ...selected.trigger, data: e.target.value } })} placeholder="Postback data" />
-                )}
-              </div>
-              <div className="flex items-center">
-                {([
-                  { key: "line" as const, label: "Line", color: "text-green-600" },
-                  { key: "facebook" as const, label: "Facebook", icon: Facebook, color: "text-blue-600" },
-                  { key: "instagram" as const, label: "Instagram", icon: Instagram, color: "text-pink-600" },
-                ]).map((tab) => (
-                  <button key={tab.key} onClick={() => setPlatformTab(tab.key)} className={cn("flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors", platformTab === tab.key ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
-                    {tab.icon ? <tab.icon className={cn("h-3.5 w-3.5", platformTab === tab.key && tab.color)} /> : <span className={cn("h-4 w-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px] font-bold", platformTab !== tab.key && "opacity-50")}>L</span>}
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="ml-auto px-3">
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowTypeSelector(true)}>
-                  <Plus className="h-3 w-3 mr-1" />
+            {/* ── Row 2: Platform tabs ── */}
+            <div className="flex items-center border-b shrink-0 px-6">
+              {([
+                { key: "line" as const, label: "Line", dotColor: "bg-green-500" },
+                { key: "facebook" as const, label: "Facebook", icon: Facebook },
+                { key: "instagram" as const, label: "Instagram", icon: Instagram },
+              ]).map((tab) => (
+                <button key={tab.key} onClick={() => setPlatformTab(tab.key)} className={cn("flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors", platformTab === tab.key ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                  {tab.dotColor ? <span className={cn("h-2.5 w-2.5 rounded-full", tab.dotColor, platformTab !== tab.key && "opacity-40")} /> : null}
+                  {tab.icon ? <tab.icon className="h-4 w-4" /> : null}
+                  {tab.label}
+                </button>
+              ))}
+              <div className="ml-auto py-1.5">
+                <Button variant="outline" size="sm" className="text-xs" onClick={() => setShowTypeSelector(true)}>
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
                   เพิ่มประเภทข้อความ
                 </Button>
               </div>
