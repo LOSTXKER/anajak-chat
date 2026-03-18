@@ -390,40 +390,38 @@ export default function AutoReplyPage() {
       </div>
 
       {/* ─── Right: Message Editor ─── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {!selected ? (
           <div className="flex flex-col items-center justify-center h-full gap-4">
             <MessageSquare className="h-12 w-12 text-muted-foreground/30" />
             <p className="text-muted-foreground text-sm">เลือกรูปแบบทางซ้ายเพื่อแก้ไข</p>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
-            {/* Top bar: name + actions */}
-            <div className="flex items-center gap-3 border-b px-5 py-3">
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground shrink-0">ชื่อรูปแบบ *</Label>
-                  <Input
-                    value={selected.name}
-                    onChange={(e) => updateSelected({ name: e.target.value })}
-                    className="h-8 text-sm font-medium max-w-xs"
-                  />
-                </div>
+          <>
+            {/* Header bar */}
+            <div className="flex items-center gap-3 border-b px-5 py-2.5 shrink-0">
+              <span className="text-xs text-muted-foreground shrink-0">แก้ไขข้อความตอบกลับ</span>
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-xs text-muted-foreground">ชื่อรูปแบบ *</span>
+                <Input value={selected.name} onChange={(e) => updateSelected({ name: e.target.value })} className="h-8 text-sm font-medium max-w-xs" />
               </div>
-
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-3 shrink-0">
                 <Tooltip>
                   <TooltipTrigger render={<span className="text-[10px] text-muted-foreground font-mono" />}>
-                    Message ID : {selected.id.slice(0, 12)}...
+                    Message ID : {selected.id.slice(0, 10)}...
                   </TooltipTrigger>
                   <TooltipContent>{selected.id}</TooltipContent>
                 </Tooltip>
-
-                <div className="flex items-center gap-1.5 border-l pl-2">
-                  <Switch checked={selected.isActive} onCheckedChange={() => handleToggle(selected.id)} />
-                  <span className="text-xs text-muted-foreground">{selected.isActive ? "เปิด" : "ปิด"}</span>
-                </div>
-
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked={pattern.assignToHuman ?? false} onChange={(e) => updatePattern({ assignToHuman: e.target.checked })} className="h-3.5 w-3.5 rounded" />
+                  <span className="text-xs text-muted-foreground">ส่งต่อแอดมิน</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked disabled className="h-3.5 w-3.5 rounded" />
+                  <span className="text-xs text-muted-foreground">สำหรับใช้งานเป็นตัวแทน</span>
+                </label>
+                <Switch checked={selected.isActive} onCheckedChange={() => handleToggle(selected.id)} />
+                <span className="text-xs text-muted-foreground">{selected.isActive ? "เปิด" : "ปิด"}</span>
                 <Button size="sm" onClick={saveSelected} disabled={saving}>
                   {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
                   บันทึก
@@ -431,73 +429,38 @@ export default function AutoReplyPage() {
               </div>
             </div>
 
-            {/* Trigger config */}
-            <div className="flex items-center gap-3 border-b px-5 py-2 bg-muted/30">
-              <Label className="text-xs text-muted-foreground shrink-0">Trigger:</Label>
-              <Select
-                value={selected.trigger.type}
-                onValueChange={(v) => updateSelected({ trigger: { ...selected.trigger, type: (v ?? "keyword") as FlowTrigger["type"] } })}
-              >
-                <SelectTrigger className="h-7 text-xs w-32"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="first_message">ข้อความแรก</SelectItem>
-                  <SelectItem value="keyword">คีย์เวิร์ด</SelectItem>
-                  <SelectItem value="postback">กดปุ่ม</SelectItem>
-                </SelectContent>
-              </Select>
-              {selected.trigger.type === "keyword" && (
-                <Input
-                  className="h-7 text-xs max-w-xs"
-                  value={selected.trigger.keywords?.join(", ") ?? ""}
-                  onChange={(e) => updateSelected({ trigger: { ...selected.trigger, keywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean) } })}
-                  placeholder="คีย์เวิร์ดคั่นด้วย ,"
-                />
-              )}
-              {selected.trigger.type === "postback" && (
-                <Input
-                  className="h-7 text-xs max-w-xs"
-                  value={selected.trigger.data ?? ""}
-                  onChange={(e) => updateSelected({ trigger: { ...selected.trigger, data: e.target.value } })}
-                  placeholder="Postback data"
-                />
-              )}
-
-              <div className="ml-auto flex items-center gap-1.5">
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={pattern.assignToHuman ?? false}
-                    onChange={(e) => updatePattern({ assignToHuman: e.target.checked })}
-                    className="h-3.5 w-3.5 rounded border-border"
-                  />
-                  <span className="text-xs text-muted-foreground">สำหรับใช้งานเป็นตัวแทน</span>
-                </label>
+            {/* Trigger + Platform tabs */}
+            <div className="flex items-center border-b shrink-0">
+              <div className="flex items-center gap-2 px-5 py-2 border-r">
+                <span className="text-xs text-muted-foreground">Trigger:</span>
+                <Select value={selected.trigger.type} onValueChange={(v) => updateSelected({ trigger: { ...selected.trigger, type: (v ?? "keyword") as FlowTrigger["type"] } })}>
+                  <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="first_message">ข้อความแรก</SelectItem>
+                    <SelectItem value="keyword">คีย์เวิร์ด</SelectItem>
+                    <SelectItem value="postback">กดปุ่ม</SelectItem>
+                  </SelectContent>
+                </Select>
+                {selected.trigger.type === "keyword" && (
+                  <Input className="h-7 text-xs w-40" value={selected.trigger.keywords?.join(", ") ?? ""} onChange={(e) => updateSelected({ trigger: { ...selected.trigger, keywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean) } })} placeholder="คีย์เวิร์ด..." />
+                )}
+                {selected.trigger.type === "postback" && (
+                  <Input className="h-7 text-xs w-40" value={selected.trigger.data ?? ""} onChange={(e) => updateSelected({ trigger: { ...selected.trigger, data: e.target.value } })} placeholder="Postback data" />
+                )}
               </div>
-            </div>
-
-            {/* Platform tabs */}
-            <div className="flex items-center gap-0 border-b px-5">
-              {([
-                { key: "line" as const, label: "Line", color: "text-green-600" },
-                { key: "facebook" as const, label: "Facebook", icon: Facebook, color: "text-blue-600" },
-                { key: "instagram" as const, label: "Instagram", icon: Instagram, color: "text-pink-600" },
-              ]).map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setPlatformTab(tab.key)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors",
-                    platformTab === tab.key
-                      ? `border-accent text-foreground`
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {tab.icon ? <tab.icon className={cn("h-3.5 w-3.5", platformTab === tab.key && tab.color)} /> : <span className={cn("h-3.5 w-3.5 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px] font-bold", platformTab !== tab.key && "opacity-50")}>L</span>}
-                  {tab.label}
-                </button>
-              ))}
-
-              <div className="ml-auto">
+              <div className="flex items-center">
+                {([
+                  { key: "line" as const, label: "Line", color: "text-green-600" },
+                  { key: "facebook" as const, label: "Facebook", icon: Facebook, color: "text-blue-600" },
+                  { key: "instagram" as const, label: "Instagram", icon: Instagram, color: "text-pink-600" },
+                ]).map((tab) => (
+                  <button key={tab.key} onClick={() => setPlatformTab(tab.key)} className={cn("flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors", platformTab === tab.key ? "border-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                    {tab.icon ? <tab.icon className={cn("h-3.5 w-3.5", platformTab === tab.key && tab.color)} /> : <span className={cn("h-4 w-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[8px] font-bold", platformTab !== tab.key && "opacity-50")}>L</span>}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="ml-auto px-3">
                 <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowTypeSelector(true)}>
                   <Plus className="h-3 w-3 mr-1" />
                   เพิ่มประเภทข้อความ
@@ -505,103 +468,121 @@ export default function AutoReplyPage() {
               </div>
             </div>
 
-            {/* Messages area */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
-              <div className="text-xs text-muted-foreground mb-2">ข้อความ ({pattern.messages.length}/{pattern.messages.length} ข้อมูล)</div>
+            {/* Messages as chat preview */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-2xl mx-auto py-4 px-5">
+                <div className="text-xs text-muted-foreground mb-3">ข้อความ ({pattern.messages.length}/{pattern.messages.length} ข้อมูล)</div>
 
-              {pattern.messages.length === 0 && (
-                <div className="flex flex-col items-center py-12 text-center">
-                  <MessageSquare className="h-10 w-10 text-muted-foreground/20 mb-3" />
-                  <p className="text-sm text-muted-foreground mb-3">ยังไม่มีข้อความ</p>
-                  <Button variant="outline" onClick={() => setShowTypeSelector(true)}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    เพิ่มประเภทข้อความ
-                  </Button>
-                </div>
-              )}
-
-              {pattern.messages.map((msg, idx) => (
-                <div key={idx} className="rounded-xl border bg-card overflow-hidden group">
-                  {/* Message header */}
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/30 border-b">
-                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0" />
-                    <span className="text-xs text-muted-foreground flex-1">{idx + 1}. {msgTypeLabel(msg.type)}</span>
-                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3" /></Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3" /></Button>
-                    </div>
+                {pattern.messages.length === 0 ? (
+                  <div className="flex flex-col items-center py-16 text-center">
+                    <MessageSquare className="h-10 w-10 text-muted-foreground/20 mb-3" />
+                    <p className="text-sm text-muted-foreground mb-3">ยังไม่มีข้อความ</p>
+                    <Button variant="outline" onClick={() => setShowTypeSelector(true)}>
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      เพิ่มประเภทข้อความ
+                    </Button>
                   </div>
+                ) : (
+                  <div className="space-y-3">
+                    {pattern.messages.map((msg, idx) => (
+                      <div key={idx} className="group relative">
+                        {/* Action buttons - float right on hover */}
+                        <div className="absolute -right-2 top-0 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3" /></Button>
+                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3" /></Button>
+                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3" /></Button>
+                          <Button variant="secondary" size="icon" className="h-6 w-6 rounded-full shadow-sm text-destructive" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3" /></Button>
+                        </div>
 
-                  {/* Message preview */}
-                  <div className="p-3 cursor-pointer" onClick={() => openEditMsg(idx)}>
-                    {msg.type === "text" && (
-                      <div className="space-y-2">
-                        <p className="text-sm whitespace-pre-wrap">{msg.text || <span className="text-muted-foreground italic">ยังไม่มีข้อความ</span>}</p>
-                        {msg.buttons?.map((btn, bi) => (
-                          <Button key={bi} variant="default" size="sm" className="rounded-full text-xs mr-1.5">{btn.label || "ปุ่ม"}</Button>
-                        ))}
-                      </div>
-                    )}
-                    {msg.type === "image" && (
-                      msg.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={msg.imageUrl} alt="" className="max-w-[300px] max-h-[200px] rounded-lg object-cover" />
-                      ) : (
-                        <div className="rounded-lg bg-muted p-6 flex items-center justify-center max-w-[200px]"><Image className="h-8 w-8 text-muted-foreground/30" /></div>
-                      )
-                    )}
-                    {msg.type === "card" && (
-                      <div className="rounded-lg border max-w-sm overflow-hidden">
-                        {msg.cardImageUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={msg.cardImageUrl} alt="" className="w-full h-32 object-cover" />
-                        )}
-                        <div className="p-3 space-y-1">
-                          <p className="text-sm font-semibold">{msg.cardTitle || "หัวข้อ"}</p>
-                          {msg.cardText && <p className="text-xs text-muted-foreground">{msg.cardText}</p>}
-                          {msg.cardButtons?.map((btn, bi) => (
-                            <Button key={bi} variant="default" size="sm" className="rounded-full text-xs mr-1.5 mt-1">{btn.label || "ปุ่ม"}</Button>
-                          ))}
+                        {/* Chat bubble preview */}
+                        <div className="cursor-pointer hover:opacity-90 transition-opacity" onClick={() => openEditMsg(idx)}>
+                          {msg.type === "text" && (
+                            <div className="rounded-2xl rounded-bl-sm bg-card border border-border p-3 max-w-md shadow-sm">
+                              <p className="text-sm whitespace-pre-wrap">{msg.text || <span className="text-muted-foreground italic">ยังไม่มีข้อความ — คลิกเพื่อแก้ไข</span>}</p>
+                              {msg.buttons && msg.buttons.length > 0 && (
+                                <div className="mt-2 space-y-1.5">
+                                  {msg.buttons.map((btn, bi) => (
+                                    <div key={bi} className="w-full rounded-lg bg-accent text-accent-foreground text-center text-xs font-medium py-2 px-4">{btn.label || "ปุ่ม"}</div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {msg.type === "image" && (
+                            msg.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={msg.imageUrl} alt="" className="max-w-xs rounded-2xl rounded-bl-sm border shadow-sm object-cover" />
+                            ) : (
+                              <div className="rounded-2xl rounded-bl-sm bg-card border p-8 flex items-center justify-center max-w-[200px] shadow-sm"><Image className="h-8 w-8 text-muted-foreground/30" /></div>
+                            )
+                          )}
+                          {msg.type === "card" && (
+                            <div className="rounded-2xl border max-w-xs overflow-hidden shadow-sm bg-card">
+                              {msg.cardImageUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={msg.cardImageUrl} alt="" className="w-full h-36 object-cover" />
+                              ) : (
+                                <div className="w-full h-28 bg-muted flex items-center justify-center"><Image className="h-8 w-8 text-muted-foreground/20" /></div>
+                              )}
+                              <div className="p-3 space-y-1">
+                                <p className="text-sm font-semibold">{msg.cardTitle || "หัวข้อ"}</p>
+                                {msg.cardText && <p className="text-xs text-muted-foreground">{msg.cardText}</p>}
+                                {msg.cardButtons && msg.cardButtons.length > 0 && (
+                                  <div className="pt-1 space-y-1">
+                                    {msg.cardButtons.map((btn, bi) => (
+                                      <div key={bi} className="w-full rounded-lg bg-accent text-accent-foreground text-center text-xs font-medium py-1.5">{btn.label || "ปุ่ม"}</div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {msg.type === "sticker" && (
+                            <div className="rounded-2xl rounded-bl-sm bg-card border p-4 max-w-[120px] shadow-sm flex items-center justify-center">
+                              <Smile className="h-12 w-12 text-muted-foreground/40" />
+                            </div>
+                          )}
+                          {msg.type === "file" && (
+                            <div className="rounded-2xl rounded-bl-sm bg-card border p-3 max-w-xs shadow-sm flex items-center gap-2">
+                              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                              <span className="text-sm truncate">{msg.fileName || msg.fileUrl || "ไฟล์แนบ"}</span>
+                            </div>
+                          )}
+                          {msg.type === "video" && (
+                            <div className="rounded-2xl rounded-bl-sm bg-card border p-3 max-w-xs shadow-sm flex items-center gap-2">
+                              <Video className="h-5 w-5 text-muted-foreground shrink-0" />
+                              <span className="text-sm truncate">{msg.videoUrl || "วิดีโอ"}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
-                    {msg.type === "sticker" && <p className="text-xs text-muted-foreground">Sticker: {msg.stickerPackageId}/{msg.stickerId}</p>}
-                    {msg.type === "file" && <p className="text-xs text-muted-foreground flex items-center gap-1"><FileText className="h-4 w-4" />{msg.fileName || msg.fileUrl || "ไฟล์"}</p>}
-                    {msg.type === "video" && <p className="text-xs text-muted-foreground flex items-center gap-1"><Video className="h-4 w-4" />{msg.videoUrl || "วิดีโอ"}</p>}
+                    ))}
                   </div>
-                </div>
-              ))}
+                )}
 
-              {/* Quick Reply */}
-              <div className="pt-2 border-t">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground">Quick Reply ({(pattern.quickReplies ?? []).length}/13 ข้อมูล)</span>
-                  <Button variant="ghost" size="sm" className="h-6 text-xs text-accent" onClick={addQuickReply}>
-                    <Plus className="h-3 w-3 mr-1" />
-                    เพิ่ม Quick reply
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(pattern.quickReplies ?? []).map((qr, idx) => (
-                    <div key={idx} className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 group/qr">
-                      <span className="text-xs text-muted-foreground">ชื่อ</span>
-                      <Input
-                        className="h-5 w-20 border-0 p-0 text-xs font-medium focus-visible:ring-0"
-                        value={qr.label}
-                        onChange={(e) => updateQuickReply(idx, { label: e.target.value, value: e.target.value })}
-                        placeholder="ชื่อปุ่ม"
-                      />
-                      <button onClick={() => removeQuickReply(idx)} className="opacity-0 group-hover/qr:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
+                {/* Quick Reply */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-muted-foreground">Quick Reply ({(pattern.quickReplies ?? []).length}/13 ข้อมูล)</span>
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-accent" onClick={addQuickReply}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      เพิ่ม Quick reply
+                    </Button>
+                  </div>
+                  {(pattern.quickReplies ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {(pattern.quickReplies ?? []).map((qr, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 shadow-sm group/qr">
+                          <Input className="h-5 w-20 border-0 p-0 text-xs font-medium focus-visible:ring-0" value={qr.label} onChange={(e) => updateQuickReply(idx, { label: e.target.value, value: e.target.value })} placeholder="ชื่อปุ่ม" />
+                          <button onClick={() => removeQuickReply(idx)} className="opacity-0 group-hover/qr:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
