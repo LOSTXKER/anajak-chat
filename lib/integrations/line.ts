@@ -64,6 +64,149 @@ export async function validateLineCredentials(
   }
 }
 
+// ─── Rich Menu ────────────────────────────────────────────────────────────────
+
+export interface RichMenuArea {
+  bounds: { x: number; y: number; width: number; height: number };
+  action: { type: "message" | "uri" | "postback"; label?: string; text?: string; uri?: string; data?: string };
+}
+
+export interface RichMenuRequest {
+  size: { width: 2500; height: 1686 | 843 };
+  selected: boolean;
+  name: string;
+  chatBarText: string;
+  areas: RichMenuArea[];
+}
+
+export async function createRichMenu(
+  credentials: LineCredentials,
+  menu: RichMenuRequest
+): Promise<{ richMenuId: string } | { error: string }> {
+  const res = await fetch("https://api.line.me/v2/bot/richmenu", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${credentials.channelAccessToken}`,
+    },
+    body: JSON.stringify(menu),
+  });
+  if (!res.ok) return { error: `LINE API ${res.status}: ${await res.text()}` };
+  return (await res.json()) as { richMenuId: string };
+}
+
+export async function uploadRichMenuImage(
+  credentials: LineCredentials,
+  richMenuId: string,
+  imageBuffer: ArrayBuffer,
+  contentType: string
+): Promise<boolean> {
+  const res = await fetch(`https://api-data.line.me/v2/bot/richmenu/${richMenuId}/content`, {
+    method: "POST",
+    headers: {
+      "Content-Type": contentType,
+      Authorization: `Bearer ${credentials.channelAccessToken}`,
+    },
+    body: imageBuffer,
+  });
+  return res.ok;
+}
+
+export async function setDefaultRichMenu(
+  credentials: LineCredentials,
+  richMenuId: string
+): Promise<boolean> {
+  const res = await fetch(`https://api.line.me/v2/bot/user/all/richmenu/${richMenuId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
+  });
+  return res.ok;
+}
+
+export async function deleteRichMenu(
+  credentials: LineCredentials,
+  richMenuId: string
+): Promise<boolean> {
+  const res = await fetch(`https://api.line.me/v2/bot/richmenu/${richMenuId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
+  });
+  return res.ok;
+}
+
+export async function listRichMenus(
+  credentials: LineCredentials
+): Promise<Array<{ richMenuId: string; name: string; chatBarText: string; selected: boolean; areas: RichMenuArea[] }>> {
+  const res = await fetch("https://api.line.me/v2/bot/richmenu/list", {
+    headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
+  });
+  if (!res.ok) return [];
+  const data = (await res.json()) as { richmenus: Array<{ richMenuId: string; name: string; chatBarText: string; selected: boolean; areas: RichMenuArea[] }> };
+  return data.richmenus ?? [];
+}
+
+export async function getDefaultRichMenuId(
+  credentials: LineCredentials
+): Promise<string | null> {
+  const res = await fetch("https://api.line.me/v2/bot/user/all/richmenu", {
+    headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { richMenuId: string };
+  return data.richMenuId ?? null;
+}
+
+export async function removeDefaultRichMenu(
+  credentials: LineCredentials
+): Promise<boolean> {
+  const res = await fetch("https://api.line.me/v2/bot/user/all/richmenu", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${credentials.channelAccessToken}` },
+  });
+  return res.ok;
+}
+
+// ─── Flex / Button Messages ──────────────────────────────────────────────────
+
+export interface LineFlexButton {
+  label: string;
+  type: "postback" | "uri" | "message";
+  data?: string;
+  uri?: string;
+  text?: string;
+}
+
+export function buildLineButtonMessage(text: string, buttons: LineFlexButton[]) {
+  return {
+    type: "flex" as const,
+    altText: text,
+    contents: {
+      type: "bubble",
+      body: {
+        type: "box",
+        layout: "vertical",
+        contents: [{ type: "text", text, wrap: true }],
+      },
+      footer: {
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        contents: buttons.map((btn) => ({
+          type: "button",
+          style: "primary",
+          action: btn.type === "uri"
+            ? { type: "uri", label: btn.label, uri: btn.uri }
+            : btn.type === "postback"
+              ? { type: "postback", label: btn.label, data: btn.data, displayText: btn.label }
+              : { type: "message", label: btn.label, text: btn.text ?? btn.label },
+        })),
+      },
+    },
+  };
+}
+
+// ─── Webhook Types ────────────────────────────────────────────────────────────
+
 export interface LineWebhookEvent {
   type: string;
   replyToken?: string;
@@ -79,6 +222,10 @@ export interface LineWebhookEvent {
     type: string;
     text?: string;
     contentProvider?: { type: string; originalContentUrl?: string };
+  };
+  postback?: {
+    data: string;
+    params?: Record<string, string>;
   };
 }
 

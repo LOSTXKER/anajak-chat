@@ -15,6 +15,8 @@ import {
   ShieldAlert,
   Plug,
   BarChart3,
+  LayoutGrid,
+  Workflow,
 } from "lucide-react";
 
 const SETTINGS_NAV = [
@@ -24,6 +26,8 @@ const SETTINGS_NAV = [
   { href: "/settings/ai-bot", label: "AI Bot", icon: Bot },
   { href: "/settings/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
   { href: "/settings/templates", label: "ข้อความด่วน", icon: MessageCircle },
+  { href: "/settings/chat-flows", label: "Chat Flow", icon: Workflow },
+  { href: "/settings/line-rich-menu", label: "LINE Rich Menu", icon: LayoutGrid },
   { href: "/settings/business-hours", label: "เวลาทำการ", icon: Clock },
   { href: "/settings/sla", label: "SLA", icon: ShieldAlert },
   { href: "/settings/erp", label: "ERP", icon: Plug },

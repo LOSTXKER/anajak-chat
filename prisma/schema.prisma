@@ -172,6 +172,7 @@ model Organization {
   knowledgeArticles   KnowledgeArticle[]
   aiReplyLogs         AiReplyLog[]
   contactLabels       ContactLabel[]
+  chatFlows           ChatFlow[]
 
   @@map("organizations")
 }
@@ -242,6 +243,7 @@ model Channel {
   organization  Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   conversations Conversation[]
   capiDatasets  CapiDataset[]
+  chatFlows     ChatFlow[]
 
   @@map("channels")
 }
@@ -316,6 +318,7 @@ model Conversation {
   orders        Order[]
   aiReplyLogs   AiReplyLog[]
   reads         ConversationRead[]
+  flowSessions  FlowSession[]
 
   @@index([orgId, status])
   @@index([orgId, assignedTo])
@@ -404,16 +407,19 @@ model Order {
 }
 
 model QuickReplyTemplate {
-  id         String           @id @default(uuid()) @db.Uuid
-  orgId      String           @map("org_id") @db.Uuid
-  name       String
-  content    String
-  category   TemplateCategory @default(custom)
-  shortcut   String?
-  isActive   Boolean          @default(true) @map("is_active")
-  usageCount Int              @default(0) @map("usage_count")
-  createdBy  String           @map("created_by") @db.Uuid
-  createdAt  DateTime         @default(now()) @map("created_at")
+  id           String           @id @default(uuid()) @db.Uuid
+  orgId        String           @map("org_id") @db.Uuid
+  name         String
+  content      String
+  category     TemplateCategory @default(custom)
+  shortcut     String?
+  templateType String           @default("text") @map("template_type")
+  buttons      Json?            @db.JsonB
+  imageUrl     String?          @map("image_url")
+  isActive     Boolean          @default(true) @map("is_active")
+  usageCount   Int              @default(0) @map("usage_count")
+  createdBy    String           @map("created_by") @db.Uuid
+  createdAt    DateTime         @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
@@ -646,4 +652,46 @@ model AiReplyLog {
   @@index([conversationId])
   @@index([orgId, createdAt])
   @@map("ai_reply_logs")
+}
+
+// ─── Chat Flow Builder ───────────────────────────────────────────────────────
+
+model ChatFlow {
+  id          String    @id @default(uuid()) @db.Uuid
+  orgId       String    @map("org_id") @db.Uuid
+  name        String
+  description String?
+  isActive    Boolean   @default(false) @map("is_active")
+  trigger     Json      @db.JsonB
+  steps       Json      @default("[]") @db.JsonB
+  channelId   String?   @map("channel_id") @db.Uuid
+  priority    Int       @default(0)
+  createdBy   String    @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  channel      Channel?      @relation(fields: [channelId], references: [id])
+  sessions     FlowSession[]
+
+  @@index([orgId, isActive])
+  @@map("chat_flows")
+}
+
+model FlowSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  flowId         String    @map("flow_id") @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  currentStep    Int       @default(0) @map("current_step")
+  status         String    @default("active")
+  variables      Json      @default("{}") @db.JsonB
+  startedAt      DateTime  @default(now()) @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+
+  flow         ChatFlow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([flowId, conversationId])
+  @@index([conversationId, status])
+  @@map("flow_sessions")
 }

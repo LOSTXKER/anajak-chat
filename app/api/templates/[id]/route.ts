@@ -21,6 +21,9 @@ export const PUT = apiHandler(async (request, context) => {
       ...(body.category !== undefined && { category: body.category }),
       ...(body.shortcut !== undefined && { shortcut: body.shortcut }),
       ...(body.isActive !== undefined && { isActive: body.isActive }),
+      ...(body.templateType !== undefined && { templateType: body.templateType }),
+      ...(body.buttons !== undefined && { buttons: body.buttons }),
+      ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl }),
     },
   });
 

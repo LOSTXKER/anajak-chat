@@ -5,6 +5,7 @@ import { isWithinBusinessHours, extractBusinessHours } from "@/lib/business-hour
 import { sendPlatformMessage } from "@/lib/integrations/send-message";
 import { maybeQueueLeadCapiEvent } from "@/lib/capi-lead-events";
 import { processIncomingMessage } from "@/lib/ai-bot";
+import { processFlowForMessage } from "@/lib/flow-engine";
 import type { Platform } from "@/lib/generated/prisma/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -201,8 +202,15 @@ async function runPostMessageHooks(params: {
 
   await sendBusinessHoursAutoReply({ orgId, conversationId, channelId, platform, contactPlatformId: platformUserId }).catch((e) => console.error("[Webhook] auto-reply error:", e));
 
+  // Run flow engine first — if a flow handles the message, skip AI bot
   if (content) {
-    await processIncomingMessage({ conversationId, messageContent: content, orgId }).catch((e) => console.error("[Webhook] AI processing error:", e));
+    const flowHandled = await processFlowForMessage({
+      conversationId, messageContent: content, orgId,
+    }).catch((e) => { console.error("[Webhook] flow engine error:", e); return false; });
+
+    if (!flowHandled) {
+      await processIncomingMessage({ conversationId, messageContent: content, orgId }).catch((e) => console.error("[Webhook] AI processing error:", e));
+    }
   }
 }
 

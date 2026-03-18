@@ -41,7 +41,7 @@ export const GET = apiHandler(async (request) => {
 export const POST = apiHandler(async (request) => {
   const user = await requireAuth();
 
-  const { name, content, category = "custom", shortcut } = await request.json();
+  const { name, content, category = "custom", shortcut, templateType = "text", buttons, imageUrl } = await request.json();
 
   if (!name || !content) {
     return jsonError("name and content required", 400);
@@ -54,6 +54,9 @@ export const POST = apiHandler(async (request) => {
       content,
       category,
       shortcut: shortcut ?? null,
+      templateType,
+      buttons: buttons ?? undefined,
+      imageUrl: imageUrl ?? null,
       createdBy: user.id,
     },
   });

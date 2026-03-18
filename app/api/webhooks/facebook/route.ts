@@ -3,6 +3,7 @@ import { searchParams } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { verifyFacebookWebhook, parseFacebookReferral } from "@/lib/integrations/facebook";
 import { upsertContactAndConversation } from "@/lib/webhooks/upsert-contact-conversation";
+import { processFlowForMessage } from "@/lib/flow-engine";
 import type { FacebookWebhookBody } from "@/lib/integrations/facebook";
 
 export async function GET(request: Request) {
@@ -63,6 +64,30 @@ export async function POST(request: Request) {
 
     const messagingEvents = entry.messaging ?? [];
     for (const event of messagingEvents) {
+      // Handle postback events (button taps)
+      if (event.postback && !event.message) {
+        const senderId = event.sender.id;
+        const contact = await prisma.contact.findFirst({
+          where: { platformId: senderId, platform: "facebook", orgId: channel.orgId },
+        });
+        if (contact) {
+          const conversation = await prisma.conversation.findFirst({
+            where: { contactId: contact.id, orgId: channel.orgId },
+            orderBy: { createdAt: "desc" },
+          });
+          if (conversation) {
+            await processFlowForMessage({
+              conversationId: conversation.id,
+              messageContent: event.postback.payload ?? event.postback.title ?? "",
+              orgId: channel.orgId,
+              eventType: "postback",
+              postbackData: event.postback.payload,
+            }).catch((e) => console.error("[FB Webhook] flow postback error:", e));
+          }
+        }
+        continue;
+      }
+
       if (!event.message) continue;
 
       const senderId = event.sender.id;

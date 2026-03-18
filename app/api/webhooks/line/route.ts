@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyLineSignature } from "@/lib/integrations/line";
 import { upsertContactAndConversation } from "@/lib/webhooks/upsert-contact-conversation";
+import { processFlowForMessage } from "@/lib/flow-engine";
 import type { LineWebhookBody } from "@/lib/integrations/line";
 
 export async function POST(request: Request) {
@@ -38,8 +39,32 @@ export async function POST(request: Request) {
   }
 
   for (const event of body.events) {
-    if (event.type !== "message") continue;
     if (!event.source.userId) continue;
+
+    // Handle postback events (button taps from Rich Menu or Flex Messages)
+    if (event.type === "postback" && event.postback) {
+      const contact = await prisma.contact.findFirst({
+        where: { platformId: event.source.userId, platform: "line", orgId: channel.orgId },
+      });
+      if (contact) {
+        const conversation = await prisma.conversation.findFirst({
+          where: { contactId: contact.id, orgId: channel.orgId },
+          orderBy: { createdAt: "desc" },
+        });
+        if (conversation) {
+          await processFlowForMessage({
+            conversationId: conversation.id,
+            messageContent: event.postback.data,
+            orgId: channel.orgId,
+            eventType: "postback",
+            postbackData: event.postback.data,
+          }).catch((e) => console.error("[LINE Webhook] flow postback error:", e));
+        }
+      }
+      continue;
+    }
+
+    if (event.type !== "message") continue;
     if (!event.message) continue;
 
     const msg = event.message;
