@@ -52,10 +52,10 @@ const MAIN_NAV: NavItem[] = [
 ];
 
 const CONTENT_NAV: NavItem[] = [
-  { href: "/auto-reply", label: "ตอบกลับ", icon: Bot },
+  { href: "/auto-reply", label: "ข้อความ", icon: Bot },
+  { href: "/ai-bot", label: "อินเทนต์", icon: Sparkles },
   { href: "/templates", label: "ข้อความด่วน", icon: MessageCircle },
   { href: "/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
-  { href: "/ai-bot", label: "AI Bot", icon: Sparkles },
   { href: "/line-rich-menu", label: "เมนู", icon: LayoutGrid },
 ];
 

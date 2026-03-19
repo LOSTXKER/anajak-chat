@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+
+export const maxDuration = 30;
 import { searchParams } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";
 import { verifyFacebookWebhook, parseFacebookReferral } from "@/lib/integrations/facebook";
 import { upsertContactAndConversation } from "@/lib/webhooks/upsert-contact-conversation";
-import { processFlowForMessage } from "@/lib/flow-engine";
+import { matchIntents, executeIntent } from "@/lib/flow-engine";
 import type { FacebookWebhookBody } from "@/lib/integrations/facebook";
 
 export async function GET(request: Request) {
@@ -76,13 +78,23 @@ export async function POST(request: Request) {
             orderBy: { createdAt: "desc" },
           });
           if (conversation) {
-            await processFlowForMessage({
-              conversationId: conversation.id,
-              messageContent: event.postback.payload ?? event.postback.title ?? "",
+            const postbackContent = event.postback.payload ?? event.postback.title ?? "";
+            const match = await matchIntents({
               orgId: channel.orgId,
+              messageContent: postbackContent,
               eventType: "postback",
               postbackData: event.postback.payload,
-            }).catch((e) => console.error("[FB Webhook] flow postback error:", e));
+            }).catch(() => null);
+
+            if (match) {
+              await executeIntent({
+                match,
+                platform: "facebook",
+                credentials: channel.credentials,
+                recipientId: senderId,
+                conversationId: conversation.id,
+              }).catch((e) => console.error("[FB Webhook] intent execute error:", e));
+            }
           }
         }
         continue;

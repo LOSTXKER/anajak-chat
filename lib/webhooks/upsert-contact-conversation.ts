@@ -5,7 +5,7 @@ import { isWithinBusinessHours, extractBusinessHours } from "@/lib/business-hour
 import { sendPlatformMessage } from "@/lib/integrations/send-message";
 import { maybeQueueLeadCapiEvent } from "@/lib/capi-lead-events";
 import { processIncomingMessage } from "@/lib/ai-bot";
-import { processFlowForMessage } from "@/lib/flow-engine";
+import { processMessageForIntents } from "@/lib/flow-engine";
 import type { Platform } from "@/lib/generated/prisma/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -33,6 +33,7 @@ interface UpsertParams {
   };
   eventType?: "message" | "postback";
   postbackData?: string;
+  skipPostHooks?: boolean;
 }
 
 // ─── Main Orchestrator ────────────────────────────────────────────────────────
@@ -52,14 +53,17 @@ export async function upsertContactAndConversation(params: UpsertParams) {
     conversationId: conversation.id, content, contentType, mediaUrl, platformMessageId, metadata,
   });
 
-  // Set SLA deadline every time a customer sends a message
   await setSlaDeadline(conversation.id, orgId, message.createdAt).catch(
     (e) => console.error("[Webhook] SLA set error:", e)
   );
 
-  // Fire-and-forget side effects
-  const replyToken = (metadata as Record<string, unknown>)?.replyToken as string | undefined;
-  await runPostMessageHooks({ orgId, channelId, platform, platformUserId, conversationId: conversation.id, content, eventType: params.eventType, postbackData: params.postbackData, replyToken });
+  if (!params.skipPostHooks) {
+    await runPostMessageHooks({
+      orgId, channelId, platform, platformUserId,
+      conversationId: conversation.id, content,
+      eventType: params.eventType, postbackData: params.postbackData,
+    });
+  }
 
   return { contact, conversation, message };
 }
@@ -183,9 +187,9 @@ async function createInboundMessage(params: {
   });
 }
 
-// ─── Post-Message Hooks ───────────────────────────────────────────────────────
+// ─── Post-Message Hooks (exported so webhook can call it separately) ─────────
 
-async function runPostMessageHooks(params: {
+export async function runPostMessageHooks(params: {
   orgId: string;
   channelId: string;
   platform: Platform;
@@ -194,9 +198,9 @@ async function runPostMessageHooks(params: {
   content?: string;
   eventType?: "message" | "postback";
   postbackData?: string;
-  replyToken?: string;
+  skipFlowEngine?: boolean;
 }) {
-  const { orgId, channelId, platform, platformUserId, conversationId, content, eventType, postbackData, replyToken } = params;
+  const { orgId, channelId, platform, platformUserId, conversationId, content, eventType, postbackData } = params;
 
   if (content) {
     await maybeQueueLeadCapiEvent({
@@ -208,13 +212,27 @@ async function runPostMessageHooks(params: {
 
   await sendBusinessHoursAutoReply({ orgId, conversationId, channelId, platform, contactPlatformId: platformUserId }).catch((e) => console.error("[Webhook] auto-reply error:", e));
 
-  // Run flow engine first — if a flow handles the message, skip AI bot
-  if (content) {
-    const flowHandled = await processFlowForMessage({
-      conversationId, messageContent: content, orgId, eventType, postbackData, replyToken,
-    }).catch((e) => { console.error("[Webhook] flow engine error:", e); return false; });
+  if (content && !params.skipFlowEngine) {
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { credentials: true },
+    });
 
-    if (!flowHandled) {
+    const contact = await prisma.contact.findFirst({
+      where: { orgId, platformId: platformUserId, platform },
+      select: { platformId: true },
+    });
+
+    const intentHandled = await processMessageForIntents({
+      orgId, conversationId, channelId,
+      messageContent: content,
+      platform,
+      credentials: channel?.credentials ?? {},
+      recipientId: contact?.platformId ?? platformUserId,
+      eventType, postbackData,
+    }).catch((e) => { console.error("[Webhook] intent engine error:", e); return false; });
+
+    if (!intentHandled) {
       await processIncomingMessage({ conversationId, messageContent: content, orgId }).catch((e) => console.error("[Webhook] AI processing error:", e));
     }
   }

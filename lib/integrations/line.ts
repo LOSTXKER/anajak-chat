@@ -6,57 +6,69 @@ export interface LineCredentials {
   channelAccessToken: string;
 }
 
-export interface LineTextMessage {
-  type: "text";
-  text: string;
-}
+export interface LineTextMessage { type: "text"; text: string }
+export interface LineImageMessage { type: "image"; originalContentUrl: string; previewImageUrl: string }
+export interface LineStickerMessage { type: "sticker"; packageId: string; stickerId: string }
+export interface LineFlexMessage { type: "flex"; altText: string; contents: Record<string, unknown> }
 
-export interface LineImageMessage {
-  type: "image";
-  originalContentUrl: string;
-  previewImageUrl: string;
-}
+export type LineMessage = LineTextMessage | LineImageMessage | LineStickerMessage | LineFlexMessage;
 
-export type LineMessage = LineTextMessage | LineImageMessage;
+export interface LineSendResult { ok: boolean; status: number; error?: string }
 
 export async function sendLineMessage(
   credentials: LineCredentials,
   to: string,
   messages: LineMessage[]
-): Promise<boolean> {
-  const res = await fetch("https://api.line.me/v2/bot/message/push", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${credentials.channelAccessToken}`,
-    },
-    body: JSON.stringify({ to, messages }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`[LINE Push] ${res.status} ${res.statusText}: ${body}`);
+): Promise<LineSendResult> {
+  try {
+    const res = await fetch("https://api.line.me/v2/bot/message/push", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${credentials.channelAccessToken}`,
+      },
+      body: JSON.stringify({ to, messages }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      const error = `[LINE Push] ${res.status}: ${body}`;
+      console.error(error);
+      return { ok: false, status: res.status, error };
+    }
+    return { ok: true, status: 200 };
+  } catch (e) {
+    const error = `[LINE Push] Network error: ${e instanceof Error ? e.message : String(e)}`;
+    console.error(error);
+    return { ok: false, status: 0, error };
   }
-  return res.ok;
 }
 
 export async function sendLineReply(
   credentials: LineCredentials,
   replyToken: string,
   messages: LineMessage[]
-): Promise<boolean> {
-  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${credentials.channelAccessToken}`,
-    },
-    body: JSON.stringify({ replyToken, messages }),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    console.error(`[LINE Reply] ${res.status} ${res.statusText}: ${body}`);
+): Promise<LineSendResult> {
+  try {
+    const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${credentials.channelAccessToken}`,
+      },
+      body: JSON.stringify({ replyToken, messages }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      const error = `[LINE Reply] ${res.status}: ${body}`;
+      console.error(error);
+      return { ok: false, status: res.status, error };
+    }
+    return { ok: true, status: 200 };
+  } catch (e) {
+    const error = `[LINE Reply] Network error: ${e instanceof Error ? e.message : String(e)}`;
+    console.error(error);
+    return { ok: false, status: 0, error };
   }
-  return res.ok;
 }
 
 export function verifyLineSignature(

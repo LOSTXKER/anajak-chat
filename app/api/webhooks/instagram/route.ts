@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const maxDuration = 30;
 import crypto from "crypto";
 import { searchParams } from "@/lib/api-helpers";
 import { prisma } from "@/lib/prisma";

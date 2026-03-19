@@ -172,7 +172,8 @@ model Organization {
   knowledgeArticles   KnowledgeArticle[]
   aiReplyLogs         AiReplyLog[]
   contactLabels       ContactLabel[]
-  chatFlows           ChatFlow[]
+  messageSets         MessageSet[]
+  botIntents          BotIntent[]
 
   @@map("organizations")
 }
@@ -243,7 +244,7 @@ model Channel {
   organization  Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   conversations Conversation[]
   capiDatasets  CapiDataset[]
-  chatFlows     ChatFlow[]
+  botIntents    BotIntent[]
 
   @@map("channels")
 }
@@ -318,7 +319,7 @@ model Conversation {
   orders        Order[]
   aiReplyLogs   AiReplyLog[]
   reads         ConversationRead[]
-  flowSessions  FlowSession[]
+  intentSessions IntentSession[]
 
   @@index([orgId, status])
   @@index([orgId, assignedTo])
@@ -654,44 +655,65 @@ model AiReplyLog {
   @@map("ai_reply_logs")
 }
 
-// ─── Chat Flow Builder ───────────────────────────────────────────────────────
+// ─── Message Sets & Bot Intents (Chatcone-Style) ─────────────────────────────
 
-model ChatFlow {
-  id          String    @id @default(uuid()) @db.Uuid
-  orgId       String    @map("org_id") @db.Uuid
-  name        String
-  description String?
-  isActive    Boolean   @default(false) @map("is_active")
-  trigger     Json      @db.JsonB
-  steps       Json      @default("[]") @db.JsonB
-  channelId   String?   @map("channel_id") @db.Uuid
-  priority    Int       @default(0)
-  createdBy   String    @map("created_by") @db.Uuid
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+model MessageSet {
+  id        String   @id @default(uuid()) @db.Uuid
+  orgId     String   @map("org_id") @db.Uuid
+  name      String
+  messages  Json     @default("{}") @db.JsonB
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  organization Organization  @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  channel      Channel?      @relation(fields: [channelId], references: [id])
-  sessions     FlowSession[]
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  intents      BotIntent[]
 
-  @@index([orgId, isActive])
-  @@map("chat_flows")
+  @@index([orgId])
+  @@map("message_sets")
 }
 
-model FlowSession {
+model BotIntent {
+  id            String   @id @default(uuid()) @db.Uuid
+  orgId         String   @map("org_id") @db.Uuid
+  name          String
+  isActive      Boolean  @default(false) @map("is_active")
+  triggerType   String   @map("trigger_type")
+  keywords      String[] @default([])
+  postbackData  String?  @map("postback_data")
+  messageSetId  String   @map("message_set_id") @db.Uuid
+  channelId     String?  @map("channel_id") @db.Uuid
+  priority      Int      @default(0)
+  assignToHuman Boolean  @default(false) @map("assign_to_human")
+  createdBy     String   @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  messageSet   MessageSet   @relation(fields: [messageSetId], references: [id])
+  channel      Channel?     @relation(fields: [channelId], references: [id])
+  sessions     IntentSession[]
+
+  @@index([orgId, isActive])
+  @@map("bot_intents")
+}
+
+model IntentSession {
   id             String    @id @default(uuid()) @db.Uuid
-  flowId         String    @map("flow_id") @db.Uuid
+  intentId       String    @map("intent_id") @db.Uuid
   conversationId String    @map("conversation_id") @db.Uuid
-  currentStep    Int       @default(0) @map("current_step")
   status         String    @default("active")
+  sentCount      Int       @default(0) @map("sent_count")
+  totalMessages  Int       @default(0) @map("total_messages")
+  errors         String[]  @default([])
   variables      Json      @default("{}") @db.JsonB
   startedAt      DateTime  @default(now()) @map("started_at")
   completedAt    DateTime? @map("completed_at")
 
-  flow         ChatFlow     @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  intent       BotIntent    @relation(fields: [intentId], references: [id], onDelete: Cascade)
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  @@unique([flowId, conversationId])
+  @@index([intentId, conversationId])
   @@index([conversationId, status])
-  @@map("flow_sessions")
+  @@map("intent_sessions")
 }

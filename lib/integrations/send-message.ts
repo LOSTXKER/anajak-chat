@@ -1,5 +1,5 @@
 import type { Platform } from "@/lib/generated/prisma/client";
-import { sendLineMessage, sendLineReply, buildLineButtonMessage, type LineCredentials } from "./line";
+import { sendLineMessage, sendLineReply, buildLineButtonMessage, type LineCredentials, type LineMessage, type LineSendResult } from "./line";
 import { sendFacebookMessage, type FacebookCredentials } from "./facebook";
 import { sendInstagramMessage } from "./instagram";
 import { sendWhatsAppMessage, type WhatsAppCredentials } from "./whatsapp";
@@ -12,10 +12,6 @@ export interface SendMessageParams {
   imageUrl?: string;
 }
 
-/**
- * Unified message sender — routes to the correct platform API.
- * Replaces the if/else platform branching that was duplicated in 6+ locations.
- */
 export async function sendPlatformMessage(params: SendMessageParams): Promise<boolean> {
   const { platform, credentials, recipientId, text, imageUrl } = params;
   const creds = credentials as Record<string, string>;
@@ -27,11 +23,11 @@ export async function sendPlatformMessage(params: SendMessageParams): Promise<bo
         channelSecret: creds.channelSecret ?? "",
         channelAccessToken: creds.channelAccessToken ?? "",
       };
-      const messages = imageUrl
-        ? [{ type: "image" as const, originalContentUrl: imageUrl, previewImageUrl: imageUrl }]
-        : [{ type: "text" as const, text: text ?? "" }];
-      await sendLineMessage(lineCreds, recipientId, messages);
-      return true;
+      const messages: LineMessage[] = imageUrl
+        ? [{ type: "image", originalContentUrl: imageUrl, previewImageUrl: imageUrl }]
+        : [{ type: "text", text: text ?? "" }];
+      const result = await sendLineMessage(lineCreds, recipientId, messages);
+      return result.ok;
     }
 
     case "facebook": {
@@ -80,7 +76,7 @@ export async function sendPlatformMessage(params: SendMessageParams): Promise<bo
   }
 }
 
-// ─── Rich Message Sender (buttons, cards, quick replies) ─────────────────────
+// ─── Rich Message Types ──────────────────────────────────────────────────────
 
 export interface RichButton {
   label: string;
@@ -105,30 +101,32 @@ export interface AutoReplyMessage {
   thumbnailUrl?: string;
 }
 
+export interface SendResult { ok: boolean; error?: string }
+
 export async function sendAutoReplyMessage(params: {
   platform: Platform | string;
   credentials: unknown;
   recipientId: string;
   message: AutoReplyMessage;
   replyToken?: string;
-}): Promise<boolean> {
+}): Promise<SendResult> {
   const { platform, credentials, recipientId, message: msg, replyToken } = params;
 
-  const sendLine = async (creds: LineCredentials, messages: unknown[]) => {
-    console.log(`[AutoReply] sendLine: recipientId=${recipientId}, messages=${JSON.stringify(messages).slice(0, 200)}, token=${creds.channelAccessToken ? creds.channelAccessToken.slice(0, 10) + "..." : "MISSING"}`);
+  const sendLine = async (creds: LineCredentials, messages: LineMessage[]): Promise<SendResult> => {
+    let result: LineSendResult | undefined;
     if (replyToken) {
-      const ok = await sendLineReply(creds, replyToken, messages as never[]);
-      if (ok) return true;
-      console.warn("[AutoReply] Reply API failed, falling back to Push API");
+      result = await sendLineReply(creds, replyToken, messages);
+      if (result.ok) return { ok: true };
+      console.warn(`[AutoReply] Reply API failed (${result.status}), trying Push API`);
     }
-    return sendLineMessage(creds, recipientId, messages as never[]);
+    result = await sendLineMessage(creds, recipientId, messages);
+    return result.ok ? { ok: true } : { ok: false, error: result.error };
   };
 
   switch (msg.type) {
     case "text": {
       if (!msg.text && !msg.buttons?.length) {
-        console.warn("[AutoReply] Skipping empty text message");
-        return false;
+        return { ok: false, error: "Empty text message" };
       }
       if (msg.buttons?.length && platform === "line") {
         const creds = credentials as unknown as LineCredentials;
@@ -142,7 +140,7 @@ export async function sendAutoReplyMessage(params: {
             text: b.action === "message" ? b.value : undefined,
           }))
         );
-        return sendLine(creds, [flex]);
+        return sendLine(creds, [flex as unknown as LineMessage]);
       }
       if (msg.buttons?.length && (platform === "facebook" || platform === "instagram")) {
         const fbMsg = {
@@ -159,40 +157,42 @@ export async function sendAutoReplyMessage(params: {
             },
           },
         };
-        return sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        const ok = await sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        return ok ? { ok: true } : { ok: false, error: `${platform} API failed` };
       }
-      return sendPlatformMessage({ platform, credentials, recipientId, text: msg.text });
+      const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: msg.text });
+      return ok ? { ok: true } : { ok: false, error: `${platform} text send failed` };
     }
 
     case "image": {
       if (!msg.imageUrl) {
-        console.warn("[AutoReply] Skipping image message with no URL");
-        return false;
+        return { ok: false, error: "Image message missing URL" };
       }
       if (platform === "line") {
         const creds = credentials as unknown as LineCredentials;
         return sendLine(creds, [{ type: "image", originalContentUrl: msg.imageUrl, previewImageUrl: msg.imageUrl }]);
       }
-      return sendPlatformMessage({ platform, credentials, recipientId, imageUrl: msg.imageUrl });
+      const ok = await sendPlatformMessage({ platform, credentials, recipientId, imageUrl: msg.imageUrl });
+      return ok ? { ok: true } : { ok: false, error: `${platform} image send failed` };
     }
 
     case "card": {
       if (platform === "line") {
         const creds = credentials as unknown as LineCredentials;
-        const bubble = {
-          type: "flex" as const,
+        const bodyContents: Record<string, unknown>[] = [];
+        if (msg.cardTitle) bodyContents.push({ type: "text", text: msg.cardTitle, weight: "bold", size: "lg" });
+        if (msg.cardText) bodyContents.push({ type: "text", text: msg.cardText, wrap: true, size: "sm", margin: "md" });
+        if (bodyContents.length === 0) bodyContents.push({ type: "text", text: "(empty)", size: "sm", color: "#999999" });
+
+        const bubble: LineMessage = {
+          type: "flex",
           altText: msg.cardTitle ?? "Card",
           contents: {
             type: "bubble",
             ...(msg.cardImageUrl ? {
               hero: { type: "image", url: msg.cardImageUrl, size: "full", aspectRatio: "20:13", aspectMode: "cover" },
             } : {}),
-            body: {
-              type: "box", layout: "vertical", contents: [
-                ...(msg.cardTitle ? [{ type: "text", text: msg.cardTitle, weight: "bold", size: "lg" }] : []),
-                ...(msg.cardText ? [{ type: "text", text: msg.cardText, wrap: true, size: "sm", margin: "md" }] : []),
-              ],
-            },
+            body: { type: "box", layout: "vertical", contents: bodyContents },
             ...(msg.cardButtons?.length ? {
               footer: {
                 type: "box", layout: "vertical", spacing: "sm",
@@ -229,27 +229,34 @@ export async function sendAutoReplyMessage(params: {
             },
           },
         };
-        return sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        const ok = await sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        return ok ? { ok: true } : { ok: false, error: `${platform} card send failed` };
       }
-      return sendPlatformMessage({ platform, credentials, recipientId, text: `${msg.cardTitle ?? ""}\n${msg.cardText ?? ""}` });
+      const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: `${msg.cardTitle ?? ""}\n${msg.cardText ?? ""}` });
+      return ok ? { ok: true } : { ok: false, error: `${platform} card fallback failed` };
     }
 
     case "sticker": {
       if (platform === "line") {
         const creds = credentials as unknown as LineCredentials;
+        if (!msg.stickerPackageId || !msg.stickerId) return { ok: false, error: "Sticker missing packageId/stickerId" };
         return sendLine(creds, [{ type: "sticker", packageId: msg.stickerPackageId, stickerId: msg.stickerId }]);
       }
-      return true;
+      return { ok: true };
     }
 
-    case "file":
-      return sendPlatformMessage({ platform, credentials, recipientId, text: msg.fileName ? `[ไฟล์: ${msg.fileName}] ${msg.fileUrl}` : msg.fileUrl });
+    case "file": {
+      const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: msg.fileName ? `[ไฟล์: ${msg.fileName}] ${msg.fileUrl}` : msg.fileUrl });
+      return ok ? { ok: true } : { ok: false, error: "File send failed" };
+    }
 
-    case "video":
-      return sendPlatformMessage({ platform, credentials, recipientId, text: msg.videoUrl });
+    case "video": {
+      const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: msg.videoUrl });
+      return ok ? { ok: true } : { ok: false, error: "Video send failed" };
+    }
 
     default:
-      return false;
+      return { ok: false, error: `Unknown message type: ${msg.type}` };
   }
 }
 
