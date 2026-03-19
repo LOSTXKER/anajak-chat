@@ -1,5 +1,5 @@
 import type { Platform } from "@/lib/generated/prisma/client";
-import { sendLineMessage, buildLineButtonMessage, type LineCredentials } from "./line";
+import { sendLineMessage, sendLineReply, buildLineButtonMessage, type LineCredentials } from "./line";
 import { sendFacebookMessage, type FacebookCredentials } from "./facebook";
 import { sendInstagramMessage } from "./instagram";
 import { sendWhatsAppMessage, type WhatsAppCredentials } from "./whatsapp";
@@ -110,11 +110,25 @@ export async function sendAutoReplyMessage(params: {
   credentials: unknown;
   recipientId: string;
   message: AutoReplyMessage;
+  replyToken?: string;
 }): Promise<boolean> {
-  const { platform, credentials, recipientId, message: msg } = params;
+  const { platform, credentials, recipientId, message: msg, replyToken } = params;
+
+  const sendLine = async (creds: LineCredentials, messages: unknown[]) => {
+    if (replyToken) {
+      const ok = await sendLineReply(creds, replyToken, messages as never[]);
+      if (ok) return true;
+      console.warn("[AutoReply] Reply API failed, falling back to Push API");
+    }
+    return sendLineMessage(creds, recipientId, messages as never[]);
+  };
 
   switch (msg.type) {
     case "text": {
+      if (!msg.text && !msg.buttons?.length) {
+        console.warn("[AutoReply] Skipping empty text message");
+        return true;
+      }
       if (msg.buttons?.length && platform === "line") {
         const creds = credentials as unknown as LineCredentials;
         const flex = buildLineButtonMessage(
@@ -127,8 +141,7 @@ export async function sendAutoReplyMessage(params: {
             text: b.action === "message" ? b.value : undefined,
           }))
         );
-        await sendLineMessage(creds, recipientId, [flex as never]);
-        return true;
+        return sendLine(creds, [flex]);
       }
       if (msg.buttons?.length && (platform === "facebook" || platform === "instagram")) {
         const fbMsg = {
@@ -150,8 +163,17 @@ export async function sendAutoReplyMessage(params: {
       return sendPlatformMessage({ platform, credentials, recipientId, text: msg.text });
     }
 
-    case "image":
+    case "image": {
+      if (!msg.imageUrl) {
+        console.warn("[AutoReply] Skipping image message with no URL");
+        return true;
+      }
+      if (platform === "line") {
+        const creds = credentials as unknown as LineCredentials;
+        return sendLine(creds, [{ type: "image", originalContentUrl: msg.imageUrl, previewImageUrl: msg.imageUrl }]);
+      }
       return sendPlatformMessage({ platform, credentials, recipientId, imageUrl: msg.imageUrl });
+    }
 
     case "card": {
       if (platform === "line") {
@@ -185,8 +207,7 @@ export async function sendAutoReplyMessage(params: {
             } : {}),
           },
         };
-        await sendLineMessage(creds, recipientId, [bubble as never]);
-        return true;
+        return sendLine(creds, [bubble]);
       }
       if (platform === "facebook" || platform === "instagram") {
         const fbMsg = {
@@ -215,14 +236,9 @@ export async function sendAutoReplyMessage(params: {
     case "sticker": {
       if (platform === "line") {
         const creds = credentials as unknown as LineCredentials;
-        await sendLineMessage(creds, recipientId, [{
-          type: "sticker" as never,
-          packageId: msg.stickerPackageId,
-          stickerId: msg.stickerId,
-        } as never]);
-        return true;
+        return sendLine(creds, [{ type: "sticker", packageId: msg.stickerPackageId, stickerId: msg.stickerId }]);
       }
-      return true; // stickers only supported on LINE
+      return true;
     }
 
     case "file":

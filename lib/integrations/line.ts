@@ -32,6 +32,30 @@ export async function sendLineMessage(
     },
     body: JSON.stringify({ to, messages }),
   });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[LINE Push] ${res.status} ${res.statusText}: ${body}`);
+  }
+  return res.ok;
+}
+
+export async function sendLineReply(
+  credentials: LineCredentials,
+  replyToken: string,
+  messages: LineMessage[]
+): Promise<boolean> {
+  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${credentials.channelAccessToken}`,
+    },
+    body: JSON.stringify({ replyToken, messages }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[LINE Reply] ${res.status} ${res.statusText}: ${body}`);
+  }
   return res.ok;
 }
 

@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_Thai } from "next/font/google";
+import { Inter, Noto_Sans_Thai } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const ibmPlex = IBM_Plex_Sans_Thai({
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const notoThai = Noto_Sans_Thai({
   weight: ["300", "400", "500", "600", "700"],
-  subsets: ["thai", "latin"],
-  variable: "--font-sans",
+  subsets: ["thai"],
+  variable: "--font-thai",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" suppressHydrationWarning>
-      <body className={`${ibmPlex.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${notoThai.variable} font-sans antialiased`}>
         <ThemeProvider>
           {children}
           <Toaster position="top-right" richColors />

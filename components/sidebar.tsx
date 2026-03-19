@@ -75,7 +75,7 @@ function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium transition-all duration-150",
+        "group relative flex flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-xs font-medium transition-all duration-150",
         isActive
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
@@ -171,7 +171,7 @@ function SidebarContent({ user, onNavClick }: {
           onClick={onNavClick}
           aria-current={isSettingsActive ? "page" : undefined}
           className={cn(
-            "flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium transition-all duration-150",
+            "flex flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-xs font-medium transition-all duration-150",
             isSettingsActive
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"

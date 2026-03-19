@@ -31,6 +31,8 @@ interface UpsertParams {
     psid?: string;
     igsid?: string;
   };
+  eventType?: "message" | "postback";
+  postbackData?: string;
 }
 
 // ─── Main Orchestrator ────────────────────────────────────────────────────────
@@ -56,7 +58,8 @@ export async function upsertContactAndConversation(params: UpsertParams) {
   );
 
   // Fire-and-forget side effects
-  await runPostMessageHooks({ orgId, channelId, platform, platformUserId, conversationId: conversation.id, content });
+  const replyToken = (metadata as Record<string, unknown>)?.replyToken as string | undefined;
+  await runPostMessageHooks({ orgId, channelId, platform, platformUserId, conversationId: conversation.id, content, eventType: params.eventType, postbackData: params.postbackData, replyToken });
 
   return { contact, conversation, message };
 }
@@ -189,8 +192,11 @@ async function runPostMessageHooks(params: {
   platformUserId: string;
   conversationId: string;
   content?: string;
+  eventType?: "message" | "postback";
+  postbackData?: string;
+  replyToken?: string;
 }) {
-  const { orgId, channelId, platform, platformUserId, conversationId, content } = params;
+  const { orgId, channelId, platform, platformUserId, conversationId, content, eventType, postbackData, replyToken } = params;
 
   if (content) {
     await maybeQueueLeadCapiEvent({
@@ -205,7 +211,7 @@ async function runPostMessageHooks(params: {
   // Run flow engine first — if a flow handles the message, skip AI bot
   if (content) {
     const flowHandled = await processFlowForMessage({
-      conversationId, messageContent: content, orgId,
+      conversationId, messageContent: content, orgId, eventType, postbackData, replyToken,
     }).catch((e) => { console.error("[Webhook] flow engine error:", e); return false; });
 
     if (!flowHandled) {
