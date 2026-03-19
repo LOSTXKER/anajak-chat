@@ -115,6 +115,7 @@ export async function sendAutoReplyMessage(params: {
   const { platform, credentials, recipientId, message: msg, replyToken } = params;
 
   const sendLine = async (creds: LineCredentials, messages: unknown[]) => {
+    console.log(`[AutoReply] sendLine: recipientId=${recipientId}, messages=${JSON.stringify(messages).slice(0, 200)}, token=${creds.channelAccessToken ? creds.channelAccessToken.slice(0, 10) + "..." : "MISSING"}`);
     if (replyToken) {
       const ok = await sendLineReply(creds, replyToken, messages as never[]);
       if (ok) return true;
@@ -127,7 +128,7 @@ export async function sendAutoReplyMessage(params: {
     case "text": {
       if (!msg.text && !msg.buttons?.length) {
         console.warn("[AutoReply] Skipping empty text message");
-        return true;
+        return false;
       }
       if (msg.buttons?.length && platform === "line") {
         const creds = credentials as unknown as LineCredentials;
@@ -166,7 +167,7 @@ export async function sendAutoReplyMessage(params: {
     case "image": {
       if (!msg.imageUrl) {
         console.warn("[AutoReply] Skipping image message with no URL");
-        return true;
+        return false;
       }
       if (platform === "line") {
         const creds = credentials as unknown as LineCredentials;

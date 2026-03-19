@@ -18,6 +18,7 @@ export const GET = apiHandler(async (_req, ctx) => {
       status: true,
       startedAt: true,
       completedAt: true,
+      variables: true,
       conversation: {
         select: {
           id: true,

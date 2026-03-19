@@ -158,37 +158,46 @@ async function executeAutoReply(
   const { platform, credentials } = conversation.channel;
   const recipientId = conversation.contact.platformId;
   let usedReplyToken = false;
+  let sentCount = 0;
+  const errors: string[] = [];
+
+  console.log(`[FlowEngine] Sending to recipientId=${recipientId}, platform=${platform}, replyToken=${replyToken ? "yes" : "no"}`);
 
   for (let i = 0; i < pattern.messages.length; i++) {
     const msg = pattern.messages[i];
     try {
       const tokenForThis = (!usedReplyToken && platform === "line" && replyToken) ? replyToken : undefined;
 
-      console.log(`[FlowEngine] Sending message ${i + 1}/${pattern.messages.length}: type=${msg.type}, platform=${platform}${tokenForThis ? " (via Reply API)" : ""}`);
+      console.log(`[FlowEngine] Sending message ${i + 1}/${pattern.messages.length}: type=${msg.type}${tokenForThis ? " (Reply API)" : " (Push API)"}`);
 
       const ok = await sendAutoReplyMessage({ platform, credentials, recipientId, message: msg, replyToken: tokenForThis });
 
       if (tokenForThis) usedReplyToken = true;
 
-      if (!ok) {
-        console.error(`[FlowEngine] Message ${i + 1} send returned false`);
+      if (ok) {
+        sentCount++;
+        const contentType = msg.type === "image" ? "image" : msg.type === "video" ? "file" : "text";
+        const content = msg.text ?? msg.cardTitle ?? msg.fileName ?? (msg.type === "sticker" ? "[Sticker]" : null);
+
+        await prisma.message.create({
+          data: {
+            conversationId,
+            senderType: "bot",
+            content,
+            contentType,
+            mediaUrl: msg.imageUrl ?? msg.fileUrl ?? msg.videoUrl ?? null,
+            metadata: { source: "auto_reply", sessionId },
+          },
+        });
+      } else {
+        const errMsg = `Message ${i + 1} (${msg.type}) failed to send`;
+        console.error(`[FlowEngine] ${errMsg}`);
+        errors.push(errMsg);
       }
-
-      const contentType = msg.type === "image" ? "image" : msg.type === "video" ? "file" : "text";
-      const content = msg.text ?? msg.cardTitle ?? msg.fileName ?? (msg.type === "sticker" ? "[Sticker]" : null);
-
-      await prisma.message.create({
-        data: {
-          conversationId,
-          senderType: "bot",
-          content,
-          contentType,
-          mediaUrl: msg.imageUrl ?? msg.fileUrl ?? msg.videoUrl ?? null,
-          metadata: { source: "auto_reply", sessionId },
-        },
-      });
     } catch (e) {
-      console.error(`[FlowEngine] Message ${i + 1} error:`, e);
+      const errMsg = `Message ${i + 1} error: ${e instanceof Error ? e.message : String(e)}`;
+      console.error(`[FlowEngine] ${errMsg}`);
+      errors.push(errMsg);
     }
   }
 
@@ -199,10 +208,16 @@ async function executeAutoReply(
     });
   }
 
+  const finalStatus = sentCount > 0 ? "completed" : "failed";
   await prisma.flowSession.update({
     where: { id: sessionId },
-    data: { status: "completed", completedAt: new Date(), currentStep: pattern.messages.length },
+    data: {
+      status: finalStatus,
+      completedAt: new Date(),
+      currentStep: sentCount,
+      variables: { sentCount, totalMessages: pattern.messages.length, errors: errors.length > 0 ? errors : undefined },
+    },
   });
 
-  console.log(`[FlowEngine] Session ${sessionId} completed`);
+  console.log(`[FlowEngine] Session ${sessionId} ${finalStatus}: sent ${sentCount}/${pattern.messages.length}${errors.length > 0 ? `, errors: ${errors.join("; ")}` : ""}`);
 }

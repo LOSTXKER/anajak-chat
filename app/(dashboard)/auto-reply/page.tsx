@@ -58,6 +58,7 @@ interface ChatFlow {
 
 interface ActivityEntry {
   id: string; status: string; startedAt: string; completedAt: string | null;
+  variables?: { sentCount?: number; totalMessages?: number; errors?: string[] };
   conversation: { id: string; contact: { displayName: string | null; platform: string }; channel: { name: string } };
 }
 
@@ -671,12 +672,24 @@ export default function AutoReplyPage() {
                   ) : (
                     <div className="space-y-2">
                       {activityLog.map((entry) => (
-                        <div key={entry.id} className="flex items-center gap-3 rounded-xl bg-card border p-3">
-                          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm text-muted-foreground shrink-0">{formatRelativeTime(entry.startedAt)}</span>
-                          <span className="font-medium truncate">{entry.conversation.contact.displayName || "ลูกค้า"}</span>
-                          <span className="text-sm text-muted-foreground/60 truncate">{entry.conversation.channel.name}</span>
-                          <span className={cn("ml-auto rounded-full px-2.5 py-1 text-xs font-medium shrink-0", entry.status === "completed" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400" : "bg-muted text-muted-foreground")}>{entry.status === "completed" ? "สำเร็จ" : entry.status}</span>
+                        <div key={entry.id} className="rounded-xl bg-card border p-3 space-y-1">
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                            <span className="text-sm text-muted-foreground shrink-0">{formatRelativeTime(entry.startedAt)}</span>
+                            <span className="font-medium truncate">{entry.conversation.contact.displayName || "ลูกค้า"}</span>
+                            <span className="text-sm text-muted-foreground/60 truncate">{entry.conversation.channel.name}</span>
+                            {entry.variables?.sentCount !== undefined && (
+                              <span className="text-xs text-muted-foreground/50 shrink-0">{entry.variables.sentCount}/{entry.variables.totalMessages} sent</span>
+                            )}
+                            <span className={cn("ml-auto rounded-full px-2.5 py-1 text-xs font-medium shrink-0",
+                              entry.status === "completed" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+                              : entry.status === "failed" ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
+                              : "bg-muted text-muted-foreground"
+                            )}>{entry.status === "completed" ? "สำเร็จ" : entry.status === "failed" ? "ส่งไม่สำเร็จ" : entry.status}</span>
+                          </div>
+                          {entry.variables?.errors && entry.variables.errors.length > 0 && (
+                            <div className="pl-7 text-xs text-red-500">{entry.variables.errors.join(", ")}</div>
+                          )}
                         </div>
                       ))}
                     </div>
