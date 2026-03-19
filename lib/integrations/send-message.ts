@@ -233,7 +233,14 @@ export async function sendAutoReplyMessage(params: {
             payload: { template_type: "generic", elements: [element] },
           },
         };
-        return sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        const templateResult = await sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        if (templateResult.ok) return templateResult;
+
+        console.warn(`[SendMsg] Card template failed (${templateResult.error}), falling back to text`);
+        const fallbackText = [msg.cardTitle, msg.cardText].filter(Boolean).join("\n") || "Message";
+        const fbFallback = await sendPlatformFbMessage(credentials, platform, recipientId, { text: fallbackText });
+        if (fbFallback.ok) return fbFallback;
+        return { ok: false, error: `Card: ${templateResult.error}` };
       }
       const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: `${msg.cardTitle ?? ""}\n${msg.cardText ?? ""}` });
       return ok ? { ok: true } : { ok: false, error: `${platform} card fallback failed` };

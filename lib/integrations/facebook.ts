@@ -29,21 +29,23 @@ export async function sendFacebookMessage(
   message: Record<string, any>
 ): Promise<FbSendResult> {
   try {
+    const payload = {
+      recipient: { id: recipientId },
+      message,
+      messaging_type: "RESPONSE",
+    };
+    console.log(`[FB Send] to=${recipientId} payload=${JSON.stringify(message).slice(0, 500)}`);
     const res = await fetch(
       `${META_GRAPH_BASE_URL}/me/messages?access_token=${credentials.pageAccessToken}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipient: { id: recipientId },
-          message,
-          messaging_type: "RESPONSE",
-        }),
+        body: JSON.stringify(payload),
       }
     );
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      console.error(`[FB Send] ${res.status}: ${body}`);
+      console.error(`[FB Send] FAILED ${res.status}: ${body}`);
       let errorMsg = `HTTP ${res.status}`;
       try {
         const parsed = JSON.parse(body);
@@ -51,6 +53,7 @@ export async function sendFacebookMessage(
       } catch { /* use status */ }
       return { ok: false, error: errorMsg };
     }
+    console.log(`[FB Send] OK`);
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
