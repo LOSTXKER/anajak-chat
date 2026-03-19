@@ -40,7 +40,8 @@ export async function sendPlatformMessage(params: SendMessageParams): Promise<bo
       const message = imageUrl
         ? { attachment: { type: "image" as const, payload: { url: imageUrl } } }
         : { text: text ?? "" };
-      return sendFacebookMessage(fbCreds, recipientId, message);
+      const fbResult = await sendFacebookMessage(fbCreds, recipientId, message);
+      return fbResult.ok;
     }
 
     case "instagram": {
@@ -265,22 +266,21 @@ export async function sendAutoReplyMessage(params: {
 async function sendPlatformFbMessage(credentials: unknown, platform: string, recipientId: string, message: unknown): Promise<SendResult> {
   const creds = credentials as Record<string, string>;
   try {
-    let ok: boolean;
     if (platform === "facebook") {
-      ok = await sendFacebookMessage(
+      const result = await sendFacebookMessage(
         { pageId: creds.pageId ?? "", pageAccessToken: creds.pageAccessToken ?? "", appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
         recipientId,
         message as Record<string, unknown>
       );
-    } else {
-      ok = await sendInstagramMessage(
-        { igAccessToken: creds.igAccessToken, igAccountId: creds.igAccountId, pageAccessToken: creds.pageAccessToken, pageId: creds.pageId, appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
-        recipientId,
-        message as { text?: string }
-      );
+      return result.ok ? { ok: true } : { ok: false, error: `FB: ${result.error ?? "unknown"}` };
     }
-    return ok ? { ok: true } : { ok: false, error: `${platform} API returned error (check server logs)` };
+    const ok = await sendInstagramMessage(
+      { igAccessToken: creds.igAccessToken, igAccountId: creds.igAccountId, pageAccessToken: creds.pageAccessToken, pageId: creds.pageId, appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
+      recipientId,
+      message as { text?: string }
+    );
+    return ok ? { ok: true } : { ok: false, error: `Instagram API error` };
   } catch (e) {
-    return { ok: false, error: `${platform} send exception: ${e instanceof Error ? e.message : String(e)}` };
+    return { ok: false, error: `${platform} exception: ${e instanceof Error ? e.message : String(e)}` };
   }
 }

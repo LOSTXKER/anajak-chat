@@ -17,12 +17,17 @@ export interface FacebookAttachment {
   payload: { url: string; is_reusable?: boolean };
 }
 
+export interface FbSendResult {
+  ok: boolean;
+  error?: string;
+}
+
 export async function sendFacebookMessage(
   credentials: FacebookCredentials,
   recipientId: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   message: Record<string, any>
-): Promise<boolean> {
+): Promise<FbSendResult> {
   try {
     const res = await fetch(
       `${META_GRAPH_BASE_URL}/me/messages?access_token=${credentials.pageAccessToken}`,
@@ -39,11 +44,18 @@ export async function sendFacebookMessage(
     if (!res.ok) {
       const body = await res.text().catch(() => "");
       console.error(`[FB Send] ${res.status}: ${body}`);
+      let errorMsg = `HTTP ${res.status}`;
+      try {
+        const parsed = JSON.parse(body);
+        if (parsed?.error?.message) errorMsg = parsed.error.message;
+      } catch { /* use status */ }
+      return { ok: false, error: errorMsg };
     }
-    return res.ok;
+    return { ok: true };
   } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
     console.error(`[FB Send] Network error:`, e);
-    return false;
+    return { ok: false, error: `Network: ${msg}` };
   }
 }
 

@@ -44,7 +44,8 @@ export async function sendInstagramMessage(
       appSecret: credentials.appSecret,
       verifyToken: credentials.verifyToken,
     };
-    return sendFacebookMessage(fbCreds, recipientIgsid, message);
+    const result = await sendFacebookMessage(fbCreds, recipientIgsid, message as Record<string, unknown>);
+    return result.ok;
   }
 
   return false;
