@@ -49,32 +49,32 @@ const PLATFORM_META = {
   facebook: {
     label: "Facebook Messenger",
     icon: Facebook,
-    color: "text-muted-foreground",
-    bg: "bg-muted",
+    color: "text-foreground",
+    bg: "bg-muted/50",
     border: "border-border",
     description: "รับข้อความจาก Facebook Page ของคุณ",
   },
   instagram: {
     label: "Instagram DM",
     icon: Instagram,
-    color: "text-muted-foreground",
-    bg: "bg-muted",
+    color: "text-foreground",
+    bg: "bg-muted/50",
     border: "border-border",
     description: "รับ Direct Messages จาก Instagram Business Account",
   },
   line: {
     label: "LINE Official Account",
     icon: MessageSquare,
-    color: "text-muted-foreground",
-    bg: "bg-muted",
+    color: "text-foreground",
+    bg: "bg-muted/50",
     border: "border-border",
     description: "รับข้อความจาก LINE OA ด้วย Channel Access Token",
   },
   whatsapp: {
     label: "WhatsApp",
     icon: MessageCircle,
-    color: "text-muted-foreground",
-    bg: "bg-muted",
+    color: "text-foreground",
+    bg: "bg-muted/50",
     border: "border-border",
     description: "รับข้อความ WhatsApp ผ่าน WhatsApp Business API",
   },
@@ -260,18 +260,18 @@ export default function ChannelsPage() {
   const connectedPlatforms = new Set(channels.map((c) => c.platform));
 
   return (
-    <div>
+    <div className="h-full overflow-y-auto p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">ช่องทาง</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="heading-page">ช่องทาง</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           เชื่อมต่อช่องทางแชทเพื่อรับข้อความทั้งหมดในที่เดียว
         </p>
       </div>
 
       {/* Connected channels */}
       {channels.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+        <div className="mb-6">
+          <h2 className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
             เชื่อมต่อแล้ว
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -280,7 +280,7 @@ export default function ChannelsPage() {
               if (!meta) return null;
               const Icon = meta.icon;
               return (
-                <Card key={channel.id} className="rounded-xl border bg-card hover:shadow-md transition-all duration-200">
+                <Card key={channel.id} className="rounded-xl border bg-card p-6 hover:shadow-sm transition-colors [&>[data-slot=card-header]]:px-0 [&>[data-slot=card-header]]:pt-0 [&>[data-slot=card-content]]:px-0 [&>[data-slot=card-footer]]:px-0">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
                       <div className={`rounded-xl p-2.5 ${meta.bg}`}>
@@ -290,8 +290,8 @@ export default function ChannelsPage() {
                         <CardTitle className="text-sm truncate">{channel.name}</CardTitle>
                         <CardDescription className="text-xs">{meta.label}</CardDescription>
                       </div>
-                      <span className="bg-emerald-50 text-emerald-700 rounded-full px-2.5 py-0.5 text-xs font-medium flex items-center gap-1 shrink-0">
-                        <CheckCircle className="h-3 w-3" />
+                      <span className="rounded-lg bg-muted px-2.5 py-0.5 text-xs font-medium text-primary flex items-center gap-1 shrink-0">
+                        <CheckCircle className="h-3.5 w-3.5" />
                         เชื่อมต่อแล้ว
                       </span>
                     </div>
@@ -349,7 +349,7 @@ export default function ChannelsPage() {
 
       {/* Available platforms */}
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+        <h2 className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
           เพิ่มช่องทาง
         </h2>
         {loading ? (
@@ -365,7 +365,7 @@ export default function ChannelsPage() {
               const isLoading = oauthLoading === platform;
 
               return (
-                <Card key={platform} className={cn("rounded-xl border bg-card hover:shadow-md transition-all duration-200", isConnected && "opacity-60")}>
+                <Card key={platform} className={cn("rounded-xl border bg-card p-6 hover:shadow-sm transition-colors [&>[data-slot=card-header]]:px-0 [&>[data-slot=card-header]]:pt-0 [&>[data-slot=card-content]]:px-0 [&>[data-slot=card-footer]]:px-0", isConnected && "opacity-60")}>
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
                       <div className={`rounded-xl p-2.5 ${meta.bg}`}>
@@ -374,8 +374,8 @@ export default function ChannelsPage() {
                       <div>
                         <CardTitle className="text-sm">{meta.label}</CardTitle>
                         {isConnected && (
-                          <span className="mt-1 inline-flex items-center bg-emerald-50 text-emerald-700 rounded-full px-2 py-0.5 text-xs font-medium dark:bg-emerald-950 dark:text-emerald-400">
-                            <CheckCircle className="mr-1 h-3 w-3" />
+                          <span className="mt-1 inline-flex items-center rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-primary">
+                            <CheckCircle className="mr-1 h-3.5 w-3.5" />
                             เชื่อมต่อแล้ว
                           </span>
                         )}
@@ -419,7 +419,7 @@ export default function ChannelsPage() {
         <DialogContent className="sm:max-w-md rounded-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-green-600" />
+              <MessageSquare className="h-5 w-5 text-primary" />
               เชื่อมต่อ LINE Official Account
             </DialogTitle>
             <DialogDescription>
@@ -431,7 +431,7 @@ export default function ChannelsPage() {
               <Label htmlFor="line-name">ชื่อ Channel (ไม่บังคับ)</Label>
               <Input
                 id="line-name"
-              className="rounded-lg"
+                className="rounded-lg"
               placeholder="เช่น LINE OA ร้านค้า"
                 value={lineForm.name}
                 onChange={(e) => setLineForm((f) => ({ ...f, name: e.target.value }))}
@@ -475,6 +475,7 @@ export default function ChannelsPage() {
               ยกเลิก
             </Button>
             <Button
+              className="rounded-lg"
               onClick={handleLineConnect}
               disabled={
                 lineConnecting ||

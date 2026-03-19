@@ -11,11 +11,14 @@ import {
   Copy,
   Image,
 } from "lucide-react";
+
+import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import {
   Select,
   SelectTrigger,
@@ -25,6 +28,16 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+
+const SIZE_OPTIONS = [
+  { value: "full" as const, label: "เต็มหน้าจอ" },
+  { value: "half" as const, label: "ครึ่งหน้า" },
+] as const;
+
+const DISPLAY_OPTIONS = [
+  { value: "show" as const, label: "แสดง" },
+  { value: "hide" as const, label: "ซ่อน" },
+] as const;
 
 interface RichMenuArea {
   bounds: { x: number; y: number; width: number; height: number };
@@ -255,82 +268,88 @@ export default function LineRichMenuPage() {
 
   if (view === "list") {
     return (
-      <div ref={topRef}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold">เมนู</h1>
-            <Badge variant="outline" className="text-xs">Line</Badge>
+      <div ref={topRef} className="h-full overflow-y-auto p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="heading-page">Rich Menu</h1>
+            <p className="text-sm text-muted-foreground mt-1">สร้างเมนูที่แสดงด้านล่างในห้องแชท LINE</p>
           </div>
-          <Button onClick={openCreate}>
+          <Button onClick={openCreate} size="sm">
             <Plus className="h-4 w-4 mr-1.5" />
             สร้างริชเมนูใหม่
           </Button>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">สร้างเมนูที่แสดงด้านล่างในห้องแชท LINE ผู้ใช้สามารถกดปุ่มเพื่อส่งข้อความ เปิดลิ้งก์ หรือเรียก action ต่างๆ</p>
 
-        {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : menus.length === 0 ? (
-          <div className="flex flex-col items-center py-16">
-            <Image className="h-12 w-12 text-muted-foreground/20 mb-4" />
-            <p className="text-muted-foreground mb-4">ยังไม่มี Rich Menu</p>
-            <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1.5" />สร้าง Rich Menu แรก</Button>
-          </div>
-        ) : (
-          <div className="border rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30 text-left">
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground w-28">รูป</th>
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">ชื่อ</th>
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">ประเภท</th>
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">สถานะ</th>
-                  <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground w-28"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {menus.map((menu) => {
-                  const isDefault = menu.richMenuId === defaultId;
-                  return (
-                    <tr key={menu.richMenuId} className="border-b last:border-b-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`/api/channels/line/rich-menu/image?id=${menu.richMenuId}`}
-                          alt={menu.name}
-                          className="w-24 h-14 rounded border object-cover bg-muted"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium">{menu.name}</p>
-                        <p className="text-xs text-muted-foreground">{menu.areas.length} ปุ่ม | แถบ: {menu.chatBarText}</p>
-                      </td>
-                      <td className="px-4 py-3"><span className="text-xs">All Friend</span></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className={cn("text-xs font-medium", isDefault ? "text-green-600" : "text-muted-foreground")}>
-                            {isDefault ? "Launch" : "ปิด"}
-                          </span>
-                          <Switch checked={isDefault} onCheckedChange={() => handleApply(menu.richMenuId)} disabled={applyingId === menu.richMenuId} />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(menu)}><Pencil className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(menu.richMenuId); toast({ title: "คัดลอก ID" }); }}><Copy className="h-3.5 w-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(menu.richMenuId)} disabled={deletingId === menu.richMenuId}>
-                            {deletingId === menu.richMenuId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="mt-6">
+          {loading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : menus.length === 0 ? (
+            <EmptyState
+              icon={Image}
+              message="ยังไม่มี Rich Menu"
+              description="สร้าง Rich Menu เพื่อเริ่มใช้งาน"
+              action={
+                <Button onClick={openCreate} className="rounded-lg">
+                  <Plus className="h-4 w-4 mr-1.5" />สร้าง Rich Menu แรก
+                </Button>
+              }
+            />
+          ) : (
+            <div className="border rounded-xl overflow-hidden shadow-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/20 text-left">
+                    <th className="px-5 py-3 text-xs font-medium text-muted-foreground w-28">รูป</th>
+                    <th className="px-5 py-3 text-xs font-medium text-muted-foreground">ชื่อ</th>
+                    <th className="px-5 py-3 text-xs font-medium text-muted-foreground">ประเภท</th>
+                    <th className="px-5 py-3 text-xs font-medium text-muted-foreground">สถานะ</th>
+                    <th className="px-5 py-3 text-xs font-medium text-muted-foreground w-28"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {menus.map((menu) => {
+                    const isDefault = menu.richMenuId === defaultId;
+                    return (
+                      <tr key={menu.richMenuId} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
+                        <td className="px-5 py-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`/api/channels/line/rich-menu/image?id=${menu.richMenuId}`}
+                            alt={menu.name}
+                            className="w-24 h-14 rounded-lg border object-cover bg-muted"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        </td>
+                        <td className="px-5 py-3">
+                          <p className="font-semibold">{menu.name}</p>
+                          <p className="text-xs text-muted-foreground">{menu.areas.length} ปุ่ม | แถบ: {menu.chatBarText}</p>
+                        </td>
+                        <td className="px-5 py-3"><span className="rounded-xl bg-muted px-2 py-0.5 text-xs font-medium">All Friend</span></td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className={cn("text-xs font-semibold", isDefault ? "text-primary" : "text-muted-foreground")}>
+                              {isDefault ? "Launch" : "ปิด"}
+                            </span>
+                            <Switch checked={isDefault} onCheckedChange={() => handleApply(menu.richMenuId)} disabled={applyingId === menu.richMenuId} />
+                          </div>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-0.5 justify-end">
+                            <Button variant="ghost" size="icon-sm" onClick={() => openEdit(menu)}><Pencil className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon-sm" onClick={() => { navigator.clipboard.writeText(menu.richMenuId); toast({ title: "คัดลอก ID" }); }}><Copy className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(menu.richMenuId)} disabled={deletingId === menu.richMenuId}>
+                              {deletingId === menu.richMenuId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -338,69 +357,66 @@ export default function LineRichMenuPage() {
   // ─── Editor View ───────────────────────────────────────────────────────
 
   return (
-    <div ref={topRef}>
+    <div ref={topRef} className="h-full overflow-y-auto p-6">
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView("list")}><ArrowLeft className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon-sm" onClick={() => setView("list")}><ArrowLeft className="h-4 w-4" /></Button>
         <div>
-          <h1 className="text-lg font-bold">{editingId ? "แก้ไขริชเมนู" : "สร้างริชเมนูใหม่"}</h1>
-          <p className="text-xs text-muted-foreground">Setting menu</p>
+          <h1 className="heading-page">{editingId ? "แก้ไขริชเมนู" : "สร้างริชเมนูใหม่"}</h1>
+          <p className="text-sm text-muted-foreground mt-1">ตั้งค่ารูปภาพและปุ่มกดสำหรับริชเมนู</p>
         </div>
       </div>
 
       <div className="flex gap-8 flex-col lg:flex-row">
         {/* ─── Left: Settings ─── */}
-        <div className="flex-1 space-y-5 max-w-xl">
-          <div className="space-y-1.5">
-            <Label>ชื่อ *</Label>
-            <Input value={menuName} onChange={(e) => setMenuName(e.target.value.slice(0, 30))} placeholder="Welcome To Anajak T-Shirt" />
-            <p className="text-xs text-muted-foreground">{menuName.length}/30 — ชื่อนี้ไว้จัดการภายใน ไม่แสดงให้ผู้ใช้เห็น</p>
-          </div>
+        <div className="flex-1 space-y-6 max-w-xl">
 
-          <div className="space-y-1.5">
-            <Label>ข้อมูลพื้นฐาน *</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="size" checked={menuSize === "full"} onChange={() => handleSizeChange("full")} className="h-4 w-4 accent-accent" />
-                <span className="text-sm">เต็มหน้าจอ</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="size" checked={menuSize === "half"} onChange={() => handleSizeChange("half")} className="h-4 w-4 accent-accent" />
-                <span className="text-sm">ครึ่งหน้า</span>
-              </label>
+          {/* Card 1: Basic Info */}
+          <div className="rounded-2xl border bg-card p-6 space-y-5">
+            <h2 className="heading-section">ข้อมูลพื้นฐาน</h2>
+
+            <div className="space-y-1.5">
+              <Label>ชื่อ *</Label>
+              <Input value={menuName} onChange={(e) => setMenuName(e.target.value.slice(0, 30))} placeholder="Welcome To Anajak T-Shirt" />
+              <p className="text-xs text-muted-foreground">{menuName.length}/30 — ชื่อนี้ไว้จัดการภายใน ไม่แสดงให้ผู้ใช้เห็น</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>ขนาดเมนู *</Label>
+              <SegmentedControl
+                options={SIZE_OPTIONS}
+                value={menuSize}
+                onChange={(v) => handleSizeChange(v as "full" | "half")}
+                size="sm"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>ป้ายแถบเมนู *</Label>
+              <Input value={chatBarText} onChange={(e) => setChatBarText(e.target.value)} placeholder="เมนู" className="max-w-xs" />
+            </div>
+
+            <div className="space-y-2">
+              <Label>การแสดงเมนูเริ่มต้น *</Label>
+              <SegmentedControl
+                options={DISPLAY_OPTIONS}
+                value={showOnStart ? "show" : "hide"}
+                onChange={(v) => setShowOnStart(v === "show")}
+                size="sm"
+              />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>ป้ายแถบเมนู *</Label>
-            <Input value={chatBarText} onChange={(e) => setChatBarText(e.target.value)} placeholder="เมนู" className="max-w-xs" />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>การแสดงเมนูเริ่มต้น *</Label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="show" checked={showOnStart} onChange={() => setShowOnStart(true)} className="h-4 w-4 accent-accent" />
-                <span className="text-sm">แสดง</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="show" checked={!showOnStart} onChange={() => setShowOnStart(false)} className="h-4 w-4 accent-accent" />
-                <span className="text-sm">ซ่อน</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Template + Upload */}
-          <div className="space-y-3">
-            <Label>เลือกเทมเพลต</Label>
-            <div className="flex gap-4 items-start">
-              {/* Grid template */}
-              <div className="space-y-2 shrink-0">
+          {/* Card 2: Template + Upload */}
+          <div className="rounded-2xl border bg-card p-6 space-y-4">
+            <h2 className="heading-section">เทมเพลตและรูปภาพ</h2>
+            <div className="flex gap-5 items-start">
+              <div className="space-y-2.5 shrink-0">
                 <div className={cn(
-                  "grid border-2 border-accent rounded-lg overflow-hidden w-40",
+                  "grid border rounded-xl overflow-hidden w-36",
                   menuSize === "full" ? "grid-cols-3 grid-rows-2 aspect-[2500/1686]" : "grid-cols-3 grid-rows-1 aspect-[2500/843]"
                 )}>
                   {visibleAreas.map((area, i) => (
-                    <div key={i} className="border border-accent/30 flex items-center justify-center text-sm font-bold text-accent bg-accent/5">
+                    <div key={i} className="border border-border/50 flex items-center justify-center text-xs font-bold text-muted-foreground bg-muted/30">
                       {area.label}
                     </div>
                   ))}
@@ -410,15 +426,14 @@ export default function LineRichMenuPage() {
                 </Button>
               </div>
 
-              {/* Upload */}
-              <div className="space-y-2">
-                <label className="flex flex-col items-center gap-2 border-2 border-dashed rounded-xl p-4 cursor-pointer hover:bg-muted/30 transition-colors w-full">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
+              <div className="space-y-3 flex-1">
+                <label className="flex flex-col items-center gap-2 border border-dashed rounded-xl px-4 py-5 cursor-pointer hover:bg-muted/30 transition-colors">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground font-medium">อัปโหลดรูปริชเมนู</span>
                   <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleImageChange} />
                 </label>
-                {imageFile && <Badge variant="outline" className="text-xs"><Upload className="h-3 w-3 mr-1" />{imageFile.name}</Badge>}
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                {imageFile && <Badge variant="outline" className="text-xs"><Upload className="h-3.5 w-3.5 mr-1" />{imageFile.name}</Badge>}
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   รองรับ: jpg, jpeg, png<br />
                   ขนาดไฟล์: ไม่เกิน 1 MB<br />
                   ขนาดภาพ: 2500 x {menuSize === "full" ? "1686" : "843"} px
@@ -427,23 +442,23 @@ export default function LineRichMenuPage() {
             </div>
           </div>
 
-          {/* Area actions */}
-          <div className="space-y-3">
-            <Label>ตั้งค่าการแสดงผล</Label>
-            <div className="space-y-2">
+          {/* Card 3: Area Actions */}
+          <div className="rounded-2xl border bg-card p-6 space-y-4">
+            <h2 className="heading-section">ตั้งค่าปุ่มกด</h2>
+            <div className="space-y-3">
               {visibleAreas.map((area, i) => (
-                <div key={i} className="rounded-xl border p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-bold bg-accent/10 text-accent rounded-md px-2 py-0.5">{area.label}</span>
-                    <span className="text-[10px] text-muted-foreground">0 Click</span>
+                <div key={i} className="rounded-xl border bg-muted/20 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">{area.label}</span>
+                    <span className="text-xs text-muted-foreground">0 Click</span>
                   </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium w-14 shrink-0">Action</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Label className="w-16 shrink-0 text-xs">Action</Label>
                       <Select value={area.actionType} onValueChange={(v) => {
                         const u = [...areas]; u[i] = { ...u[i], actionType: v ?? "message" }; setAreas(u);
                       }}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger size="sm"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="message">Message</SelectItem>
                           <SelectItem value="uri">URL</SelectItem>
@@ -451,12 +466,12 @@ export default function LineRichMenuPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <p className="text-[10px] text-muted-foreground pl-16">
+                    <p className="text-xs text-muted-foreground ml-[76px]">
                       {area.actionType === "uri" ? "เมื่อกดจะเปิด URL ที่กำหนด" : area.actionType === "postback" ? "เมื่อกดจะส่ง postback data" : "เมื่อกดจะส่งข้อความ"}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs w-14 shrink-0" />
-                      <Input className="h-8 text-xs" value={area.value} onChange={(e) => {
+                    <div className="flex items-center gap-3">
+                      <Label className="w-16 shrink-0 text-xs">ค่า</Label>
+                      <Input className="h-8 text-sm" value={area.value} onChange={(e) => {
                         const u = [...areas]; u[i] = { ...u[i], value: e.target.value }; setAreas(u);
                       }} placeholder={area.actionType === "uri" ? "https://..." : "ข้อความ/data"} />
                     </div>
@@ -466,7 +481,7 @@ export default function LineRichMenuPage() {
             </div>
           </div>
 
-          <Button onClick={handleSave} disabled={saving} className="px-8">
+          <Button onClick={handleSave} disabled={saving} className="px-8 shadow-sm shadow-primary/25">
             {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             บันทึก
           </Button>
@@ -474,9 +489,9 @@ export default function LineRichMenuPage() {
 
         {/* ─── Right: Preview ─── */}
         <div className="lg:w-[340px] shrink-0">
-          <h3 className="text-sm font-semibold mb-3">ตัวอย่างริชเมนู</h3>
-          <div className="rounded-2xl border overflow-hidden shadow-lg bg-card sticky top-4">
-            <div className="bg-muted px-4 py-2 border-b">
+          <h3 className="heading-card mb-3">ตัวอย่างริชเมนู</h3>
+          <div className="rounded-2xl border overflow-hidden bg-card shadow-lg shadow-black/5 sticky top-6">
+            <div className="bg-muted/60 px-4 py-2 border-b">
               <span className="text-xs font-medium">Your Account</span>
             </div>
             <div className="relative">
@@ -484,7 +499,7 @@ export default function LineRichMenuPage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={imagePreview} alt="Rich Menu Preview" className="w-full" />
               ) : (
-                <div className={cn("w-full bg-muted/30 flex items-center justify-center", menuSize === "full" ? "aspect-[2500/1686]" : "aspect-[2500/843]")}>
+                <div className={cn("w-full bg-muted/20 flex items-center justify-center", menuSize === "full" ? "aspect-[2500/1686]" : "aspect-[2500/843]")}>
                   <Image className="h-10 w-10 text-muted-foreground/20" />
                 </div>
               )}
@@ -496,7 +511,7 @@ export default function LineRichMenuPage() {
                 ))}
               </div>
             </div>
-            <div className="bg-muted px-4 py-2.5 flex items-center justify-center border-t">
+            <div className="bg-muted/60 px-4 py-2.5 flex items-center justify-center border-t">
               <span className="text-xs font-medium text-muted-foreground">{chatBarText || "เมนู"} Menu</span>
             </div>
           </div>

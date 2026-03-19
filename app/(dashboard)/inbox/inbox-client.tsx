@@ -196,7 +196,7 @@ export default function InboxPage() {
           <div className="flex h-full flex-col">
             {/* Mobile back button */}
             <div className="flex items-center gap-2 border-b px-3 py-2 lg:hidden">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedId(null); setSelectedConv(null); }}>
+              <Button variant="ghost" size="icon-sm" onClick={() => { setSelectedId(null); setSelectedConv(null); }}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-medium truncate">

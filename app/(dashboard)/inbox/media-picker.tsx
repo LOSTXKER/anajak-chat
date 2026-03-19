@@ -93,7 +93,7 @@ export function MediaPickerModal({ onSelect, onClose }: MediaPickerModalProps) {
         {/* Header */}
         <div className="flex items-center gap-2 border-b px-4 py-3">
           {folderStack.length > 0 && (
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goBack}>
+            <Button variant="ghost" size="icon-sm" onClick={goBack}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
           )}
@@ -110,7 +110,7 @@ export function MediaPickerModal({ onSelect, onClose }: MediaPickerModalProps) {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
+            <Button variant="ghost" size="icon-sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -176,7 +176,7 @@ export function MediaPickerModal({ onSelect, onClose }: MediaPickerModalProps) {
                       {selectedId === file.id && (
                         <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                           <div className="rounded-full bg-primary p-1">
-                            <Check className="h-3 w-3 text-primary-foreground" />
+                            <Check className="h-3.5 w-3.5 text-primary-foreground" />
                           </div>
                         </div>
                       )}

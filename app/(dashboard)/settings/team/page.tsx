@@ -110,11 +110,11 @@ export default function TeamSettingsPage() {
   }
 
   return (
-    <div>
+    <div className="h-full overflow-y-auto p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">ทีม</h1>
-          <p className="text-sm text-muted-foreground">จัดการสมาชิกในทีม</p>
+          <h1 className="heading-page">ทีม</h1>
+          <p className="text-sm text-muted-foreground mt-1">จัดการสมาชิกในทีม</p>
         </div>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogTrigger render={<Button />}>
@@ -181,7 +181,7 @@ export default function TeamSettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full" disabled={inviteLoading}>
+              <Button type="submit" className="w-full rounded-lg" disabled={inviteLoading}>
                 {inviteLoading ? "กำลังสร้าง..." : "สร้างบัญชี"}
               </Button>
             </form>
@@ -189,7 +189,7 @@ export default function TeamSettingsPage() {
         </Dialog>
       </div>
 
-      <Card className="rounded-xl border">
+      <Card className="rounded-xl border p-6 [&>[data-slot=card-header]]:px-0 [&>[data-slot=card-header]]:pt-0 [&>[data-slot=card-content]]:px-0 [&>[data-slot=card-footer]]:px-0 [&>[data-slot=card-footer]]:pb-0">
         <CardHeader>
           <CardTitle>สมาชิกทั้งหมด</CardTitle>
           <CardDescription>{users.length} คน</CardDescription>
@@ -199,7 +199,7 @@ export default function TeamSettingsPage() {
             {users.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center justify-between rounded-lg border bg-card p-4 transition-all"
+                className="flex items-center justify-between rounded-xl border bg-card p-4 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="min-w-0">
@@ -208,10 +208,10 @@ export default function TeamSettingsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="bg-zinc-100 text-zinc-700 dark:bg-card dark:text-foreground/80 rounded-full px-2 py-0.5 text-xs font-medium">
+                  <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     {user.role.name}
                   </span>
-                  <Badge variant={user.isActive ? "default" : "outline"} className={user.isActive ? "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800" : ""}>
+                  <Badge variant={user.isActive ? "default" : "outline"} className={`rounded-xl ${user.isActive ? "bg-primary/10 text-primary border-primary/20" : ""}`}>
                     {user.isActive ? "ใช้งาน" : "ไม่ใช้งาน"}
                   </Badge>
                 </div>

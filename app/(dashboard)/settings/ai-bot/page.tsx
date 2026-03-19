@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Bot, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AIBotConfigForm, type BotConfig } from "@/components/settings/ai-bot-config-form";
 import { AIReplyLogTable, type ReplyLog } from "@/components/settings/ai-reply-log-table";
+
 
 const PAGE_SIZE = 15;
 
@@ -104,51 +105,46 @@ export default function AIBotPage() {
     else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-auto h-full">
-      <div className="max-w-2xl">
-        <div className="mb-6">
-          <h1 className="text-lg font-semibold flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            AI Bot
-          </h1>
-          <p className="text-sm text-muted-foreground">ตั้งค่า AI ตอบแชทอัตโนมัติขับเคลื่อนด้วย Gemini</p>
-        </div>
-
-        <AIBotConfigForm
-          config={config}
-          onChange={setConfig}
-          onSave={handleSave}
-          saving={saving}
-        />
-
-        <AIReplyLogTable
-          logs={logs}
-          loading={logsLoading}
-          page={logsPage}
-          totalLogs={totalLogs}
-          statusFilter={statusFilter}
-          editingLog={editingLog}
-          actionLoading={actionLoading}
-          onPageChange={setLogsPage}
-          onStatusFilterChange={(v) => { setStatusFilter(v); setLogsPage(1); }}
-          onRefresh={fetchLogs}
-          onApprove={handleApprove}
-          onReject={handleReject}
-          onEditStart={(log) => setEditingLog({ id: log.id, content: log.draftContent })}
-          onEditCancel={() => setEditingLog(null)}
-          onEditContentChange={(content) => setEditingLog((prev) => prev ? { ...prev, content } : null)}
-          onEditSend={handleEditSend}
-        />
+    <div className="h-full overflow-y-auto p-6">
+      <div className="mb-6">
+        <h1 className="heading-page">AI Bot</h1>
+        <p className="text-sm text-muted-foreground mt-1">ตั้งค่า AI ตอบแชทอัตโนมัติขับเคลื่อนด้วย Gemini</p>
       </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+      <>
+      <AIBotConfigForm
+        config={config}
+        onChange={setConfig}
+        onSave={handleSave}
+        saving={saving}
+      />
+
+      <AIReplyLogTable
+        logs={logs}
+        loading={logsLoading}
+        page={logsPage}
+        totalLogs={totalLogs}
+        statusFilter={statusFilter}
+        editingLog={editingLog}
+        actionLoading={actionLoading}
+        onPageChange={setLogsPage}
+        onStatusFilterChange={(v) => { setStatusFilter(v); setLogsPage(1); }}
+        onRefresh={fetchLogs}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onEditStart={(log) => setEditingLog({ id: log.id, content: log.draftContent })}
+        onEditCancel={() => setEditingLog(null)}
+        onEditContentChange={(content) => setEditingLog((prev) => prev ? { ...prev, content } : null)}
+        onEditSend={handleEditSend}
+      />
+      </>
+      )}
     </div>
   );
 }

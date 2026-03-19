@@ -302,11 +302,16 @@ export default function ChatFlowsPage() {
   const msgTypeLabel = (type: string) => MSG_TYPES.find((t) => t.value === type)?.label ?? type;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] -m-4 md:-m-6">
+    <div className="flex h-full overflow-hidden">
       {/* Left: Pattern List */}
-      <div className="w-64 shrink-0 border-r flex flex-col bg-card">
-        <div className="p-3 border-b">
-          <Button className="w-full" size="sm" onClick={() => { setNewName(""); setShowNewDialog(true); }}>
+      <div className="w-[340px] shrink-0 border-r flex flex-col bg-card">
+        <div className="p-4 space-y-3 border-b">
+          <div>
+            <h1 className="heading-page">Chat Flows</h1>
+            <p className="text-sm text-muted-foreground mt-1">จัดการรูปแบบการตอบกลับอัตโนมัติ</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{flows.length} รูปแบบ</p>
+          </div>
+          <Button className="w-full h-9 rounded-lg" size="sm" onClick={() => { setNewName(""); setShowNewDialog(true); }}>
             <Plus className="h-4 w-4 mr-1.5" />
             สร้างรูปแบบตอบกลับ
           </Button>
@@ -325,24 +330,24 @@ export default function ChatFlowsPage() {
                 onClick={() => setSelectedId(flow.id)}
                 onKeyDown={(e) => { if (e.key === "Enter") setSelectedId(flow.id); }}
                 className={cn(
-                  "w-full text-left rounded-lg px-3 py-2 text-sm transition-colors group cursor-pointer",
-                  selectedId === flow.id ? "bg-accent/10 border-l-2 border-accent" : "hover:bg-muted/50 border-l-2 border-transparent"
+                  "w-full text-left rounded-lg px-3 py-2.5 text-sm transition-colors group cursor-pointer",
+                  selectedId === flow.id ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/50 border-l-2 border-transparent"
                 )}
               >
                 <div className="flex items-center justify-between">
                   <span className={cn("truncate font-medium", !flow.isActive && "text-muted-foreground")}>{flow.name}</span>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button onClick={(e) => { e.stopPropagation(); handleToggle(flow.id); }} className="p-0.5">
-                      {flow.isActive ? <Power className="h-3 w-3 text-green-600" /> : <PowerOff className="h-3 w-3 text-muted-foreground" />}
+                      {flow.isActive ? <Power className="h-3.5 w-3.5 text-primary" /> : <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />}
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); handleDeletePattern(flow.id); }} className="p-0.5">
-                      <Trash2 className="h-3 w-3 text-destructive" />
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <Badge variant="outline" className="text-[10px] px-1 py-0">{TRIGGER_LABELS[flow.trigger.type] ?? flow.trigger.type}</Badge>
-                  <span className="text-[10px] text-muted-foreground">{(flow.steps as AutoReplyPattern)?.messages?.length ?? 0} ข้อความ</span>
+                  <Badge variant="outline" className="text-xs px-1 py-0">{TRIGGER_LABELS[flow.trigger.type] ?? flow.trigger.type}</Badge>
+                  <span className="text-xs text-muted-foreground">{(flow.steps as AutoReplyPattern)?.messages?.length ?? 0} ข้อความ</span>
                 </div>
               </div>
             ))
@@ -357,7 +362,7 @@ export default function ChatFlowsPage() {
             <p className="text-muted-foreground text-sm">เลือกรูปแบบทางซ้ายเพื่อแก้ไข</p>
           </div>
         ) : (
-          <div className="p-4 md:p-6 space-y-4 max-w-3xl">
+          <div className="p-6 space-y-4">
             {/* Header: Name + Trigger + Active */}
             <div className="flex items-start gap-4">
               <div className="flex-1 space-y-3">
@@ -411,14 +416,14 @@ export default function ChatFlowsPage() {
                   checked={selected.isActive}
                   onCheckedChange={() => handleToggle(selected.id)}
                 />
-                <span className="text-[10px] text-muted-foreground">{selected.isActive ? "เปิด" : "ปิด"}</span>
+                <span className="text-xs text-muted-foreground">{selected.isActive ? "เปิด" : "ปิด"}</span>
               </div>
             </div>
 
             {/* Messages */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">ข้อความตอบกลับ ({pattern.messages.length})</h3>
+                <h3 className="heading-card">ข้อความตอบกลับ ({pattern.messages.length})</h3>
               </div>
 
               {pattern.messages.map((msg, idx) => {
@@ -432,11 +437,11 @@ export default function ChatFlowsPage() {
                         <span className="text-xs font-medium text-muted-foreground">{msgTypeLabel(msg.type)}</span>
                         <span className="text-xs text-muted-foreground/50">({idx + 1}/{pattern.messages.length})</span>
                       </div>
-                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditMsg(idx)}><Pencil className="h-3 w-3" /></Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => removeMessage(idx)}><Trash2 className="h-3 w-3" /></Button>
+                      <div className="flex gap-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon-xs" onClick={() => moveMessage(idx, -1)} disabled={idx === 0}><ChevronUp className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon-xs" onClick={() => moveMessage(idx, 1)} disabled={idx === pattern.messages.length - 1}><ChevronDown className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon-xs" onClick={() => openEditMsg(idx)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon-xs" className="text-destructive" onClick={() => removeMessage(idx)}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
 
@@ -496,7 +501,7 @@ export default function ChatFlowsPage() {
               {/* Add message type button */}
               <Button
                 variant="outline"
-                className="w-full border-dashed h-12"
+                className="w-full rounded-xl border-dashed h-12"
                 onClick={() => setShowTypeSelector(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -507,9 +512,9 @@ export default function ChatFlowsPage() {
             {/* Quick Replies */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Quick Reply</h3>
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={addQuickReply}>
-                  <Plus className="h-3 w-3 mr-1" />
+                <h3 className="heading-card">Quick Reply</h3>
+                <Button variant="outline" size="xs" onClick={addQuickReply}>
+                  <Plus className="h-3.5 w-3.5 mr-1" />
                   เพิ่ม
                 </Button>
               </div>
@@ -526,7 +531,7 @@ export default function ChatFlowsPage() {
                       placeholder="ชื่อปุ่ม"
                     />
                     <button onClick={() => removeQuickReply(idx)} className="text-muted-foreground hover:text-destructive">
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
@@ -534,7 +539,7 @@ export default function ChatFlowsPage() {
             </div>
 
             {/* Assign to human */}
-            <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="flex items-center justify-between rounded-xl border p-3">
               <div>
                 <p className="text-sm font-medium">ส่งต่อให้แอดมิน</p>
                 <p className="text-xs text-muted-foreground">เปิดสถานะแชทเป็น &quot;กำลังดูแล&quot; หลังส่งข้อความ</p>
@@ -721,7 +726,7 @@ function ButtonEditor({
       <div className="flex items-center justify-between">
         <Label className="text-xs">ปุ่ม</Label>
         <Button variant="outline" size="sm" className="h-6 text-xs" onClick={onAdd} disabled={buttons.length >= 3}>
-          <Plus className="h-3 w-3 mr-1" />
+          <Plus className="h-3.5 w-3.5 mr-1" />
           เพิ่มปุ่ม
         </Button>
       </div>
@@ -738,7 +743,7 @@ function ButtonEditor({
           </Select>
           <Input className="h-8 text-xs flex-1" placeholder="ค่า" value={btn.value} onChange={(e) => onUpdate(i, { value: e.target.value })} />
           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onRemove(i)}>
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
       ))}

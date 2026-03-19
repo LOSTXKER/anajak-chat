@@ -66,14 +66,6 @@ export default function SLAPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   function formatDuration(minutes: number) {
     if (minutes >= 1440) return `${Math.floor(minutes / 1440)} วัน`;
     if (minutes >= 60) return `${Math.floor(minutes / 60)} ชม. ${minutes % 60 > 0 ? `${minutes % 60} นาที` : ""}`.trim();
@@ -81,18 +73,15 @@ export default function SLAPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="h-full overflow-y-auto p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold flex items-center gap-2">
-            <Timer className="h-5 w-5" />
-            ตั้งค่า SLA
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="heading-page">ตั้งค่า SLA</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             กำหนดเวลาตอบกลับลูกค้าสำหรับทุกการสนทนา
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving || loading}>
           {saving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -102,56 +91,64 @@ export default function SLAPage() {
         </Button>
       </div>
 
-      <div
-        className={cn(
-          "rounded-xl border bg-card p-6",
-          !config.isActive && "border-muted opacity-60"
-        )}
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <Switch
-            checked={config.isActive}
-            onCheckedChange={(v) => setConfig((prev) => ({ ...prev, isActive: v }))}
-          />
-          <span className="text-sm font-medium">
-            {config.isActive ? "เปิดใช้งาน SLA" : "ปิดใช้งาน SLA"}
-          </span>
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">เวลาตอบกลับ</label>
-          <p className="text-xs text-muted-foreground">
-            ระยะเวลาสูงสุดที่ต้องตอบกลับลูกค้าแต่ละข้อความ
-          </p>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min={1}
-              className="h-10 w-24 text-sm rounded-lg"
-              value={config.firstResponseMinutes}
-              onChange={(e) =>
-                setConfig((prev) => ({ ...prev, firstResponseMinutes: parseInt(e.target.value) || 1 }))
-              }
-              disabled={!config.isActive}
-            />
-            <span className="text-sm text-muted-foreground">นาที</span>
-          </div>
-          {config.isActive && (
-            <p className="text-xs text-muted-foreground">
-              = {formatDuration(config.firstResponseMinutes)}
-            </p>
+      ) : (
+      <>
+        <div
+          className={cn(
+            "rounded-xl border bg-card p-6",
+            !config.isActive && "border-muted opacity-60"
           )}
-        </div>
-      </div>
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <Switch
+              checked={config.isActive}
+              onCheckedChange={(v) => setConfig((prev) => ({ ...prev, isActive: v }))}
+            />
+            <span className="text-sm font-medium">
+              {config.isActive ? "เปิดใช้งาน SLA" : "ปิดใช้งาน SLA"}
+            </span>
+          </div>
 
-      <div className="mt-6 rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground space-y-1">
-        <p className="font-medium text-foreground">วิธีการทำงานของ SLA</p>
-        <p>• เมื่อลูกค้าส่งข้อความมา ระบบจะเริ่มนับเวลา SLA ถอยหลัง</p>
-        <p>• เมื่อ Agent ตอบกลับ SLA จะหยุดนับ (จนกว่าลูกค้าจะส่งข้อความใหม่)</p>
-        <p>• เมื่อเหลือเวลาน้อยกว่า 20% → แสดงสีเหลืองใน Inbox</p>
-        <p>• เมื่อเกินกำหนด → แสดงสีแดง + ติดป้าย &quot;ไม่ได้รับ&quot; + แจ้งเตือนอัตโนมัติ</p>
-        <p>• ระบบตรวจสอบ SLA ทุก 5 นาที</p>
-      </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">เวลาตอบกลับ</label>
+            <p className="text-xs text-muted-foreground">
+              ระยะเวลาสูงสุดที่ต้องตอบกลับลูกค้าแต่ละข้อความ
+            </p>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                min={1}
+                className="h-10 w-24 text-sm rounded-lg"
+                value={config.firstResponseMinutes}
+                onChange={(e) =>
+                  setConfig((prev) => ({ ...prev, firstResponseMinutes: parseInt(e.target.value) || 1 }))
+                }
+                disabled={!config.isActive}
+              />
+              <span className="text-sm text-muted-foreground">นาที</span>
+            </div>
+            {config.isActive && (
+              <p className="text-xs text-muted-foreground">
+                = {formatDuration(config.firstResponseMinutes)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-xl border bg-muted/30 p-6 text-sm text-muted-foreground space-y-1">
+          <p className="font-medium text-foreground">วิธีการทำงานของ SLA</p>
+          <p>• เมื่อลูกค้าส่งข้อความมา ระบบจะเริ่มนับเวลา SLA ถอยหลัง</p>
+          <p>• เมื่อ Agent ตอบกลับ SLA จะหยุดนับ (จนกว่าลูกค้าจะส่งข้อความใหม่)</p>
+          <p>• เมื่อเหลือเวลาน้อยกว่า 20% → แสดงสีเหลืองใน Inbox</p>
+          <p>• เมื่อเกินกำหนด → แสดงสีแดง + ติดป้าย &quot;ไม่ได้รับ&quot; + แจ้งเตือนอัตโนมัติ</p>
+          <p>• ระบบตรวจสอบ SLA ทุก 5 นาที</p>
+        </div>
+      </>
+      )}
     </div>
   );
 }

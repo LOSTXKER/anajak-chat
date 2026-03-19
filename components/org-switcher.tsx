@@ -85,11 +85,11 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
   if (orgs.length <= 1 && !showCreate) {
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-md px-1 py-1 text-sm transition-colors hover:bg-muted">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
-            <Building2 className="h-3.5 w-3.5 text-primary-foreground" />
+        <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1 text-sm transition-colors hover:bg-muted/80">
+          <div className="rounded-lg flex h-7 w-7 items-center justify-center bg-primary/10 text-primary shadow-sm shrink-0">
+            <Building2 className="h-3.5 w-3.5" />
           </div>
-          <span className="truncate text-sm font-semibold tracking-tight">{currentOrgName}</span>
+          <span className="truncate text-sm font-bold tracking-tight">{currentOrgName}</span>
           <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
@@ -109,11 +109,11 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-md px-1 py-1 text-sm transition-colors hover:bg-muted">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shrink-0">
-            <Building2 className="h-3.5 w-3.5 text-primary-foreground" />
+        <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1 text-sm transition-colors hover:bg-muted/80">
+          <div className="rounded-lg flex h-7 w-7 items-center justify-center bg-primary/10 text-primary shadow-sm shrink-0">
+            <Building2 className="h-3.5 w-3.5" />
           </div>
-          <span className="truncate text-sm font-semibold tracking-tight">{currentOrgName}</span>
+          <span className="truncate text-sm font-bold tracking-tight">{currentOrgName}</span>
           <ChevronDown className="ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
@@ -140,7 +140,7 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
       </DropdownMenu>
 
       <Dialog open={showCreate} onOpenChange={(open) => { setShowCreate(open); if (!open) setNewOrgName(""); }}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-sm rounded-xl">
           <DialogHeader>
             <DialogTitle>สร้างองค์กรใหม่</DialogTitle>
           </DialogHeader>
@@ -151,6 +151,7 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
             placeholder="ชื่อองค์กร"
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && createOrg()}
+            className="rounded-lg"
           />
           <DialogFooter>
             <Button
@@ -164,6 +165,7 @@ export function OrgSwitcher({ currentOrgId, currentOrgName }: Props) {
               size="sm"
               onClick={createOrg}
               disabled={creating || !newOrgName.trim()}
+              className="rounded-lg"
             >
               {creating ? "กำลังสร้าง..." : "สร้าง"}
             </Button>

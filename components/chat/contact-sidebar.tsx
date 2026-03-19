@@ -103,28 +103,27 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
   }
 
   return (
-    <div className="hidden w-80 shrink-0 flex-col border-l bg-card lg:flex overflow-hidden">
+    <div className="hidden w-[360px] shrink-0 flex-col border-l bg-card lg:flex overflow-hidden">
       <Tabs defaultValue="contact" className="flex flex-col h-full gap-0">
-        <TabsList className="w-full rounded-none border-b bg-transparent px-2 pt-1.5 pb-0 h-auto shrink-0" variant="line">
-          <TabsTrigger value="contact" className="gap-1.5 text-xs px-3 py-1.5">
-            <User className="h-3.5 w-3.5" />
+        <TabsList className="w-full rounded-none border-b bg-transparent px-3 pt-2 pb-0 h-auto shrink-0" variant="line">
+          <TabsTrigger value="contact" className="gap-1.5 text-sm px-4 py-2">
+            <User className="h-4 w-4" />
             ข้อมูล
           </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-1.5 text-xs px-3 py-1.5">
-            <Sparkles className="h-3.5 w-3.5" />
+          <TabsTrigger value="ai" className="gap-1.5 text-sm px-4 py-2">
+            <Sparkles className="h-4 w-4" />
             AI Copilot
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="contact" className="overflow-y-auto">
-          <div className="p-4 space-y-4">
+          <div className="p-5 space-y-5">
             {/* Header with avatar + menu */}
             <div className="flex flex-col items-center text-center relative">
               <div className="absolute right-0 top-0" ref={menuRef}>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
+                  size="icon-sm"
                   onClick={() => setShowMenu(!showMenu)}
                   aria-label="เมนู"
                   aria-expanded={showMenu}
@@ -133,7 +132,7 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
                   <MoreVertical className="h-4 w-4" />
                 </Button>
                 {showMenu && (
-                  <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-lg border bg-popover p-1 shadow-lg" role="menu">
+                  <div className="absolute right-0 top-full z-20 mt-1 min-w-44 rounded-lg border bg-popover p-1.5 shadow-lg" role="menu">
                     <button
                       role="menuitem"
                       onClick={() => handleExport("excel")}
@@ -157,7 +156,7 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
                           <button
                             role="menuitem"
                             onClick={() => { setShowMenu(false); onSpam(); }}
-                            className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                            className="flex w-full items-center gap-2 rounded px-3 py-1.5 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors"
                           >
                             <Ban className="h-3.5 w-3.5" />
                             สแปม
@@ -179,12 +178,14 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
                 )}
               </div>
 
-              <Avatar className="h-14 w-14 mb-2">
-                <AvatarImage src={contact.avatarUrl ?? undefined} />
-                <AvatarFallback className="text-base">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <p className="font-medium text-sm">{displayName}</p>
-              <p className="text-xs text-muted-foreground capitalize">{contact.platform}</p>
+              <div className="relative mb-3">
+                <Avatar className="rounded-lg h-16 w-16 ring-4 ring-primary/10">
+                  <AvatarImage src={contact.avatarUrl ?? undefined} className="rounded-lg" />
+                  <AvatarFallback className="rounded-lg text-lg font-bold bg-primary/10 text-primary">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </div>
+              <p className="font-semibold text-base">{displayName}</p>
+              <p className="text-xs text-muted-foreground capitalize mt-0.5">{contact.platform}</p>
             </div>
 
             {/* Contact Details */}
@@ -211,19 +212,19 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
                   <>
                     {name && (
                       <div className="flex items-center gap-2 text-xs">
-                        <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span>{name}</span>
                       </div>
                     )}
                     {phone && (
                       <div className="flex items-center gap-2 text-xs">
-                        <Phone className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span>{phone}</span>
                       </div>
                     )}
                     {email && (
                       <div className="flex items-center gap-2 text-xs">
-                        <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         <span>{email}</span>
                       </div>
                     )}
@@ -245,7 +246,7 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
               action={
                 <button
                   onClick={() => { setShowTagInput(true); fetchTagSuggestions(); }}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  className="text-primary hover:text-primary/80"
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
@@ -256,12 +257,17 @@ export function ContactSidebar({ conversation, onSpam, onBlock, onInsertReply }:
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-0.5 bg-muted text-foreground rounded-full text-xs px-2 py-0.5"
+                      className="inline-flex items-center gap-1 bg-primary/10 text-primary rounded-xl text-xs px-2.5 py-1 font-medium"
                     >
                       {tag}
-                      <button onClick={() => removeTag(tag)} className="hover:text-red-500 transition-colors">
+                      <Button
+                        variant="ghost"
+                        className="h-auto w-auto p-0 rounded-full hover:text-destructive"
+                        onClick={() => removeTag(tag)}
+                        aria-label={`ลบแท็ก ${tag}`}
+                      >
                         <X className="h-2.5 w-2.5" />
-                      </button>
+                      </Button>
                     </span>
                   ))}
                   {tags.length === 0 && !showTagInput && (

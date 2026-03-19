@@ -3,11 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Users, AlertCircle } from "lucide-react";
 import { SkeletonCard } from "@/components/skeleton";
-import { PageHeader } from "@/components/page-header";
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PageShell } from "@/components/page-shell";
+import { PageHeader } from "@/components/page-header";
 
 interface AgentWorkload {
   id: string;
@@ -50,17 +52,14 @@ export default function WorkloadPage() {
   }, [fetchWorkload]);
 
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader
-        title="ปริมาณงาน"
-        subtitle="ปริมาณงานทีม"
-        actions={
-          <Button variant="outline" onClick={fetchWorkload} disabled={loading}>
-            <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
-            รีเฟรช
-          </Button>
-        }
-      />
+    <PageShell>
+      <PageHeader title="ปริมาณงาน" subtitle="ดูปริมาณงานและความจุของทีม" />
+      <div className="flex items-center justify-end">
+        <Button variant="outline" onClick={fetchWorkload} disabled={loading}>
+          <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
+          รีเฟรช
+        </Button>
+      </div>
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -69,7 +68,7 @@ export default function WorkloadPage() {
           ))}
         </div>
       ) : agents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16">
           <Users className="h-10 w-10 text-muted-foreground/30" />
           <p className="mt-3 text-sm text-muted-foreground">ไม่พบสมาชิกในทีม</p>
         </div>
@@ -93,7 +92,7 @@ export default function WorkloadPage() {
                   </div>
                   {isOverloaded && (
                     <Badge variant="destructive" className="text-xs shrink-0">
-                      <AlertCircle className="mr-1 h-3 w-3" />
+                      <AlertCircle className="mr-1 h-3.5 w-3.5" />
                       เต็ม
                     </Badge>
                   )}
@@ -107,10 +106,10 @@ export default function WorkloadPage() {
                       className={cn(
                         "font-medium",
                         isOverloaded
-                          ? "text-red-600 dark:text-red-400"
+                          ? "text-destructive"
                           : isWarning
-                          ? "text-yellow-600 dark:text-yellow-400"
-                          : "text-green-600 dark:text-green-400"
+                          ? "text-warning"
+                          : "text-success"
                       )}
                     >
                       {agent.totalActive} / {agent.maxConcurrentChats}
@@ -123,8 +122,8 @@ export default function WorkloadPage() {
                         isOverloaded
                           ? "bg-red-500"
                           : isWarning
-                          ? "bg-yellow-500"
-                          : "bg-green-500"
+                          ? "bg-warning"
+                          : "bg-success"
                       )}
                       style={{ width: `${Math.min(agent.capacityPercent, 100)}%` }}
                     />
@@ -134,11 +133,11 @@ export default function WorkloadPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="rounded-md bg-muted/50 p-2">
-                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">{agent.openCount}</p>
+                    <p className="text-lg font-semibold text-success">{agent.openCount}</p>
                     <p className="text-xs text-muted-foreground">เปิด</p>
                   </div>
                   <div className="rounded-md bg-muted/50 p-2">
-                    <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">{agent.pendingCount}</p>
+                    <p className="text-lg font-semibold text-warning">{agent.pendingCount}</p>
                     <p className="text-xs text-muted-foreground">รอ</p>
                   </div>
                   <div className="rounded-md bg-muted/50 p-2">
@@ -157,7 +156,7 @@ export default function WorkloadPage() {
       {/* Team summary */}
       {agents.length > 0 && (
         <div className="mt-6 rounded-xl border bg-card p-6">
-          <h2 className="mb-3 text-lg font-semibold">สรุปทีม</h2>
+          <h2 className="mb-3 heading-section">สรุปทีม</h2>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold">
@@ -181,6 +180,6 @@ export default function WorkloadPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

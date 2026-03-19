@@ -63,7 +63,7 @@ export function SlaTimer({ conversation, variant = "compact" }: SlaTimerProps) {
     if (isBreached) {
       return (
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
+          <div className="flex items-center gap-1.5 text-destructive">
             <AlertTriangle className="h-3.5 w-3.5" />
             <span className="text-xs font-medium">เกินเวลา SLA</span>
           </div>
@@ -79,12 +79,12 @@ export function SlaTimer({ conversation, variant = "compact" }: SlaTimerProps) {
       <div className="flex items-center gap-3">
         <div className={cn(
           "flex items-center gap-1.5",
-          isWarning ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+          isWarning ? "text-warning" : "text-muted-foreground"
         )}>
           <span className="text-xs">รับเรื่องภายใน</span>
           <span className={cn(
             "font-mono text-xs font-semibold tabular-nums",
-            isWarning ? "text-amber-600 dark:text-amber-400" : "text-foreground"
+            isWarning ? "text-warning" : "text-foreground"
           )}>
             {formatCountdown(remaining)}
           </span>
@@ -99,8 +99,8 @@ export function SlaTimer({ conversation, variant = "compact" }: SlaTimerProps) {
 
   if (isBreached) {
     return (
-      <span className="flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400" title="เกินเวลา SLA">
-        <AlertTriangle className="h-3 w-3" />
+      <span className="flex items-center gap-1 text-xs font-medium text-destructive" title="เกินเวลา SLA">
+        <AlertTriangle className="h-3.5 w-3.5" />
         เกิน SLA
       </span>
     );
@@ -110,11 +110,11 @@ export function SlaTimer({ conversation, variant = "compact" }: SlaTimerProps) {
     <span
       className={cn(
         "flex items-center gap-1 text-xs font-medium tabular-nums",
-        isWarning ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+        isWarning ? "text-warning" : "text-muted-foreground"
       )}
       title={`SLA: ${formatDuration(slaMinutes)}`}
     >
-      <Timer className="h-3 w-3" />
+      <Timer className="h-3.5 w-3.5" />
       {formatCountdown(remaining)}
     </span>
   );

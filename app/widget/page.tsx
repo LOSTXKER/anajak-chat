@@ -39,7 +39,6 @@ function ChatWidget() {
 
   useEffect(() => {
     sessionId.current = generateSessionId();
-    // Check if already chatted
     const existingName = localStorage.getItem("anajak_name");
     if (existingName) { setVisitorName(existingName); setNameSet(true); }
     else { setLoading(false); }
@@ -114,42 +113,42 @@ function ChatWidget() {
 
   if (!orgId) {
     return (
-      <div className="h-screen flex items-center justify-center text-sm text-gray-500">
+      <div className="h-screen flex items-center justify-center text-sm text-muted-foreground">
         Invalid widget configuration
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-white font-sans text-sm">
+    <div className="flex flex-col h-screen bg-background font-sans text-sm rounded-xl overflow-hidden shadow-lg">
       {/* Header */}
-      <div className="bg-indigo-600 text-white px-4 py-3 flex items-center gap-3 shrink-0">
-        <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
+      <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3 shrink-0">
+        <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary-foreground/20">
           <MessageCircle className="h-4 w-4" />
         </div>
         <div>
           <p className="font-semibold text-sm">แชทกับเรา</p>
-          <p className="text-xs text-white/80">ทีมงานพร้อมช่วยเหลือ</p>
+          <p className="text-xs text-primary-foreground/80">ทีมงานพร้อมช่วยเหลือ</p>
         </div>
       </div>
 
       {!nameSet ? (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="w-full max-w-xs">
-            <h2 className="text-base font-semibold mb-1">สวัสดีครับ! 👋</h2>
-            <p className="text-xs text-gray-500 mb-4">กรุณาระบุชื่อก่อนเริ่มแชท</p>
+            <h2 className="text-base font-semibold mb-1">สวัสดีครับ!</h2>
+            <p className="text-xs text-muted-foreground mb-4">กรุณาระบุชื่อก่อนเริ่มแชท</p>
             <input
               type="text"
               placeholder="ชื่อของคุณ"
               value={visitorName}
               onChange={(e) => setVisitorName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleStartChat(); }}
-              className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               onClick={handleStartChat}
               disabled={!visitorName.trim()}
-              className="w-full rounded-lg bg-indigo-600 text-white py-2 text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+              className="w-full rounded-lg bg-primary text-primary-foreground py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
             >
               เริ่มแชท
             </button>
@@ -157,14 +156,14 @@ function ChatWidget() {
         </div>
       ) : loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
-              <div className="text-center text-xs text-gray-400 pt-8">
+              <div className="text-center text-xs text-muted-foreground pt-8">
                 <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 ส่งข้อความเพื่อเริ่มการสนทนา
               </div>
@@ -174,14 +173,14 @@ function ChatWidget() {
               return (
                 <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                   {!isMe && (
-                    <div className="h-6 w-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mr-2 shrink-0 mt-1">
+                    <div className="h-6 w-6 flex items-center justify-center rounded-lg text-xs font-bold mr-2 shrink-0 mt-1 bg-muted text-muted-foreground">
                       A
                     </div>
                   )}
-                  <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                  <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
                     isMe
-                      ? "bg-indigo-600 text-white rounded-br-sm"
-                      : "bg-gray-100 text-gray-800 rounded-bl-sm"
+                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      : "bg-muted/50 text-foreground rounded-bl-sm"
                   }`}>
                     {msg.content}
                   </div>
@@ -200,18 +199,17 @@ function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                className="flex-1 resize-none rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 max-h-32"
-                style={{ lineHeight: "1.4" }}
+                className="flex-1 resize-none rounded-lg border px-3 py-2 text-sm leading-[1.4] focus:outline-none focus:ring-2 focus:ring-primary max-h-32"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-50 shrink-0"
+                className="h-9 w-9 rounded-full flex items-center justify-center disabled:opacity-50 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="text-center text-[10px] text-gray-400 mt-1.5">Powered by Anajak Chat</p>
+            <p className="text-center text-xs text-muted-foreground mt-1.5">Powered by Anajak Chat</p>
           </div>
         </>
       )}

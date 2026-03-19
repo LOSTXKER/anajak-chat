@@ -49,7 +49,7 @@ export function ErpConfigForm({
           )}
           Test Connection
         </Button>
-        <Button onClick={onSave} disabled={saving}>
+        <Button onClick={onSave} disabled={saving} className="rounded-lg">
           {saving ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -65,8 +65,8 @@ export function ErpConfigForm({
           className={cn(
             "mb-4 flex items-center gap-2 rounded-xl border p-3 text-sm",
             testResult.success
-              ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
-              : "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
+              ? "border-primary/30 bg-primary/10 text-primary"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
           )}
         >
           {testResult.success ? (
@@ -83,7 +83,7 @@ export function ErpConfigForm({
       {/* Config form */}
       <div className="mb-8 space-y-4 rounded-xl border bg-card p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">การตั้งค่าการเชื่อมต่อ</h2>
+          <h2 className="heading-section">การตั้งค่าการเชื่อมต่อ</h2>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">เปิดใช้งาน</span>
             <Switch
@@ -133,7 +133,7 @@ export function ErpConfigForm({
 
       {/* Webhook URLs */}
       <div className="mb-8 rounded-xl border bg-card p-6">
-        <h2 className="mb-3 text-lg font-semibold">Webhook URLs สำหรับตั้งค่าใน ERP</h2>
+        <h2 className="mb-3 heading-section">Webhook URLs สำหรับตั้งค่าใน ERP</h2>
         <div className="space-y-2">
           {[
             { label: "Order Status", path: "order-status" },
@@ -147,8 +147,8 @@ export function ErpConfigForm({
               </code>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
+                size="icon-sm"
+                className="shrink-0"
                 onClick={() => onCopyWebhookUrl(path)}
               >
                 <Copy className="h-3.5 w-3.5" />

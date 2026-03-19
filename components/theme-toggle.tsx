@@ -9,18 +9,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
-  if (!mounted) return <div className={`h-8 w-8 ${className ?? ""}`} />;
+  if (!mounted)
+    return (
+      <div className={cn("inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground", className)}>
+        <Sun className="h-4 w-4" />
+      </div>
+    );
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-muted ${className ?? ""}`}
+        className={cn(
+          "inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted/80",
+          className
+        )}
       >
         {theme === "dark" ? (
           <Moon className="h-4 w-4" />

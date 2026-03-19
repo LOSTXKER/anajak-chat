@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Thai } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -25,10 +24,8 @@ export default function RootLayout({
     <html lang="th" suppressHydrationWarning>
       <body className={`${ibmPlex.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster position="top-right" richColors />
-          </TooltipProvider>
+          {children}
+          <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
     </html>

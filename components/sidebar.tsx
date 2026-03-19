@@ -15,9 +15,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { NotificationBell } from "@/components/notification-bell";
-import { OrgSwitcher } from "@/components/org-switcher";
 import {
   MessageSquare,
   Users,
@@ -27,7 +24,6 @@ import {
   Settings,
   LogOut,
   Menu,
-  ChevronDown,
   Bot,
   BookOpen,
   MessageCircle,
@@ -51,16 +47,16 @@ interface NavItem {
 }
 
 const MAIN_NAV: NavItem[] = [
-  { href: "/inbox", label: "กล่องข้อความ", icon: MessageSquare },
+  { href: "/inbox", label: "แชท", icon: MessageSquare },
   { href: "/contacts", label: "รายชื่อ", icon: Users },
 ];
 
 const CONTENT_NAV: NavItem[] = [
-  { href: "/auto-reply", label: "ตอบกลับอัตโนมัติ", icon: Bot },
+  { href: "/auto-reply", label: "ตอบกลับ", icon: Bot },
   { href: "/templates", label: "ข้อความด่วน", icon: MessageCircle },
   { href: "/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
   { href: "/ai-bot", label: "AI Bot", icon: Sparkles },
-  { href: "/line-rich-menu", label: "LINE Rich Menu", icon: LayoutGrid },
+  { href: "/line-rich-menu", label: "เมนู", icon: LayoutGrid },
 ];
 
 const TOOLS_NAV: NavItem[] = [
@@ -69,39 +65,34 @@ const TOOLS_NAV: NavItem[] = [
   { href: "/media-library", label: "คลังสื่อ", icon: ImageIcon },
 ];
 
-function NavGroup({ label, items, onClick }: { label: string; items: NavItem[]; onClick?: () => void }) {
+function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
   const pathname = usePathname();
+  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
 
   return (
-    <div className="mb-4">
-      <p className="mb-1 px-3 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
-        {label}
-      </p>
-      <div className="flex flex-col">
-        {items.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClick}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "relative flex items-center gap-3 px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "font-semibold text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r bg-accent" />
-              )}
-              <item.icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </div>
+    <Link
+      href={item.href}
+      onClick={onClick}
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        "group relative flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium transition-all duration-150",
+        isActive
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+      )}
+    >
+      <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary")} />
+      <span className="text-center leading-tight line-clamp-1">{item.label}</span>
+    </Link>
+  );
+}
+
+function NavGroup({ items, onClick }: { items: NavItem[]; onClick?: () => void }) {
+  return (
+    <div className="flex flex-col gap-0.5">
+      {items.map((item) => (
+        <NavLink key={item.href} item={item} onClick={onClick} />
+      ))}
     </div>
   );
 }
@@ -122,22 +113,17 @@ function UserMenu({ user }: { user: UserInfo }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted">
-        <Avatar className="h-7 w-7">
-          <AvatarFallback className="bg-zinc-100 text-zinc-600 text-xs font-medium dark:bg-card dark:text-muted-foreground">
+      <DropdownMenuTrigger className="flex items-center justify-center rounded-lg p-1 transition-colors hover:bg-muted/80">
+        <Avatar className="h-8 w-8 rounded-lg ring-2 ring-border/50">
+          <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-xs font-bold">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 text-left min-w-0">
-          <p className="truncate text-sm font-medium leading-none">{user.name}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{user.roleName}</p>
-        </div>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <div className="px-2 py-1.5 text-sm">
-          <p className="font-medium">{user.name}</p>
-          <p className="text-muted-foreground">{user.email}</p>
+      <DropdownMenuContent align="center" side="right" sideOffset={8} className="w-56">
+        <div className="px-2 py-2 text-sm">
+          <p className="font-semibold">{user.name}</p>
+          <p className="text-xs text-muted-foreground">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => (window.location.href = "/settings/general")}>
@@ -145,7 +131,7 @@ function UserMenu({ user }: { user: UserInfo }) {
           ตั้งค่า
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+        <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut className="mr-2 h-4 w-4" />
           ออกจากระบบ
         </DropdownMenuItem>
@@ -154,50 +140,50 @@ function UserMenu({ user }: { user: UserInfo }) {
   );
 }
 
-function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () => void }) {
+function SidebarContent({ user, onNavClick }: {
+  user: UserInfo;
+  onNavClick?: () => void;
+}) {
   const pathname = usePathname();
   const isSettingsActive = pathname.startsWith("/settings");
 
   return (
-    <div className="flex h-full flex-col border-r bg-background">
-      <div className="flex h-12 items-center px-3 shrink-0">
-        <OrgSwitcher currentOrgId={user.orgId} currentOrgName={user.orgName} />
+    <div className="flex h-full flex-col bg-sidebar border-r border-sidebar-border">
+      {/* Logo */}
+      <div className="flex h-14 items-center justify-center shrink-0 border-b border-sidebar-border">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-sm shadow-primary/25">
+          <MessageSquare className="h-4 w-4 text-primary-foreground" />
+        </div>
       </div>
 
-      <ScrollArea className="flex-1 py-2">
-        <NavGroup label="หลัก" items={MAIN_NAV} onClick={onNavClick} />
-        <NavGroup label="เนื้อหาและบอท" items={CONTENT_NAV} onClick={onNavClick} />
-        <NavGroup label="เครื่องมือ" items={TOOLS_NAV} onClick={onNavClick} />
+      {/* Navigation */}
+      <ScrollArea className="flex-1 px-2 py-2">
+        <NavGroup items={MAIN_NAV} onClick={onNavClick} />
+        <div className="mx-auto my-2 h-px w-8 bg-border/60" />
+        <NavGroup items={CONTENT_NAV} onClick={onNavClick} />
+        <div className="mx-auto my-2 h-px w-8 bg-border/60" />
+        <NavGroup items={TOOLS_NAV} onClick={onNavClick} />
+        <div className="mx-auto my-2 h-px w-8 bg-border/60" />
 
-        <div className="mb-4">
-          <p className="mb-1 px-3 text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
-            จัดการ
-          </p>
-          <Link
-            href="/settings/general"
-            onClick={onNavClick}
-            aria-current={isSettingsActive ? "page" : undefined}
-            className={cn(
-              "relative flex items-center gap-3 px-3 py-2 text-sm transition-colors",
-              isSettingsActive
-                ? "font-semibold text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {isSettingsActive && (
-              <span className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r bg-accent" />
-            )}
-            <Settings className="h-4 w-4 shrink-0" />
-            ตั้งค่า
-          </Link>
-        </div>
+        {/* Settings */}
+        <Link
+          href="/settings/general"
+          onClick={onNavClick}
+          aria-current={isSettingsActive ? "page" : undefined}
+          className={cn(
+            "flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium transition-all duration-150",
+            isSettingsActive
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+          )}
+        >
+          <Settings className={cn("h-5 w-5 shrink-0", isSettingsActive && "text-primary")} />
+          <span className="text-center leading-tight">ตั้งค่า</span>
+        </Link>
       </ScrollArea>
 
-      <div className="shrink-0 border-t px-3 py-2 space-y-1">
-        <div className="flex items-center gap-1 px-1">
-          <NotificationBell userId={user.userId} />
-          <ThemeToggle />
-        </div>
+      {/* User */}
+      <div className="shrink-0 border-t border-sidebar-border py-2 flex justify-center">
         <UserMenu user={user} />
       </div>
     </div>
@@ -206,7 +192,7 @@ function SidebarContent({ user, onNavClick }: { user: UserInfo; onNavClick?: () 
 
 export function DesktopSidebar({ user }: { user: UserInfo }) {
   return (
-    <aside className="hidden w-56 shrink-0 lg:block">
+    <aside className="hidden shrink-0 lg:block w-[76px]">
       <SidebarContent user={user} />
     </aside>
   );
@@ -219,7 +205,7 @@ export function MobileSidebar({ user }: { user: UserInfo }) {
         <Menu className="h-5 w-5" />
         <span className="sr-only">เมนู</span>
       </SheetTrigger>
-      <SheetContent side="left" className="w-56 p-0">
+      <SheetContent side="left" className="w-[76px] p-0">
         <SidebarContent user={user} />
       </SheetContent>
     </Sheet>

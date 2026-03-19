@@ -97,35 +97,24 @@ export default function BusinessHoursPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-2xl">
+    <div className="h-full overflow-y-auto p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            เวลาทำการ
-          </h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="heading-page">เวลาทำการ</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             ตั้งเวลาทำการและข้อความตอบกลับอัตโนมัตินอกเวลา
           </p>
         </div>
         <div className="flex items-center gap-3">
           {isOpen !== null && (
             <span
-              className={`text-sm font-medium ${isOpen ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+              className={`text-sm font-medium ${isOpen ? "text-primary" : "text-destructive"}`}
             >
               {isOpen ? "● กำลังเปิดทำการ" : "○ ปิดทำการ"}
             </span>
           )}
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || loading}>
             {saving ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -136,11 +125,17 @@ export default function BusinessHoursPage() {
         </div>
       </div>
 
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+      <>
+
       {/* Timezone */}
       <div className="mb-6 rounded-xl border bg-card p-6 space-y-1.5">
         <Label>Timezone</Label>
         <Input
-          className="rounded-lg"
           value={config.timezone}
           onChange={(e) => setConfig((prev) => ({ ...prev, timezone: e.target.value }))}
           placeholder="Asia/Bangkok"
@@ -149,14 +144,14 @@ export default function BusinessHoursPage() {
 
       {/* Weekly schedule */}
       <div className="mb-6 rounded-xl border bg-card p-6">
-        <h2 className="mb-3 text-lg font-semibold">ตารางรายสัปดาห์</h2>
+        <h2 className="mb-3 heading-section">ตารางรายสัปดาห์</h2>
         <div className="space-y-2">
           {DAY_ORDER.map((day) => {
             const schedule = config.schedule[day as keyof typeof config.schedule];
             return (
               <div
                 key={day}
-                className="flex items-center gap-4 rounded-lg border bg-card px-4 py-3"
+                className="flex items-center gap-4 rounded-xl border bg-card px-4 py-3"
               >
                 <Switch
                   checked={schedule.enabled}
@@ -190,19 +185,19 @@ export default function BusinessHoursPage() {
 
       {/* Holidays */}
       <div className="mb-6 rounded-xl border bg-card p-6">
-        <h2 className="mb-3 text-lg font-semibold">วันหยุดพิเศษ</h2>
+        <h2 className="mb-3 heading-section">วันหยุดพิเศษ</h2>
         <div className="space-y-2 mb-3">
           {config.holidays.length === 0 ? (
             <p className="text-sm text-muted-foreground">ยังไม่มีวันหยุดพิเศษ</p>
           ) : (
             config.holidays.map((h) => (
-              <div key={h.date} className="flex items-center gap-3 rounded-lg border px-4 py-2">
+              <div key={h.date} className="flex items-center gap-3 rounded-xl border px-4 py-2">
                 <span className="text-sm font-mono">{h.date}</span>
                 <span className="flex-1 text-sm">{h.name}</span>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  size="icon-sm"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   onClick={() => removeHoliday(h.date)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -214,7 +209,7 @@ export default function BusinessHoursPage() {
         <div className="flex gap-2">
           <Input
             type="date"
-            className="w-40"
+            className="w-40 rounded-lg"
             value={newHolidayDate}
             onChange={(e) => setNewHolidayDate(e.target.value)}
           />
@@ -222,7 +217,7 @@ export default function BusinessHoursPage() {
             placeholder="ชื่อวันหยุด เช่น วันสงกรานต์"
             value={newHolidayName}
             onChange={(e) => setNewHolidayName(e.target.value)}
-            className="flex-1"
+            className="flex-1 rounded-lg"
           />
           <Button
             variant="outline"
@@ -253,9 +248,9 @@ export default function BusinessHoursPage() {
             onClick={() =>
               setConfig((prev) => ({ ...prev, afterHoursBehavior: "auto_reply_only" }))
             }
-            className={`rounded-lg border p-3 text-left text-sm transition-colors ${
+            className={`rounded-xl border p-3 text-left text-sm transition-colors ${
               config.afterHoursBehavior === "auto_reply_only"
-                ? "border-foreground bg-muted/30"
+                ? "border-primary bg-primary/5"
                 : "hover:bg-muted"
             }`}
           >
@@ -266,7 +261,7 @@ export default function BusinessHoursPage() {
           </button>
           <button
             onClick={() => setConfig((prev) => ({ ...prev, afterHoursBehavior: "ai_bot" }))}
-            className={`rounded-lg border p-3 text-left text-sm transition-colors opacity-50 cursor-not-allowed`}
+            className={`rounded-xl border p-3 text-left text-sm transition-colors opacity-50 cursor-not-allowed`}
             disabled
             title="ต้องเปิดใช้งาน AI Bot ก่อน (Phase 5)"
           >
@@ -277,6 +272,8 @@ export default function BusinessHoursPage() {
           </button>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

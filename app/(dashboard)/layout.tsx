@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { DesktopSidebar, MobileSidebar } from "@/components/sidebar";
-import { NotificationBell } from "@/components/notification-bell";
+import { DesktopSidebar } from "@/components/sidebar";
+import { Navbar } from "@/components/navbar";
 import { NewMessageNotifier } from "@/components/new-message-notifier";
 
 export default async function DashboardLayout({
@@ -30,15 +30,8 @@ export default async function DashboardLayout({
       <DesktopSidebar user={userInfo} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-12 items-center gap-3 border-b px-4 lg:hidden">
-          <MobileSidebar user={userInfo} />
-          <span className="text-sm font-medium">{user.organization.name}</span>
-          <div className="ml-auto">
-            <NotificationBell userId={user.id} />
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-hidden">
+        <Navbar user={userInfo} />
+        <main className="flex-1 overflow-hidden bg-muted/20 dark:bg-background">
           {children}
         </main>
       </div>

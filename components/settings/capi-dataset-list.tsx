@@ -25,8 +25,8 @@ export interface CapiDataset {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  sent: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
-  failed: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+  sent: "bg-primary/10 text-primary",
+  failed: "bg-destructive/10 text-destructive",
 };
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -53,7 +53,7 @@ export function CapiDatasetList({
 }: CapiDatasetListProps) {
   return (
     <section className="mb-8">
-      <h2 className="mb-3 text-lg font-semibold">CAPI Datasets</h2>
+      <h2 className="mb-3 heading-section">CAPI Datasets</h2>
 
       {loading ? (
         <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
@@ -61,19 +61,19 @@ export function CapiDatasetList({
           กำลังโหลด...
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {datasets.map((dataset) => (
             <div
               key={dataset.id}
               className={cn(
-                "rounded-xl border bg-card p-4 flex items-center gap-4 transition-all",
+                "rounded-xl border bg-card p-6 flex items-center gap-4 transition-colors",
                 !dataset.isActive && "opacity-50"
               )}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="font-medium text-sm">{dataset.channel.name}</p>
-                  <Badge className={cn("text-[10px] py-0", STATUS_STYLES[dataset.isActive ? "sent" : "failed"])}>
+                  <Badge className={cn("rounded-xl text-xs py-0", STATUS_STYLES[dataset.isActive ? "sent" : "failed"])}>
                     {dataset.isActive ? "Active" : "Inactive"}
                   </Badge>
                   <span className="text-xs text-muted-foreground capitalize">
@@ -105,7 +105,7 @@ export function CapiDatasetList({
           {channelsWithoutDataset.map((channel) => (
             <div
               key={channel.id}
-              className="rounded-xl border border-dashed p-4 flex items-center gap-4"
+              className="rounded-xl border border-dashed p-6 flex items-center gap-4"
             >
               <div className="flex-1">
                 <p className="font-medium text-sm">{channel.name}</p>
@@ -129,7 +129,7 @@ export function CapiDatasetList({
           ))}
 
           {datasets.length === 0 && channelsWithoutDataset.length === 0 && (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8">
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-8">
               <BarChart3 className="h-8 w-8 text-muted-foreground/30" />
               <p className="mt-2 text-sm text-muted-foreground">
                 ยังไม่มี Facebook / Instagram channel ที่เชื่อมต่อ

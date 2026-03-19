@@ -17,11 +17,11 @@ export default function DashboardError({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="rounded-full bg-red-50 p-4 dark:bg-red-950">
-        <AlertTriangle className="h-8 w-8 text-red-500 dark:text-red-400" />
+      <div className="rounded-full bg-destructive/10 p-4">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
       </div>
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold">เกิดข้อผิดพลาด</h2>
+        <h2 className="heading-section">เกิดข้อผิดพลาด</h2>
         <p className="text-sm text-muted-foreground max-w-sm">
           เกิดข้อผิดพลาดขณะโหลดหน้านี้ กรุณาลองใหม่อีกครั้ง
         </p>

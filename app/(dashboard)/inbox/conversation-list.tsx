@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FilterDropdown } from "@/components/ui/filter-dropdown";
+import { TabBar } from "@/components/ui/tab-bar";
 import { STATUS_BADGE, LABEL_BADGE } from "@/lib/constants";
 import { SlaTimer } from "./sla-timer";
 import type { Conversation } from "./types";
@@ -110,60 +111,38 @@ export function ConversationList({
 
   const hasActiveFilter = labelFilter !== "" || channelFilter !== "";
 
+  const STATUS_TABS = [
+    { value: "all" as const, label: "ทั้งหมด" },
+    { value: "pending" as const, label: "รอรับ", count: statusCounts.pending, alert: newPendingAlert },
+    { value: "open" as const, label: "กำลังดูแล", count: statusCounts.open },
+    { value: "resolved" as const, label: "เสร็จสิ้น", count: statusCounts.resolved },
+  ];
+
   return (
-    <div className="flex h-full w-full lg:w-80 shrink-0 flex-col border-r">
-      {/* Status tabs */}
-      <div className="flex border-b" role="tablist">
-        {([
-          { value: "all" as const, label: "ทั้งหมด" },
-          { value: "pending" as const, label: "รอรับ", count: statusCounts.pending, alert: newPendingAlert },
-          { value: "open" as const, label: "กำลังดูแล", count: statusCounts.open },
-          { value: "resolved" as const, label: "เสร็จสิ้น", count: statusCounts.resolved },
-        ]).map((tab) => (
-          <button
-            key={tab.value}
-            role="tab"
-            aria-selected={mainTab === tab.value}
-            onClick={() => onMainTabChange(tab.value)}
-            className={cn(
-              "relative flex flex-1 items-center justify-center gap-1 py-2.5 text-xs font-medium transition-colors",
-              mainTab === tab.value
-                ? "border-b-2 border-accent text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {tab.label}
-            {"count" in tab && tab.count !== undefined && tab.count > 0 && (
-              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
-                {tab.count}
-              </span>
-            )}
-            {"alert" in tab && tab.alert && (
-              <span className="absolute right-1 top-1.5 h-2 w-2 rounded-full bg-red-500" />
-            )}
-          </button>
-        ))}
+    <div className="flex h-full w-full lg:w-[340px] shrink-0 flex-col border-r bg-background">
+      <div className="px-3 pt-2">
+        <TabBar tabs={STATUS_TABS} value={mainTab} onChange={(v) => onMainTabChange(v)} />
       </div>
 
       {/* Search + Filters */}
       <div className="border-b p-3 space-y-2">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-8 pl-8 text-sm"
-              placeholder="ค้นหา..."
+              className="pl-9 text-sm"
+              placeholder="ค้นหาชื่อ, ข้อความ..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onRefresh} aria-label="รีเฟรช">
-            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+          <Button variant="ghost" size="icon-sm" className="shrink-0" onClick={onRefresh} aria-label="รีเฟรช">
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
         </div>
 
         <div className="flex items-center gap-1 flex-wrap">
-          <SlidersHorizontal className="h-3 w-3 text-muted-foreground shrink-0" />
+          <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
           <FilterDropdown
             value={channelFilter}
             options={CHANNEL_OPTIONS}
@@ -189,9 +168,9 @@ export function ConversationList({
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-1.5">
+      <div className="flex-1 overflow-y-auto p-2">
         {loading ? (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {Array.from({ length: 5 }).map((_, i) => (
               <SkeletonConversation key={i} />
             ))}
@@ -203,7 +182,7 @@ export function ConversationList({
             className="border-0 py-12"
           />
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             {conversations.map((conv) => {
               const PlatformIcon =
                 PLATFORM_ICONS[conv.channel.platform as keyof typeof PLATFORM_ICONS] ??
@@ -222,17 +201,17 @@ export function ConversationList({
                   key={conv.id}
                   onClick={() => onSelectConversation(conv.id)}
                   className={cn(
-                    "w-full rounded-lg p-2.5 text-left transition-colors border-l-2",
+                    "w-full rounded-lg p-3.5 text-left transition-colors border-l-[3px]",
                     isSelected
-                      ? "bg-accent/10 border-l-accent"
-                      : "border-l-transparent hover:bg-muted/30"
+                      ? "bg-primary/10 border-l-primary shadow-sm"
+                      : "border-l-transparent hover:bg-muted/30 hover:shadow-sm"
                   )}
                 >
-                  <div className="flex gap-2.5">
+                  <div className="flex gap-3">
                     <div className="relative shrink-0">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={conv.contact.avatarUrl ?? undefined} />
-                        <AvatarFallback className="text-sm">{initial}</AvatarFallback>
+                      <Avatar className="rounded-lg h-12 w-12">
+                        <AvatarImage src={conv.contact.avatarUrl ?? undefined} className="rounded-lg" />
+                        <AvatarFallback className="rounded-lg text-sm font-semibold bg-primary/10 text-primary">{initial}</AvatarFallback>
                       </Avatar>
                       <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-background p-0.5">
                         <PlatformIcon className={cn("h-3 w-3", platformColor)} />
@@ -241,7 +220,7 @@ export function ConversationList({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className={cn("truncate text-sm", unread > 0 ? "font-semibold text-foreground" : "font-medium")}>{displayName}</span>
+                        <span className={cn("truncate text-sm", unread > 0 ? "font-bold text-foreground" : "font-semibold")}>{displayName}</span>
                         <span className="ml-auto shrink-0">
                           {conv.status === "pending" ? (
                             <SlaTimer conversation={conv} variant="compact" />
@@ -256,28 +235,28 @@ export function ConversationList({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <p className={cn("truncate text-xs flex-1", unread > 0 ? "text-foreground" : "text-muted-foreground")}>{preview}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <p className={cn("truncate text-xs flex-1 line-clamp-2", unread > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>{preview}</p>
                         {unread > 0 && (
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-destructive shadow-sm" />
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 mt-1 flex-wrap">
-                        <span className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", STATUS_BADGE[conv.status]?.className ?? "bg-muted text-muted-foreground")}>
+                      <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                        <span className={cn("rounded-xl px-2 py-0.5 text-xs font-medium", STATUS_BADGE[conv.status]?.className ?? "bg-muted text-muted-foreground")}>
                           {STATUS_BADGE[conv.status]?.label ?? conv.status}
                         </span>
                         {conv.labels?.map((label) => {
                           const badge = LABEL_BADGE[label];
                           if (!badge) return null;
                           return (
-                            <span key={label} className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", badge.className)}>
+                            <span key={label} className={cn("rounded-xl px-2 py-0.5 text-xs font-medium", badge.className)}>
                               {badge.label}
                             </span>
                           );
                         })}
                         {conv.contact.tags?.slice(0, 2).map((tag) => (
-                          <span key={tag} className="rounded-full px-1.5 py-px text-[10px] font-medium bg-muted text-foreground">
+                          <span key={tag} className="rounded-xl px-2 py-0.5 text-xs font-medium bg-muted text-foreground">
                             {tag}
                           </span>
                         ))}

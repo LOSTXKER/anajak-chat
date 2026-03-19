@@ -5,6 +5,7 @@ import {
   RotateCcw, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
@@ -23,10 +24,10 @@ export interface CapiEvent {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  sent: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
-  pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400",
-  failed: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
-  retrying: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
+  sent: "bg-primary/10 text-primary",
+  pending: "bg-warning/10 text-warning",
+  failed: "bg-destructive/10 text-destructive",
+  retrying: "bg-muted text-muted-foreground",
 };
 
 const PAGE_SIZE = 15;
@@ -63,28 +64,30 @@ export function CapiEventLog({
   return (
     <section>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Event Log</h2>
+        <h2 className="heading-section">Event Log</h2>
         <div className="flex items-center gap-2">
-          <select
-            className="h-8 rounded-lg border bg-background px-2 text-xs"
-            value={eventFilter}
-            onChange={(e) => onEventFilterChange(e.target.value)}
-          >
-            <option value="">ทุก Event</option>
-            {["Purchase", "LeadSubmitted", "OrderCreated", "OrderShipped", "OrderDelivered", "OrderCanceled"].map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-          <select
-            className="h-8 rounded-lg border bg-background px-2 text-xs"
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
-          >
-            <option value="">ทุก Status</option>
-            {["sent", "pending", "failed", "retrying"].map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+          <Select value={eventFilter || "__all__"} onValueChange={(v) => onEventFilterChange(v === "__all__" ? "" : (v ?? ""))}>
+            <SelectTrigger size="sm" className="w-auto">
+              <SelectValue placeholder="ทุก Event" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">ทุก Event</SelectItem>
+              {["Purchase", "LeadSubmitted", "OrderCreated", "OrderShipped", "OrderDelivered", "OrderCanceled"].map((n) => (
+                <SelectItem key={n} value={n}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter || "__all__"} onValueChange={(v) => onStatusFilterChange(v === "__all__" ? "" : (v ?? ""))}>
+            <SelectTrigger size="sm" className="w-auto">
+              <SelectValue placeholder="ทุก Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">ทุก Status</SelectItem>
+              {["sent", "pending", "failed", "retrying"].map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
@@ -97,7 +100,7 @@ export function CapiEventLog({
           กำลังโหลด...
         </div>
       ) : events.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-10">
           <BarChart3 className="h-8 w-8 text-muted-foreground/30" />
           <p className="mt-2 text-sm text-muted-foreground">ยังไม่มี events</p>
         </div>
@@ -128,12 +131,12 @@ export function CapiEventLog({
                       {event.messagingChannel}
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-medium", STATUS_STYLES[event.status])}>
+                      <span className={cn("rounded-xl px-2 py-0.5 text-xs font-medium", STATUS_STYLES[event.status])}>
                         <span className="flex items-center gap-1">
-                          {event.status === "sent" && <CheckCircle className="h-3 w-3" />}
-                          {event.status === "failed" && <XCircle className="h-3 w-3" />}
-                          {event.status === "pending" && <AlertCircle className="h-3 w-3" />}
-                          {event.status === "retrying" && <RotateCcw className="h-3 w-3" />}
+                          {event.status === "sent" && <CheckCircle className="h-3.5 w-3.5" />}
+                          {event.status === "failed" && <XCircle className="h-3.5 w-3.5" />}
+                          {event.status === "pending" && <AlertCircle className="h-3.5 w-3.5" />}
+                          {event.status === "retrying" && <RotateCcw className="h-3.5 w-3.5" />}
                           {event.status}
                         </span>
                       </span>
@@ -141,15 +144,14 @@ export function CapiEventLog({
                     <td className="px-4 py-2.5 text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(event.createdAt), { addSuffix: true, locale: th })}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-red-600 max-w-[160px] truncate" title={event.errorMessage ?? undefined}>
+                    <td className="px-4 py-2.5 text-xs text-destructive max-w-[160px] truncate" title={event.errorMessage ?? undefined}>
                       {event.errorMessage ?? "—"}
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       {event.status === "failed" && (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
+                          size="icon-sm"
                           onClick={() => onRetry(event.id)}
                           title="Retry"
                         >
@@ -171,8 +173,7 @@ export function CapiEventLog({
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-7 w-7"
+                  size="icon-sm"
                   onClick={() => onPageChange(Math.max(page - 1, 1))}
                   disabled={page === 1}
                 >
@@ -183,8 +184,7 @@ export function CapiEventLog({
                 </span>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-7 w-7"
+                  size="icon-sm"
                   onClick={() => onPageChange(Math.min(page + 1, totalPages))}
                   disabled={page === totalPages}
                 >

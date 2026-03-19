@@ -104,13 +104,10 @@ export default function CAPIPage() {
   const channelsWithoutDataset = channels.filter((c) => !datasetChannelIds.has(c.id));
 
   return (
-    <div className="max-w-4xl overflow-auto h-full">
+    <div className="h-full overflow-y-auto p-6">
       <div className="mb-6">
-        <h1 className="text-lg font-semibold flex items-center gap-2">
-          <BarChart3 className="h-5 w-5" />
-          Conversions API (CAPI)
-        </h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="heading-page">Conversions API (CAPI)</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           จัดการ CAPI datasets และดู event log ที่ส่งไป Meta
         </p>
       </div>

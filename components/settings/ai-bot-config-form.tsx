@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 export interface BotConfig {
@@ -39,11 +40,12 @@ export function AIBotConfigForm({ config, onChange, onSave, saving }: AIBotConfi
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">เปิดใช้งาน</span>
+        <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-4 py-2">
+          <span className="text-sm font-medium text-muted-foreground">เปิดใช้งาน</span>
           <Switch checked={config.isActive} onCheckedChange={(v) => onChange((p) => ({ ...p, isActive: v }))} />
+          <span className={cn("text-xs font-semibold", config.isActive ? "text-primary" : "text-muted-foreground")}>{config.isActive ? "ON" : "OFF"}</span>
         </div>
-        <Button onClick={onSave} disabled={saving}>
+        <Button onClick={onSave} disabled={saving} className="rounded-lg">
           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           บันทึก
         </Button>
@@ -52,18 +54,18 @@ export function AIBotConfigForm({ config, onChange, onSave, saving }: AIBotConfi
       <div className="mb-8 space-y-5 rounded-xl border bg-card p-6">
         <div className="space-y-1.5">
           <Label>โหมดการทำงาน</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             {(["off", "confirm", "full_auto"] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => onChange((p) => ({ ...p, mode: m }))}
                 className={cn(
-                  "rounded-lg border p-3 text-left text-xs transition-colors",
-                  config.mode === m ? "border-foreground bg-muted/30" : "hover:bg-muted/50"
+                  "rounded-xl border p-4 text-left text-xs transition-colors",
+                  config.mode === m ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20" : "hover:bg-muted/50 hover:border-muted-foreground/20"
                 )}
               >
-                <div className={cn("mb-1 h-2 w-2 rounded-full", m === "off" ? "bg-gray-400" : m === "confirm" ? "bg-yellow-500" : "bg-green-500")} />
-                {MODE_LABELS[m]}
+                <div className={cn("mb-2 h-2.5 w-2.5 rounded-full ring-2", m === "off" ? "bg-muted-foreground ring-muted" : m === "confirm" ? "bg-warning ring-warning/30" : "bg-primary ring-primary/30")} />
+                <span className="font-medium">{MODE_LABELS[m]}</span>
               </button>
             ))}
           </div>
@@ -84,23 +86,21 @@ export function AIBotConfigForm({ config, onChange, onSave, saving }: AIBotConfi
           <div className="grid grid-cols-2 gap-3 pl-8">
             <div className="space-y-1">
               <Label className="text-xs">โหมดในเวลาทำการ</Label>
-              <select
-                className="w-full h-8 rounded-lg border bg-background px-2 text-xs"
-                value={config.manualMode}
-                onChange={(e) => onChange((p) => ({ ...p, manualMode: e.target.value as "off" | "confirm" | "full_auto" }))}
-              >
-                {["off", "confirm", "full_auto"].map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
-              </select>
+              <Select value={config.manualMode} onValueChange={(v) => onChange((p) => ({ ...p, manualMode: v as "off" | "confirm" | "full_auto" }))}>
+                <SelectTrigger size="sm" className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["off", "confirm", "full_auto"].map((m) => <SelectItem key={m} value={m}>{MODE_LABELS[m]}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">โหมดนอกเวลาทำการ</Label>
-              <select
-                className="w-full h-8 rounded-lg border bg-background px-2 text-xs"
-                value={config.autoMode}
-                onChange={(e) => onChange((p) => ({ ...p, autoMode: e.target.value as "off" | "confirm" | "full_auto" }))}
-              >
-                {["off", "confirm", "full_auto"].map((m) => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
-              </select>
+              <Select value={config.autoMode} onValueChange={(v) => onChange((p) => ({ ...p, autoMode: v as "off" | "confirm" | "full_auto" }))}>
+                <SelectTrigger size="sm" className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["off", "confirm", "full_auto"].map((m) => <SelectItem key={m} value={m}>{MODE_LABELS[m]}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         )}
@@ -118,14 +118,18 @@ export function AIBotConfigForm({ config, onChange, onSave, saving }: AIBotConfi
         <div className="space-y-1.5">
           <Label>ข้อความทักทาย (ทักลูกค้าครั้งแรก)</Label>
           <Input
+            className="rounded-lg"
             placeholder="สวัสดีค่ะ มีอะไรให้ช่วยมั้ยคะ?"
             value={config.greetingMessage ?? ""}
             onChange={(e) => onChange((p) => ({ ...p, greetingMessage: e.target.value || null }))}
           />
         </div>
 
-        <div className="rounded-xl bg-muted/30 p-4 space-y-3">
-          <p className="text-xs font-medium">Escalation Rules (ส่งต่อแอดมิน)</p>
+        <div className="rounded-lg bg-muted border border-border p-5 space-y-3">
+          <p className="text-sm font-bold flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+            Escalation Rules (ส่งต่อแอดมิน)
+          </p>
           <div className="flex items-center gap-2">
             <Switch
               checked={config.escalationOnNegativeSentiment}

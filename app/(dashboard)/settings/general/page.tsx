@@ -44,13 +44,13 @@ export default function GeneralSettingsPage() {
   }
 
   return (
-    <div>
+    <div className="h-full overflow-y-auto p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">ทั่วไป</h1>
-        <p className="text-sm text-muted-foreground">ตั้งค่าองค์กร</p>
+        <h1 className="heading-page">ทั่วไป</h1>
+        <p className="text-sm text-muted-foreground mt-1">ตั้งค่าองค์กร</p>
       </div>
 
-      <Card className="max-w-lg rounded-xl border">
+      <Card className="rounded-xl border p-6 [&>[data-slot=card-header]]:px-0 [&>[data-slot=card-header]]:pt-0 [&>[data-slot=card-content]]:px-0 [&>[data-slot=card-footer]]:px-0 [&>[data-slot=card-footer]]:pb-0">
         <CardHeader>
           <CardTitle>ข้อมูลองค์กร</CardTitle>
           <CardDescription>ชื่อและข้อมูลพื้นฐานขององค์กร</CardDescription>
@@ -67,13 +67,14 @@ export default function GeneralSettingsPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button
+              className="rounded-lg"
               onClick={handleSave}
               disabled={loading}
             >
               {loading ? "กำลังบันทึก..." : "บันทึก"}
             </Button>
             {saved && (
-              <span className="text-sm text-green-600 dark:text-green-400">บันทึกแล้ว</span>
+              <span className="text-sm text-primary">บันทึกแล้ว</span>
             )}
           </div>
         </CardContent>

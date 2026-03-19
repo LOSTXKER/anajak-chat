@@ -43,10 +43,10 @@ export default function SettingsLayout({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap",
+                    "flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-medium transition-colors whitespace-nowrap",
                   isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    ? "bg-primary/8 font-semibold text-primary shadow-sm shadow-primary/5"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
                 <item.icon className="h-3.5 w-3.5" />
@@ -59,11 +59,11 @@ export default function SettingsLayout({
 
       {/* Desktop sidebar */}
       <aside className="hidden w-56 shrink-0 border-r md:block">
-        <div className="flex h-14 items-center border-b px-4">
-          <h2 className="text-lg font-semibold">ตั้งค่า</h2>
+        <div className="flex h-14 items-center border-b px-5">
+          <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/50">ตั้งค่า</h2>
         </div>
         <ScrollArea className="h-[calc(100%-3.5rem)]">
-          <nav className="flex flex-col gap-1 p-3">
+          <nav className="flex flex-col gap-0.5 p-3">
             {SETTINGS_NAV.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -71,13 +71,16 @@ export default function SettingsLayout({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                    "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                     isActive
-                      ? "bg-primary/10 text-primary font-medium border-l-2 border-primary"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+                      ? "bg-primary/8 font-semibold text-primary shadow-sm shadow-primary/5"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-full bg-primary" />
+                  )}
+                  <item.icon className="h-4.5 w-4.5" />
                   {item.label}
                 </Link>
               );
@@ -85,7 +88,9 @@ export default function SettingsLayout({
           </nav>
         </ScrollArea>
       </aside>
-      <div className="flex-1 overflow-y-auto h-full p-4 md:p-6 animate-in fade-in duration-300">{children}</div>
+      <div className="flex-1 overflow-hidden h-full">
+        {children}
+      </div>
     </div>
   );
 }

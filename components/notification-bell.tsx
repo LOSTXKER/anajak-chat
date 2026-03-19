@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Check, CheckCheck, AlertTriangle, UserPlus, ArrowRightLeft, Info } from "lucide-react";
+import { Bell, Check, CheckCheck, AlertTriangle, UserPlus, ArrowRightLeft, Info, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,12 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  assignment: "text-blue-600",
-  transfer: "text-purple-600",
-  sla_warning: "text-yellow-600",
-  sla_breach: "text-red-600",
-  mention: "text-green-600",
-  system: "text-gray-600",
+  assignment: "text-foreground",
+  transfer: "text-foreground",
+  sla_warning: "text-warning",
+  sla_breach: "text-destructive",
+  mention: "text-foreground",
+  system: "text-muted-foreground",
 };
 
 interface NotificationBellProps {
@@ -111,7 +111,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="relative h-9 w-9"
+        className="relative h-8 w-8"
         aria-label="การแจ้งเตือน"
         onClick={() => {
           setOpen(!open);
@@ -120,7 +120,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -135,14 +135,14 @@ export function NotificationBell({ userId }: NotificationBellProps) {
           />
 
           {/* Dropdown */}
-          <div className="absolute right-0 top-10 z-50 w-80 rounded-lg border bg-background shadow-xl">
+          <div className="absolute right-0 top-10 z-50 w-80 rounded-2xl border bg-background/95 backdrop-blur-sm shadow-xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-4 py-3">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
                 <span className="font-semibold text-sm">Notifications</span>
                 {unreadCount > 0 && (
-                  <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                  <Badge variant="destructive" className="h-5 px-1.5 text-xs rounded-lg">
                     {unreadCount}
                   </Badge>
                 )}
@@ -162,7 +162,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
             <div className="max-h-80 overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
@@ -172,14 +172,14 @@ export function NotificationBell({ userId }: NotificationBellProps) {
               ) : (
                 notifications.map((notif) => {
                   const Icon = TYPE_ICONS[notif.type] ?? Info;
-                  const iconColor = TYPE_COLORS[notif.type] ?? "text-gray-600";
+                  const iconColor = TYPE_COLORS[notif.type] ?? "text-muted-foreground";
 
                   const content = (
                     <div
                       onClick={() => !notif.isRead && markRead(notif.id)}
                       className={cn(
-                        "flex gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50",
-                        !notif.isRead && "bg-blue-50/50 hover:bg-blue-50 dark:bg-blue-950/30 dark:hover:bg-blue-950/50"
+                        "flex gap-3 px-4 py-3 cursor-pointer transition-colors rounded-lg mx-2 my-1 hover:bg-muted/50",
+                        !notif.isRead && "bg-muted/30 hover:bg-muted/50"
                       )}
                     >
                       <div className={cn("mt-0.5 shrink-0", iconColor)}>
@@ -191,7 +191,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                             {notif.title}
                           </p>
                           {!notif.isRead && (
-                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                            <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                           )}
                         </div>
                         {notif.body && (
@@ -208,7 +208,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                   );
 
                   return (
-                    <div key={notif.id} className="border-b last:border-b-0">
+                    <div key={notif.id} className="border-b last:border-b-0 first:pt-1">
                       {notif.link ? (
                         <Link href={notif.link} onClick={() => setOpen(false)}>
                           {content}

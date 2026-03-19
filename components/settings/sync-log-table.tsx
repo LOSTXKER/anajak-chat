@@ -4,6 +4,7 @@ import {
   Plug, Loader2, RefreshCw, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
@@ -59,27 +60,29 @@ export function SyncLogTable({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Sync Log</h2>
+        <h2 className="heading-section">Sync Log</h2>
         <div className="flex items-center gap-2">
-          <select
-            className="h-8 rounded-lg border bg-background px-2 text-xs"
-            value={typeFilter}
-            onChange={(e) => onTypeFilterChange(e.target.value)}
-          >
-            <option value="">ทุกประเภท</option>
-            {Object.entries(TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-          <select
-            className="h-8 rounded-lg border bg-background px-2 text-xs"
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
-          >
-            <option value="">ทุก Status</option>
-            <option value="success">Success</option>
-            <option value="failed">Failed</option>
-          </select>
+          <Select value={typeFilter || "__all__"} onValueChange={(v) => onTypeFilterChange(v === "__all__" ? "" : (v ?? ""))}>
+            <SelectTrigger size="sm" className="w-auto">
+              <SelectValue placeholder="ทุกประเภท" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">ทุกประเภท</SelectItem>
+              {Object.entries(TYPE_LABELS).map(([v, l]) => (
+                <SelectItem key={v} value={v}>{l}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter || "__all__"} onValueChange={(v) => onStatusFilterChange(v === "__all__" ? "" : (v ?? ""))}>
+            <SelectTrigger size="sm" className="w-auto">
+              <SelectValue placeholder="ทุก Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">ทุก Status</SelectItem>
+              <SelectItem value="success">Success</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
           <Button variant="outline" size="sm" onClick={onRefresh} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
           </Button>
@@ -92,7 +95,7 @@ export function SyncLogTable({
           กำลังโหลด...
         </div>
       ) : logs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-10">
           <Plug className="h-8 w-8 text-muted-foreground/30" />
           <p className="mt-2 text-sm text-muted-foreground">ยังไม่มีประวัติ sync</p>
         </div>
@@ -117,16 +120,16 @@ export function SyncLogTable({
                       {TYPE_LABELS[log.type] ?? log.type}
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className="rounded-full px-2 py-0.5 text-[10px] font-medium bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground">
+                      <span className="rounded-xl px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
                         {log.direction === "inbound" ? "← in" : "→ out"}
                       </span>
                     </td>
                     <td className="px-3 py-2.5">
                       <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-medium",
+                        "rounded-xl px-2 py-0.5 text-xs font-medium",
                         log.status === "success"
-                          ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
-                          : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
+                          ? "bg-primary/10 text-primary"
+                          : "bg-destructive/10 text-destructive"
                       )}>
                         {log.status}
                       </span>
@@ -137,7 +140,7 @@ export function SyncLogTable({
                     <td className="px-3 py-2.5 text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true, locale: th })}
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-red-600 max-w-[120px] truncate" title={log.errorMessage ?? undefined}>
+                    <td className="px-3 py-2.5 text-xs text-destructive max-w-[120px] truncate" title={log.errorMessage ?? undefined}>
                       {log.errorMessage ?? "—"}
                     </td>
                   </tr>
@@ -153,7 +156,7 @@ export function SyncLogTable({
               </span>
               <div className="flex items-center gap-1">
                 <Button
-                  variant="outline" size="icon" className="h-7 w-7"
+                  variant="outline" size="icon-sm"
                   onClick={() => onPageChange(Math.max(page - 1, 1))}
                   disabled={page === 1}
                 >
@@ -161,7 +164,7 @@ export function SyncLogTable({
                 </Button>
                 <span className="px-2 text-xs">{page} / {totalPages}</span>
                 <Button
-                  variant="outline" size="icon" className="h-7 w-7"
+                  variant="outline" size="icon-sm"
                   onClick={() => onPageChange(Math.min(page + 1, totalPages))}
                   disabled={page === totalPages}
                 >

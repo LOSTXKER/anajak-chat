@@ -104,8 +104,8 @@ export function ChatInput({
 
   if (status === "pending") {
     return (
-      <div className="border-t px-4 py-3">
-        <Button className="w-full h-10" onClick={onStartChat} disabled={starting}>
+      <div className="px-4 py-3">
+        <Button className="w-full h-12 rounded-lg text-base font-semibold" onClick={onStartChat} disabled={starting}>
           {starting ? "กำลังเริ่ม..." : "เริ่มแชท"}
         </Button>
       </div>
@@ -114,11 +114,11 @@ export function ChatInput({
 
   if (status === "resolved") {
     return (
-      <div className="flex items-center justify-between border-t px-4 py-2.5">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between mx-3 mb-3 rounded-xl border bg-card/60 px-5 py-3 shadow-sm">
+        <span className="text-sm text-muted-foreground font-medium">
           แชทนี้เสร็จสิ้นแล้ว
         </span>
-        <Button variant="outline" size="sm" className="h-9 px-4 text-sm font-medium" onClick={onReopen} disabled={starting}>
+        <Button variant="outline" onClick={onReopen} disabled={starting}>
           <RotateCcw className="mr-1.5 h-4 w-4" />
           เปิดอีกครั้ง
         </Button>
@@ -128,9 +128,9 @@ export function ChatInput({
 
   if (status === "open" && isLockedByOther) {
     return (
-      <div className="flex items-center gap-2 border-t px-4 py-2.5">
+      <div className="flex items-center gap-2 mx-3 mb-3 rounded-xl border bg-card/60 px-5 py-3 shadow-sm">
         <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground font-medium">
           ดูแลโดย {lockedByName}
         </span>
       </div>
@@ -140,11 +140,11 @@ export function ChatInput({
   return (
     <>
       {showNoteInput && (
-        <div className="border-t bg-yellow-50 p-3 dark:bg-yellow-950/40 dark:border-yellow-700/50">
+        <div className="border-t bg-muted p-3 border-border">
           <div className="flex gap-2">
             <Textarea
               placeholder="เขียน internal note..."
-              className="min-h-[60px] resize-none bg-yellow-50 text-sm border-yellow-200 focus-visible:ring-yellow-400 dark:bg-yellow-950/40 dark:border-yellow-700/50 dark:text-yellow-100"
+              className="min-h-[60px] resize-none bg-muted text-sm border-border focus-visible:ring-ring"
               value={noteInput}
               onChange={(e) => setNoteInput(e.target.value)}
             />
@@ -160,56 +160,6 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Action bar */}
-      <div className="flex items-center justify-between border-t px-3 py-1.5">
-        <div className="flex items-center gap-2">
-          {onResolve && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 rounded-full border-green-200 bg-green-50 px-3 text-xs font-medium text-green-700 hover:bg-green-100 hover:border-green-300 dark:border-green-700/50 dark:bg-green-950/40 dark:text-green-400 dark:hover:bg-green-950/60"
-              onClick={onResolve}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              เสร็จสิ้น
-            </Button>
-          )}
-          <SlaTimer conversation={conversation} variant="bar" />
-        </div>
-        <div className="flex items-center gap-0.5">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setShowTemplates(!showTemplates)}
-            aria-label="เลือก template"
-            title="เลือก template"
-          >
-            <SmilePlus className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className={cn("h-7 w-7 text-muted-foreground hover:text-foreground transition-colors", showNoteInput && "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300")}
-            onClick={() => setShowNoteInput(!showNoteInput)}
-            aria-label="เพิ่ม note"
-            title="Internal note"
-          >
-            <StickyNote className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setShowMediaPicker(true)}
-            aria-label="แนบสื่อ"
-            title="แนบไฟล์"
-          >
-            <Paperclip className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
       {/* Template picker */}
       {showTemplates && (
         <div className="border-t px-3 py-2">
@@ -224,31 +174,83 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Input area */}
-      <div className="flex items-end gap-2 border-t px-3 py-2">
-        <div className="relative flex-1">
-          <Textarea
-            ref={textareaRef}
-            placeholder="พิมพ์ข้อความ..."
-            className="min-h-[40px] max-h-[120px] resize-none rounded-xl text-sm"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
+      <div className="mx-3 mb-3 rounded-xl border bg-card/80 shadow-sm">
+        {/* Action bar */}
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2">
+            {onResolve && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 rounded-full border-primary/30 bg-primary/10 text-xs font-semibold text-primary hover:bg-primary/15 hover:border-primary/40"
+                onClick={onResolve}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                เสร็จสิ้น
+              </Button>
+            )}
+            <SlaTimer conversation={conversation} variant="bar" />
+          </div>
+          <div className="flex items-center gap-0.5">
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setShowTemplates(!showTemplates)}
+              aria-label="เลือก template"
+              title="เลือก template"
+            >
+              <SmilePlus className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className={cn("text-muted-foreground hover:text-foreground", showNoteInput && "bg-muted text-muted-foreground")}
+              onClick={() => setShowNoteInput(!showNoteInput)}
+              aria-label="เพิ่ม note"
+              title="Internal note"
+            >
+              <StickyNote className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setShowMediaPicker(true)}
+              aria-label="แนบสื่อ"
+              title="แนบไฟล์"
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <Button
-          size="icon"
-          className="mb-0.5 h-9 w-9 shrink-0 rounded-full bg-accent text-accent-foreground hover:bg-accent/90"
-          onClick={() => handleSend()}
-          disabled={sending || !input.trim()}
-          aria-label="ส่งข้อความ"
-        >
-          {sending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
+
+        {/* Input area */}
+        <div className="flex items-end gap-2 px-3 pb-3">
+          <div className="relative flex-1">
+            <Textarea
+              ref={textareaRef}
+              placeholder="พิมพ์ข้อความ..."
+              className="min-h-[48px] max-h-[140px] resize-none rounded-lg border-0 bg-transparent text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+          <Button
+            size="icon-lg"
+            className="mb-0.5 shrink-0"
+            onClick={() => handleSend()}
+            disabled={sending || !input.trim()}
+            aria-label="ส่งข้อความ"
+          >
+            {sending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
 
       {showMediaPicker && (

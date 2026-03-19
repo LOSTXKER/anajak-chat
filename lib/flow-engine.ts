@@ -18,7 +18,29 @@ interface QuickReplyItem {
 interface AutoReplyPattern {
   messages: AutoReplyMessage[];
   quickReplies?: QuickReplyItem[];
+}
+
+interface PlatformSteps {
+  _default: AutoReplyPattern;
+  line?: AutoReplyPattern;
+  facebook?: AutoReplyPattern;
+  instagram?: AutoReplyPattern;
   assignToHuman?: boolean;
+}
+
+function resolvePlatformPattern(raw: unknown, platform: string): { pattern: AutoReplyPattern; assignToHuman: boolean } {
+  if (!raw || typeof raw !== "object") return { pattern: { messages: [] }, assignToHuman: false };
+  const obj = raw as Record<string, unknown>;
+  if ("_default" in obj && typeof obj._default === "object") {
+    const steps = obj as unknown as PlatformSteps;
+    const pattern = (steps[platform as keyof PlatformSteps] as AutoReplyPattern | undefined) ?? steps._default;
+    return { pattern, assignToHuman: steps.assignToHuman ?? false };
+  }
+  if ("messages" in obj) {
+    const legacy = obj as unknown as AutoReplyPattern & { assignToHuman?: boolean };
+    return { pattern: { messages: legacy.messages ?? [], quickReplies: legacy.quickReplies }, assignToHuman: legacy.assignToHuman ?? false };
+  }
+  return { pattern: { messages: [] }, assignToHuman: false };
 }
 
 // ─── Main Entry Point ────────────────────────────────────────────────────────
@@ -53,14 +75,15 @@ export async function processFlowForMessage(params: {
     const trigger = flow.trigger as unknown as FlowTrigger;
 
     if (matchesTrigger(trigger, messageContent, eventType, postbackData, conversation.createdAt)) {
-      const pattern = flow.steps as unknown as AutoReplyPattern;
+      const channel = await prisma.channel.findUnique({ where: { id: conversation.channelId }, select: { platform: true } });
+      const { pattern, assignToHuman } = resolvePlatformPattern(flow.steps, channel?.platform ?? "_default");
       if (!pattern?.messages?.length) continue;
 
       const session = await prisma.flowSession.create({
         data: { flowId: flow.id, conversationId },
       });
 
-      await executeAutoReply(session.id, pattern, conversationId);
+      await executeAutoReply(session.id, pattern, assignToHuman, conversationId);
       return true;
     }
   }
@@ -99,6 +122,7 @@ function matchesTrigger(
 async function executeAutoReply(
   sessionId: string,
   pattern: AutoReplyPattern,
+  assignToHuman: boolean,
   conversationId: string
 ) {
   const conversation = await prisma.conversation.findUnique({
@@ -135,7 +159,7 @@ async function executeAutoReply(
     }
   }
 
-  if (pattern.assignToHuman) {
+  if (assignToHuman) {
     await prisma.conversation.update({
       where: { id: conversationId },
       data: { status: "open" },

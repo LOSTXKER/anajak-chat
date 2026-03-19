@@ -20,11 +20,11 @@ interface TemplatePickerProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  greeting: "text-blue-600",
-  pricing: "text-purple-600",
-  shipping: "text-orange-600",
-  closing: "text-gray-600",
-  custom: "text-green-600",
+  greeting: "text-muted-foreground",
+  pricing: "text-muted-foreground",
+  shipping: "text-muted-foreground",
+  closing: "text-muted-foreground",
+  custom: "text-muted-foreground",
 };
 
 export function TemplatePicker({ onSelect, onClose, contactName }: TemplatePickerProps) {
@@ -87,10 +87,10 @@ export function TemplatePicker({ onSelect, onClose, contactName }: TemplatePicke
   }
 
   return (
-    <div className="mb-2 rounded-lg border bg-background shadow-lg">
+    <div className="mb-2 rounded-xl border bg-background shadow-lg">
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        <Zap className="h-4 w-4 text-yellow-500" />
+        <Zap className="h-4 w-4 text-primary" />
         <span className="text-sm font-medium">Quick Reply Templates</span>
         <button onClick={onClose} className="ml-auto">
           <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />

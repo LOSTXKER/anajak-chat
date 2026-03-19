@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  BookOpen, Plus, Pencil, Trash2, Upload, Search, Loader2,
-  ChevronLeft, ChevronRight, Sparkles, RefreshCw, Tag,
+  BookOpen, Plus, Trash2, Upload, Search, Loader2,
+  ChevronLeft, ChevronRight, Sparkles, RefreshCw, Tag, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
+import { EmptyState } from "@/components/empty-state";
 
 interface Article {
   id: string;
@@ -49,7 +50,7 @@ export default function KnowledgeBasePage() {
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [showDialog, setShowDialog] = useState(false);
+  const [selected, setSelected] = useState<Article | null>(null);
   const [editing, setEditing] = useState<Article>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [embedding, setEmbedding] = useState<string | null>(null);
@@ -72,8 +73,15 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => { fetchArticles(); }, [fetchArticles]);
 
-  function openNew() { setEditing(EMPTY); setShowDialog(true); }
-  function openEdit(a: Article) { setEditing(a); setShowDialog(true); }
+  function openNew() {
+    setSelected(null);
+    setEditing(EMPTY);
+  }
+
+  function selectArticle(a: Article) {
+    setSelected(a);
+    setEditing({ ...a });
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -92,7 +100,8 @@ export default function KnowledgeBasePage() {
       });
       if (res.ok) {
         toast({ title: isNew ? "สร้างบทความแล้ว" : "บันทึกแล้ว" });
-        setShowDialog(false);
+        setSelected(null);
+        setEditing(EMPTY);
         fetchArticles();
       } else {
         const err = await res.json() as { error: string };
@@ -106,15 +115,19 @@ export default function KnowledgeBasePage() {
   async function handleDelete(id: string) {
     if (!confirm("ลบบทความนี้?")) return;
     const res = await fetch(`/api/knowledge-base/${id}`, { method: "DELETE" });
-    if (res.ok) { toast({ title: "ลบแล้ว" }); fetchArticles(); }
+    if (res.ok) {
+      toast({ title: "ลบแล้ว" });
+      if (selected?.id === id) { setSelected(null); setEditing(EMPTY); }
+      fetchArticles();
+    }
   }
 
   async function handleEmbed(id: string) {
     setEmbedding(id);
     const res = await fetch(`/api/knowledge-base/${id}/embed`, { method: "POST" });
     setEmbedding(null);
-    if (res.ok) { toast({ title: "สร้าง embedding แล้ว" }); }
-    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
+    if (res.ok) toast({ title: "สร้าง embedding แล้ว" });
+    else toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
   }
 
   async function handleEmbedAll() {
@@ -144,213 +157,239 @@ export default function KnowledgeBasePage() {
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const isEditing = selected !== null || editing.title !== "";
   const tagsStr = editing.tags.join(", ");
 
   return (
-    <div className="overflow-auto h-full">
-      <div>
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              ฐานความรู้
-            </h1>
-            <p className="text-sm text-muted-foreground">ฐานความรู้สำหรับ AI อ้างอิงในการตอบลูกค้า</p>
+    <div className="flex h-full overflow-hidden">
+      {/* Left: Article List */}
+      <div className="w-[340px] shrink-0 border-r flex flex-col bg-card">
+        <div className="p-4 space-y-3 border-b">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="heading-page">ฐานความรู้</h1>
+              <p className="text-sm text-muted-foreground mt-1">จัดการบทความสำหรับ AI ใช้ตอบคำถาม</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{total} บทความ</p>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={handleEmbedAll} disabled={embeddingAll}>
+                {embeddingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                <Upload className="h-3.5 w-3.5" />
+              </Button>
+              <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={handleEmbedAll} disabled={embeddingAll}>
-              {embeddingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
-              Embed ทั้งหมด
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import CSV
-            </Button>
-            <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
-            <Button size="sm" onClick={openNew}>
-              <Plus className="mr-2 h-4 w-4" />
-              เพิ่มบทความ
-            </Button>
-          </div>
-        </div>
 
-        {/* Filters */}
-        <div className="mb-4 flex flex-wrap gap-2 items-center">
-          <div className="flex gap-1">
+          <Button size="sm" className="w-full" onClick={openNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            เพิ่มบทความ
+          </Button>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="ค้นหาบทความ..."
+              className="pl-9 text-sm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }}
+            />
+          </div>
+
+          <div className="flex gap-1 flex-wrap">
             {CATEGORIES.map((c) => (
               <button
                 key={c.value}
                 onClick={() => { setCategory(c.value); setPage(1); }}
                 className={cn(
-                  "rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors",
+                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
                   category === c.value
-                    ? "bg-primary text-primary-foreground border-transparent"
-                    : "bg-background border-border hover:bg-muted"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
                 )}
               >
                 {c.label}
               </button>
             ))}
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <form onSubmit={(e) => { e.preventDefault(); setSearch(searchInput); setPage(1); }}>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="ค้นหา..."
-                  className="pl-8 h-8 w-48"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-              </div>
-            </form>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchArticles}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
-        {/* Article Table */}
-        {loading ? (
-          <div className="flex items-center gap-2 py-10 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            กำลังโหลด...
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-10 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : articles.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+              <BookOpen className="h-8 w-8 text-muted-foreground mb-3" />
+              <p className="text-sm font-medium">ไม่พบบทความ</p>
+              <p className="text-xs text-muted-foreground mt-1">ลองเปลี่ยนหมวดหมู่หรือค้นหาใหม่</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {articles.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => selectArticle(a)}
+                  className={cn(
+                    "w-full text-left px-4 py-3 transition-colors hover:bg-muted/50",
+                    selected?.id === a.id && "bg-primary/5 border-l-2 border-l-primary"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", a.isActive ? "bg-primary" : "bg-muted-foreground/30")} />
+                        <p className="text-sm font-medium truncate">{a.title}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{a.content}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {CATEGORIES.find((c) => c.value === a.category)?.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(a.updatedAt), { addSuffix: true, locale: th })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {totalPages > 1 && (
+          <div className="border-t px-4 py-2 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{page}/{totalPages}</span>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <Button variant="ghost" size="icon-sm" onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
-        ) : articles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-            <BookOpen className="h-10 w-10 text-muted-foreground/30" />
-            <p className="mt-3 text-sm text-muted-foreground">ยังไม่มีบทความ</p>
-            <Button size="sm" className="mt-3" onClick={openNew}><Plus className="mr-2 h-4 w-4" />เพิ่มบทความแรก</Button>
+        )}
+      </div>
+
+      {/* Right: Editor */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {!isEditing ? (
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              icon={BookOpen}
+              message="เลือกบทความเพื่อแก้ไข"
+              description="เลือกจากรายการทางซ้าย หรือสร้างบทความใหม่"
+              action={
+                <Button size="sm" className="rounded-lg" onClick={openNew}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  สร้างบทความใหม่
+                </Button>
+              }
+            />
           </div>
         ) : (
           <>
-            <div className="rounded-xl border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="px-3 py-2.5 text-left text-xs text-muted-foreground font-medium">ชื่อบทความ</th>
-                    <th className="px-3 py-2.5 text-left text-xs text-muted-foreground font-medium">หมวด</th>
-                    <th className="px-3 py-2.5 text-left text-xs text-muted-foreground font-medium">Tags</th>
-                    <th className="px-3 py-2.5 text-left text-xs text-muted-foreground font-medium">ใช้งาน</th>
-                    <th className="px-3 py-2.5 text-center text-xs text-muted-foreground font-medium w-8">สถานะ</th>
-                    <th className="px-3 py-2.5 text-left text-xs text-muted-foreground font-medium">อัปเดต</th>
-                    <th className="px-3 py-2.5 w-28"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {articles.map((a) => (
-                    <tr key={a.id} className="border-b last:border-b-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-3 py-2.5 font-medium max-w-[220px] truncate">{a.title}</td>
-                      <td className="px-3 py-2.5">
-                        <span className="rounded-full bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground px-2 py-0.5 text-[10px] font-medium">
-                          {CATEGORIES.find((c) => c.value === a.category)?.label ?? a.category}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                        {a.tags.slice(0, 2).join(", ")}{a.tags.length > 2 ? ` +${a.tags.length - 2}` : ""}
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-muted-foreground">{a.usageCount} ครั้ง</td>
-                      <td className="px-3 py-2.5 text-center">
-                        <span className={cn("w-2 h-2 rounded-full inline-block", a.isActive ? "bg-green-500" : "bg-gray-300")} />
-                      </td>
-                      <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(a.updatedAt), { addSuffix: true, locale: th })}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-1 justify-end">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="Embed" onClick={() => handleEmbed(a.id)} disabled={embedding === a.id}>
-                            {embedding === a.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(a)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600" onClick={() => handleDelete(a.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="flex items-center justify-between border-b px-6 py-3">
+              <h2 className="heading-card">
+                {editing.id ? "แก้ไขบทความ" : "บทความใหม่"}
+              </h2>
+              <div className="flex items-center gap-2">
+                {editing.id && (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={() => handleEmbed(editing.id)} disabled={embedding === editing.id}>
+                      {embedding === editing.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+                      Embed
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(editing.id)}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      ลบ
+                    </Button>
+                  </>
+                )}
+                <Button variant="ghost" size="icon-sm" onClick={() => { setSelected(null); setEditing(EMPTY); }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            {totalPages > 1 && (
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="text-xs text-muted-foreground">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} จาก {total}</span>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setPage((p) => Math.max(p - 1, 1))} disabled={page === 1}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="px-2 text-xs">{page}/{totalPages}</span>
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setPage((p) => Math.min(p + 1, totalPages))} disabled={page === totalPages}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">ชื่อบทความ</Label>
+                  <Input
+                    className="rounded-lg"
+                    value={editing.title}
+                    onChange={(e) => setEditing((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="เช่น นโยบายการคืนสินค้า"
+                  />
                 </div>
-              </div>
-            )}
-          </>
-        )}
 
-        {/* Article Dialog */}
-        {showDialog && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-full max-w-lg rounded-xl border bg-background shadow-xl p-6 mx-4">
-              <h2 className="text-lg font-semibold mb-4">{editing.id ? "แก้ไขบทความ" : "เพิ่มบทความใหม่"}</h2>
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label>ชื่อบทความ</Label>
-                  <Input className="rounded-lg" value={editing.title} onChange={(e) => setEditing((prev) => ({ ...prev, title: e.target.value }))} placeholder="เช่น นโยบายการคืนสินค้า" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">หมวดหมู่</Label>
+                    <select
+                      className="w-full border bg-background px-3 text-sm"
+                      value={editing.category}
+                      onChange={(e) => setEditing((prev) => ({ ...prev, category: e.target.value }))}
+                    >
+                      {CATEGORIES.filter((c) => c.value).map((c) => (
+                        <option key={c.value} value={c.value}>{c.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium flex items-center gap-1">
+                      <Tag className="h-3.5 w-3.5" /> Tags
+                    </Label>
+                    <Input
+                      className="rounded-lg"
+                      value={tagsStr}
+                      onChange={(e) =>
+                        setEditing((prev) => ({
+                          ...prev,
+                          tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
+                        }))
+                      }
+                      placeholder="คืนสินค้า, นโยบาย, refund"
+                    />
+                  </div>
                 </div>
+
                 <div className="space-y-1.5">
-                  <Label>หมวดหมู่</Label>
-                  <select
-                    className="w-full h-9 rounded-lg border bg-background px-3 text-sm"
-                    value={editing.category}
-                    onChange={(e) => setEditing((prev) => ({ ...prev, category: e.target.value }))}
-                  >
-                    {CATEGORIES.filter((c) => c.value).map((c) => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>เนื้อหา</Label>
+                  <Label className="text-xs font-medium">เนื้อหา</Label>
                   <Textarea
-                    rows={6}
+                    className="min-h-[300px] rounded-lg"
                     value={editing.content}
                     onChange={(e) => setEditing((prev) => ({ ...prev, content: e.target.value }))}
                     placeholder="เนื้อหาที่ AI จะใช้อ้างอิง..."
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" /> Tags (คั่นด้วยจุลภาค)</Label>
-                  <Input
-                    value={tagsStr}
-                    onChange={(e) =>
-                      setEditing((prev) => ({
-                        ...prev,
-                        tags: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
-                      }))
-                    }
-                    placeholder="คืนสินค้า, นโยบาย, refund"
-                  />
-                </div>
+
                 <div className="flex items-center gap-2">
-                  <Switch checked={editing.isActive} onCheckedChange={(v) => setEditing((prev) => ({ ...prev, isActive: v }))} />
-                  <Label>เปิดใช้งาน</Label>
+                  <Switch
+                    checked={editing.isActive}
+                    onCheckedChange={(v) => setEditing((prev) => ({ ...prev, isActive: v }))}
+                  />
+                  <Label className="text-sm">เปิดใช้งาน</Label>
                 </div>
-              </div>
-              <div className="mt-6 flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowDialog(false)}>ยกเลิก</Button>
-                <Button onClick={handleSave} disabled={saving || !editing.title || !editing.content}>
-                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  บันทึก
-                </Button>
               </div>
             </div>
-          </div>
+
+            <div className="border-t px-6 py-3 flex justify-end gap-2">
+              <Button variant="outline" className="rounded-lg" onClick={() => { setSelected(null); setEditing(EMPTY); }}>
+                ยกเลิก
+              </Button>
+              <Button className="rounded-lg" onClick={handleSave} disabled={saving || !editing.title || !editing.content}>
+                {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                บันทึก
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>

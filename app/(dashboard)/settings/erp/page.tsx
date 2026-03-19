@@ -96,52 +96,47 @@ export default function ERPPage() {
     toast({ title: "คัดลอก URL แล้ว" });
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
-    <div className="overflow-auto h-full">
-      <div className="max-w-2xl">
-        <div className="mb-6">
-          <h1 className="text-lg font-semibold flex items-center gap-2">
-            <Plug className="h-5 w-5" />
-            ERP Integration
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            เชื่อมต่อระบบ ERP เพื่อ sync สินค้า, ลูกค้า, order
-          </p>
-        </div>
-
-        <ErpConfigForm
-          config={config}
-          onChange={setConfig}
-          onSave={handleSave}
-          saving={saving}
-          onTest={handleTest}
-          testing={testing}
-          testResult={testResult}
-          webhookUrl={webhookUrl}
-          onCopyWebhookUrl={copyWebhookUrl}
-        />
-
-        <SyncLogTable
-          logs={logs}
-          loading={logsLoading}
-          page={logsPage}
-          totalLogs={totalLogs}
-          typeFilter={typeFilter}
-          statusFilter={statusFilter}
-          onPageChange={setLogsPage}
-          onTypeFilterChange={(v) => { setTypeFilter(v); setLogsPage(1); }}
-          onStatusFilterChange={(v) => { setStatusFilter(v); setLogsPage(1); }}
-          onRefresh={fetchLogs}
-        />
+    <div className="h-full overflow-y-auto p-6">
+      <div className="mb-6">
+        <h1 className="heading-page">ERP Integration</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          เชื่อมต่อระบบ ERP เพื่อ sync สินค้า, ลูกค้า, order
+        </p>
       </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+      <>
+      <ErpConfigForm
+        config={config}
+        onChange={setConfig}
+        onSave={handleSave}
+        saving={saving}
+        onTest={handleTest}
+        testing={testing}
+        testResult={testResult}
+        webhookUrl={webhookUrl}
+        onCopyWebhookUrl={copyWebhookUrl}
+      />
+
+      <SyncLogTable
+        logs={logs}
+        loading={logsLoading}
+        page={logsPage}
+        totalLogs={totalLogs}
+        typeFilter={typeFilter}
+        statusFilter={statusFilter}
+        onPageChange={setLogsPage}
+        onTypeFilterChange={(v) => { setTypeFilter(v); setLogsPage(1); }}
+        onStatusFilterChange={(v) => { setStatusFilter(v); setLogsPage(1); }}
+        onRefresh={fetchLogs}
+      />
+      </>
+      )}
     </div>
   );
 }

@@ -29,15 +29,15 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
 
   if (isBot) {
     return (
-      <div className="flex gap-2 justify-start group/bubble">
-        <Avatar className="h-7 w-7 shrink-0 self-end">
-          <AvatarFallback className="text-xs bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300">AI</AvatarFallback>
+      <div className="flex gap-2.5 justify-start group/bubble">
+        <Avatar className="rounded-full h-8 w-8 shrink-0 self-end">
+          <AvatarFallback className="rounded-full text-xs font-semibold bg-muted text-muted-foreground">AI</AvatarFallback>
         </Avatar>
-        <div className="max-w-[70%]">
-          <div className="rounded-2xl rounded-bl-sm bg-card border border-border px-3 py-2 text-sm transition-colors hover:border-border/80">
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        <div className="max-w-[75%]">
+          <div className="rounded-2xl rounded-bl-md bg-muted/50 border border-border px-4 py-3 text-sm shadow-sm dark:bg-muted dark:border-border">
+            <p className="whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground text-left">
+          <p className="mt-1.5 text-xs text-muted-foreground text-left">
             {format(new Date(message.createdAt), "HH:mm")}
           </p>
         </div>
@@ -46,20 +46,20 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
   }
 
   return (
-    <div className={cn("flex gap-2 group/bubble", isContact ? "justify-start" : "justify-end")}>
+    <div className={cn("flex gap-2.5 group/bubble", isContact ? "justify-start" : "justify-end")}>
       {isContact && (
-        <Avatar className="h-7 w-7 shrink-0 self-end">
-          <AvatarImage src={contactAvatar} />
-          <AvatarFallback className="text-xs">{contactName.charAt(0)}</AvatarFallback>
+        <Avatar className="rounded-full h-8 w-8 shrink-0 self-end">
+          <AvatarImage src={contactAvatar} className="rounded-full" />
+          <AvatarFallback className="rounded-full text-xs font-semibold bg-primary/10 text-primary">{contactName.charAt(0)}</AvatarFallback>
         </Avatar>
       )}
-      <div className={cn("max-w-[70%]", isContact ? "items-start" : "items-end")}>
+      <div className={cn("max-w-[75%]", isContact ? "items-start" : "items-end")}>
         <div
           className={cn(
-            "rounded-2xl px-3 py-2 text-sm transition-colors",
+            "px-4 py-3 text-sm transition-all duration-200",
             isContact
-              ? "rounded-bl-sm bg-card border border-border text-foreground hover:border-border/80"
-              : "rounded-br-sm bg-accent/90 text-accent-foreground hover:bg-accent"
+              ? "rounded-2xl rounded-bl-md bg-card border border-border text-foreground shadow-sm hover:shadow-md"
+              : "rounded-2xl rounded-br-md bg-primary text-primary-foreground"
           )}
         >
           {message.contentType === "image" && message.mediaUrl ? (
@@ -67,7 +67,7 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
             <img
               src={message.mediaUrl}
               alt="image"
-              className="max-w-[240px] rounded-lg"
+              className="max-w-[300px] rounded-lg"
               loading="lazy"
             />
           ) : message.contentType === "file" && message.mediaUrl ? (
@@ -81,12 +81,12 @@ export function MessageBubble({ message, contactName, contactAvatar }: MessageBu
               ดาวน์โหลดไฟล์
             </a>
           ) : (
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
           )}
         </div>
         <p
           className={cn(
-            "mt-0.5 text-xs text-muted-foreground",
+            "mt-1.5 text-xs text-muted-foreground",
             isContact ? "text-left" : "text-right"
           )}
         >

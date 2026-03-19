@@ -401,7 +401,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Collision warning */}
         {collidingAgents.length > 0 && (
-          <div className="flex items-center gap-2 border-b bg-yellow-50 px-4 py-2 text-xs text-yellow-800 dark:bg-yellow-950/30 dark:text-yellow-300">
+          <div className="flex items-center gap-2 border-b border-border bg-muted px-4 py-2 text-xs text-muted-foreground">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             <span>
               {collidingAgents.map((a) => a.user_name).join(", ")}{" "}
@@ -411,14 +411,14 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         )}
 
         {/* Header */}
-        <div className="flex items-center gap-3 border-b px-4 py-2">
-          <Avatar className="h-8 w-8 shrink-0">
-            <AvatarImage src={conversation.contact.avatarUrl ?? undefined} />
-            <AvatarFallback className="text-sm">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
+        <div className="flex items-center gap-3 border-b bg-background/90 px-5 py-3">
+          <Avatar className="rounded-lg h-10 w-10 shrink-0">
+            <AvatarImage src={conversation.contact.avatarUrl ?? undefined} className="rounded-lg" />
+            <AvatarFallback className="rounded-lg text-sm font-semibold bg-primary/10 text-primary">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-medium">{displayName}</p>
+              <p className="truncate text-sm font-semibold">{displayName}</p>
               <span className="text-xs text-muted-foreground capitalize shrink-0">{conversation.channel.platform}</span>
             </div>
           </div>
@@ -429,7 +429,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
 
           {conversation.assignedUser && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 border rounded-full px-2 py-0.5">
-              <Lock className="h-3 w-3" />
+              <Lock className="h-3.5 w-3.5" />
               {conversation.assignedUser.id === currentUserId.current ? "ฉัน" : conversation.assignedUser.name}
             </span>
           )}
@@ -437,8 +437,8 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
           {/* Mobile AI button */}
           <Button
             variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0 lg:hidden"
+            size="icon-sm"
+            className="shrink-0 lg:hidden"
             onClick={() => setMobileAiOpen(true)}
           >
             <Sparkles className="h-4 w-4" />
@@ -446,7 +446,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
 
           {/* Actions dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" />}>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" className="shrink-0" />}>
               <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
@@ -486,7 +486,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
         </div>
 
         {/* Messages */}
-        <div className="chat-messages-bg flex-1 overflow-y-auto p-4 space-y-1">
+        <div className="chat-messages-bg flex-1 overflow-y-auto px-6 py-5 space-y-3">
           {nextCursor && (
             <div className="flex justify-center pb-2">
               <Button
@@ -513,8 +513,8 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
             timeline.map((item, idx) => {
               if (item.kind === "date") {
                 return (
-                  <div key={`date-${item.date}`} className="flex justify-center py-3">
-                    <span className="rounded-full bg-muted px-3 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  <div key={`date-${item.date}`} className="flex justify-center py-5">
+                    <span className="rounded-full bg-muted/60 px-4 py-1 text-xs font-semibold text-muted-foreground shadow-sm">
                       {new Date(item.date + "T00:00:00").toLocaleDateString("th-TH", {
                         day: "2-digit",
                         month: "short",
@@ -529,7 +529,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                 const label = EVENT_LABELS[evt.eventType] ?? evt.eventType;
                 const actor = (evt.metadata as Record<string, unknown>)?.agentName as string | undefined;
                 return (
-                  <div key={`evt-${evt.id}`} className="flex justify-center py-0.5">
+                  <div key={`evt-${evt.id}`} className="flex justify-center py-1">
                     <span className="text-xs text-muted-foreground/60">
                       {label}{actor ? ` • ${actor}` : ""}
                     </span>
@@ -624,7 +624,7 @@ export function ChatView({ conversation, onConversationUpdate, onNewMessage }: C
                       </AvatarFallback>
                     </Avatar>
                     <span className="flex-1 text-left font-medium">{agent.name}</span>
-                    {transferring && <Loader2 className="h-3 w-3 animate-spin" />}
+                    {transferring && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   </button>
                 ))}
             </div>

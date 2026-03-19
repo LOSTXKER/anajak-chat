@@ -14,7 +14,7 @@ export const SLA_WARNING_THRESHOLD_PERCENT = 20;
 // ─── Conversation Status Badges ───────────────────────────────────────────────
 export const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   pending: { label: "รอรับ", className: "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  open: { label: "กำลังดูแล", className: "bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  open: { label: "กำลังดูแล", className: "bg-primary/10 text-primary" },
   resolved: { label: "เสร็จสิ้น", className: "bg-zinc-100 text-zinc-500 dark:bg-card dark:text-muted-foreground/70" },
 };
 
@@ -54,7 +54,7 @@ export const EVENT_LABELS: Record<string, string> = {
 };
 
 // ─── Platform Badge Colors ────────────────────────────────────────────────────
-const PLATFORM_BADGE_BASE = "bg-zinc-100 text-zinc-600 dark:bg-card dark:text-muted-foreground";
+const PLATFORM_BADGE_BASE = "bg-muted text-muted-foreground";
 export const PLATFORM_BADGE_COLORS: Record<string, string> = {
   facebook: PLATFORM_BADGE_BASE,
   instagram: PLATFORM_BADGE_BASE,
@@ -63,4 +63,4 @@ export const PLATFORM_BADGE_COLORS: Record<string, string> = {
   web: PLATFORM_BADGE_BASE,
   manual: PLATFORM_BADGE_BASE,
 };
-export const PLATFORM_BADGE_FALLBACK = "bg-gray-100 text-gray-700 dark:bg-card dark:text-muted-foreground";
+export const PLATFORM_BADGE_FALLBACK = "bg-muted text-muted-foreground";

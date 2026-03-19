@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/app/(dashboard)/inbox/types";
@@ -177,8 +177,8 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
   }, [chatMessages]);
 
   const sentimentConfig = {
-    positive: { label: "เชิงบวก", color: "border-green-200 text-green-700 bg-green-50 dark:border-green-700/50 dark:text-green-400 dark:bg-green-950/40" },
-    negative: { label: "เชิงลบ", color: "border-red-200 text-red-700 bg-red-50 dark:border-red-700/50 dark:text-red-400 dark:bg-red-950/40" },
+    positive: { label: "เชิงบวก", color: "border-border text-muted-foreground bg-muted" },
+    negative: { label: "เชิงลบ", color: "border-border text-muted-foreground bg-muted" },
     neutral: { label: "กลางๆ", color: "border-border text-muted-foreground bg-muted" },
   };
 
@@ -193,20 +193,21 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
   const s = sentiment ? sentimentConfig[sentiment as keyof typeof sentimentConfig] : null;
 
   return (
+    <TooltipProvider>
     <div className="flex flex-col h-full">
       {/* Section A: Quick Insights */}
-      <div className="p-3 space-y-3 border-b">
+      <div className="p-4 space-y-3 border-b">
         <div className="grid grid-cols-2 gap-2">
           <Tooltip>
-            <TooltipTrigger render={<div className="rounded-lg border p-2 space-y-1 cursor-help" />}>
+            <TooltipTrigger render={<div className="rounded-xl border p-2.5 space-y-1 cursor-help hover:shadow-sm transition-shadow" />}>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Heart className="h-3 w-3" />
+                <Heart className="h-3.5 w-3.5" />
                 ความรู้สึก
               </div>
               {s ? (
                 <Badge variant="outline" className={cn("text-xs", s.color)}>{s.label}</Badge>
               ) : (
-                <button onClick={refreshSummary} className="text-xs text-blue-600 hover:underline dark:text-blue-400">
+                <button onClick={refreshSummary} className="text-xs text-primary hover:underline">
                   วิเคราะห์
                 </button>
               )}
@@ -215,9 +216,9 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger render={<div className="rounded-lg border p-2 space-y-1 cursor-help" />}>
+            <TooltipTrigger render={<div className="rounded-xl border p-2.5 space-y-1 cursor-help hover:shadow-sm transition-shadow" />}>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Target className="h-3 w-3" />
+                <Target className="h-3.5 w-3.5" />
                 เจตนา
               </div>
               <span className="text-xs font-medium">
@@ -230,9 +231,9 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger render={<div className="rounded-lg border p-2 space-y-1 cursor-help" />}>
+            <TooltipTrigger render={<div className="rounded-xl border p-2.5 space-y-1 cursor-help hover:shadow-sm transition-shadow" />}>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Users className="h-3 w-3" />
+                <Users className="h-3.5 w-3.5" />
                 กลุ่มลูกค้า
               </div>
               <span className="text-xs font-medium">
@@ -243,17 +244,17 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger render={<div className="rounded-lg border p-2 space-y-1 cursor-help" />}>
+            <TooltipTrigger render={<div className="rounded-xl border p-2.5 space-y-1 cursor-help hover:shadow-sm transition-shadow" />}>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <TrendingDown className="h-3 w-3" />
+                <TrendingDown className="h-3.5 w-3.5" />
                 ความเสี่ยง
               </div>
               {churnData ? (
                 <span className="text-xs font-medium">{churnData.reason}</span>
               ) : loadingChurn ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <button onClick={fetchChurn} className="text-xs text-blue-600 hover:underline dark:text-blue-400">
+                <button onClick={fetchChurn} className="text-xs text-primary hover:underline">
                   วิเคราะห์
                 </button>
               )}
@@ -267,10 +268,10 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
         </div>
 
         {/* Summary */}
-        <div className="rounded-lg border p-2.5">
+        <div className="rounded-xl border p-3 bg-muted/20">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-              <Sparkles className="h-3 w-3" />
+              <Sparkles className="h-3.5 w-3.5" />
               สรุปบทสนทนา
             </span>
             <Tooltip>
@@ -279,7 +280,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
                   <Button variant="ghost" size="icon" className="h-5 w-5" onClick={refreshSummary} disabled={refreshingSummary} />
                 }
               >
-                {refreshingSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                {refreshingSummary ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
               </TooltipTrigger>
               <TooltipContent>ให้ AI สรุปบทสนทนาใหม่ พร้อมวิเคราะห์ความรู้สึกและเจตนา</TooltipContent>
             </Tooltip>
@@ -291,7 +292,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
       </div>
 
       {/* Section B: Suggested Replies */}
-      <div className="p-3 space-y-2 border-b">
+      <div className="p-4 space-y-2.5 border-b">
         <div className="flex items-center justify-between">
           <Tooltip>
             <TooltipTrigger render={<span className="text-xs font-medium text-muted-foreground cursor-help" />}>
@@ -305,7 +306,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
                 <Button variant="ghost" size="icon" className="h-5 w-5" onClick={refreshSuggestions} disabled={loadingSuggestions} />
               }
             >
-              {loadingSuggestions ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              {loadingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             </TooltipTrigger>
             <TooltipContent>ขอคำตอบแนะนำ 3 ตัวเลือกจาก AI</TooltipContent>
           </Tooltip>
@@ -316,14 +317,14 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
         )}
 
         {suggestions.map((sug, i) => (
-          <div key={i} className="rounded-lg border p-2.5 space-y-1.5 hover:border-accent/50 transition-colors">
+          <div key={i} className="rounded-xl border p-3 space-y-2 hover:shadow-sm transition-shadow">
             <div className="flex items-start gap-2">
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <span className={cn(
                       "mt-1 h-2 w-2 shrink-0 rounded-full cursor-help",
-                      sug.confidence >= 0.7 ? "bg-green-500" : sug.confidence >= 0.4 ? "bg-yellow-500" : "bg-red-500"
+                      sug.confidence >= 0.7 ? "bg-foreground" : sug.confidence >= 0.4 ? "bg-muted-foreground" : "bg-muted-foreground/50"
                     )} />
                   }
                 />
@@ -343,22 +344,22 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1"
+                    <Button variant="ghost" size="xs"
                       onClick={() => { navigator.clipboard.writeText(sug.reply); toast({ title: "คัดลอกแล้ว" }); }}
                     />
                   }
                 >
-                  <Copy className="h-3 w-3" />
+                  <Copy className="h-3.5 w-3.5" />
                 </TooltipTrigger>
                 <TooltipContent>คัดลอกข้อความ</TooltipContent>
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <Button variant="outline" size="sm" className="h-6 px-2 text-xs gap-1" onClick={() => onInsertReply(sug.reply)} />
+                    <Button variant="outline" size="xs" onClick={() => onInsertReply(sug.reply)} />
                   }
                 >
-                  <ArrowDownToLine className="h-3 w-3" />
+                  <ArrowDownToLine className="h-3.5 w-3.5" />
                   ใช้
                 </TooltipTrigger>
                 <TooltipContent>ใส่ข้อความนี้ลงช่องแชท (แก้ไขได้ก่อนส่ง)</TooltipContent>
@@ -387,16 +388,16 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
                 msg.role === "user"
                   ? "bg-accent text-accent-foreground rounded-br-sm"
                   : msg.isError
-                    ? "bg-red-50 text-red-700 border border-red-200 rounded-bl-sm dark:bg-red-950/40 dark:text-red-400 dark:border-red-700/50"
+                    ? "bg-destructive/10 text-destructive border border-destructive/20 rounded-bl-sm"
                     : "bg-muted rounded-bl-sm"
               )}>
-                {msg.isError && <AlertCircle className="h-3 w-3 inline mr-1" />}
+                {msg.isError && <AlertCircle className="h-3.5 w-3.5 inline mr-1" />}
                 <p className="whitespace-pre-wrap break-words inline">{msg.content}</p>
                 {msg.role === "assistant" && !msg.isError && (
                   <Tooltip>
                     <TooltipTrigger
                       render={
-                        <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px] mt-1 gap-0.5 text-muted-foreground" onClick={() => onInsertReply(msg.content)} />
+                        <Button variant="ghost" size="xs" className="mt-1 text-muted-foreground" onClick={() => onInsertReply(msg.content)} />
                       }
                     >
                       <ArrowDownToLine className="h-2.5 w-2.5" />
@@ -411,18 +412,18 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
           {chatLoading && (
             <div className="flex justify-start">
               <div className="bg-muted rounded-xl px-3 py-2">
-                <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
               </div>
             </div>
           )}
           <div ref={chatEndRef} />
         </div>
 
-        <div className="p-2 border-t">
-          <div className="flex items-end gap-1.5">
+        <div className="p-3 border-t">
+          <div className="flex items-end gap-2">
             <Textarea
               placeholder="ถามอะไร AI ก็ได้..."
-              className="min-h-[32px] max-h-[72px] resize-none rounded-lg text-xs"
+              className="min-h-[36px] max-h-[72px] resize-none rounded-lg text-xs"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => {
@@ -435,7 +436,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <Button size="icon" className="h-8 w-8 shrink-0 rounded-lg" onClick={sendCopilotMessage} disabled={chatLoading || !chatInput.trim()} />
+                  <Button size="icon-sm" className="shrink-0" onClick={sendCopilotMessage} disabled={chatLoading || !chatInput.trim()} />
                 }
               >
                 <Send className="h-3.5 w-3.5" />
@@ -446,5 +447,6 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
