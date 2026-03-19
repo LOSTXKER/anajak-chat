@@ -143,22 +143,24 @@ export async function sendAutoReplyMessage(params: {
         return sendLine(creds, [flex as unknown as LineMessage]);
       }
       if (msg.buttons?.length && (platform === "facebook" || platform === "instagram")) {
-        const fbMsg = {
-          attachment: {
-            type: "template" as const,
-            payload: {
-              template_type: "button",
-              text: msg.text ?? "",
-              buttons: msg.buttons.map((b) =>
-                b.action === "url"
-                  ? { type: "web_url", title: b.label, url: b.value }
-                  : { type: "postback", title: b.label, payload: b.value }
-              ),
+        const validBtns = msg.buttons.filter((b) => b.label && b.value).slice(0, 3);
+        if (validBtns.length > 0) {
+          const fbMsg = {
+            attachment: {
+              type: "template" as const,
+              payload: {
+                template_type: "button",
+                text: msg.text || "เลือกตัวเลือก",
+                buttons: validBtns.map((b) =>
+                  b.action === "url"
+                    ? { type: "web_url", title: b.label, url: b.value }
+                    : { type: "postback", title: b.label, payload: b.value }
+                ),
+              },
             },
-          },
-        };
-        const ok = await sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
-        return ok ? { ok: true } : { ok: false, error: `${platform} API failed` };
+          };
+          return sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
+        }
       }
       const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: msg.text });
       return ok ? { ok: true } : { ok: false, error: `${platform} text send failed` };
@@ -211,26 +213,26 @@ export async function sendAutoReplyMessage(params: {
         return sendLine(creds, [bubble]);
       }
       if (platform === "facebook" || platform === "instagram") {
+        const title = (msg.cardTitle || msg.cardText || "Message").slice(0, 80);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const element: Record<string, any> = { title };
+        if (msg.cardText && msg.cardText !== title) element.subtitle = msg.cardText.slice(0, 80);
+        if (msg.cardImageUrl) element.image_url = msg.cardImageUrl;
+        const btns = (msg.cardButtons ?? []).filter((b) => b.label && b.value);
+        if (btns.length > 0) {
+          element.buttons = btns.slice(0, 3).map((b) =>
+            b.action === "url"
+              ? { type: "web_url", title: b.label, url: b.value }
+              : { type: "postback", title: b.label, payload: b.value }
+          );
+        }
         const fbMsg = {
           attachment: {
             type: "template" as const,
-            payload: {
-              template_type: "generic",
-              elements: [{
-                title: msg.cardTitle ?? "",
-                subtitle: msg.cardText ?? undefined,
-                image_url: msg.cardImageUrl ?? undefined,
-                buttons: (msg.cardButtons ?? []).map((b) =>
-                  b.action === "url"
-                    ? { type: "web_url", title: b.label, url: b.value }
-                    : { type: "postback", title: b.label, payload: b.value }
-                ),
-              }],
-            },
+            payload: { template_type: "generic", elements: [element] },
           },
         };
-        const ok = await sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
-        return ok ? { ok: true } : { ok: false, error: `${platform} card send failed` };
+        return sendPlatformFbMessage(credentials, platform, recipientId, fbMsg);
       }
       const ok = await sendPlatformMessage({ platform, credentials, recipientId, text: `${msg.cardTitle ?? ""}\n${msg.cardText ?? ""}` });
       return ok ? { ok: true } : { ok: false, error: `${platform} card fallback failed` };
@@ -260,18 +262,25 @@ export async function sendAutoReplyMessage(params: {
   }
 }
 
-function sendPlatformFbMessage(credentials: unknown, platform: string, recipientId: string, message: unknown): Promise<boolean> {
+async function sendPlatformFbMessage(credentials: unknown, platform: string, recipientId: string, message: unknown): Promise<SendResult> {
   const creds = credentials as Record<string, string>;
-  if (platform === "facebook") {
-    return sendFacebookMessage(
-      { pageId: creds.pageId ?? "", pageAccessToken: creds.pageAccessToken ?? "", appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
-      recipientId,
-      message as { text?: string }
-    );
+  try {
+    let ok: boolean;
+    if (platform === "facebook") {
+      ok = await sendFacebookMessage(
+        { pageId: creds.pageId ?? "", pageAccessToken: creds.pageAccessToken ?? "", appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
+        recipientId,
+        message as Record<string, unknown>
+      );
+    } else {
+      ok = await sendInstagramMessage(
+        { igAccessToken: creds.igAccessToken, igAccountId: creds.igAccountId, pageAccessToken: creds.pageAccessToken, pageId: creds.pageId, appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
+        recipientId,
+        message as { text?: string }
+      );
+    }
+    return ok ? { ok: true } : { ok: false, error: `${platform} API returned error (check server logs)` };
+  } catch (e) {
+    return { ok: false, error: `${platform} send exception: ${e instanceof Error ? e.message : String(e)}` };
   }
-  return sendInstagramMessage(
-    { igAccessToken: creds.igAccessToken, igAccountId: creds.igAccountId, pageAccessToken: creds.pageAccessToken, pageId: creds.pageId, appSecret: creds.appSecret ?? "", verifyToken: creds.verifyToken ?? "" },
-    recipientId,
-    message as { text?: string }
-  );
 }

@@ -20,21 +20,31 @@ export interface FacebookAttachment {
 export async function sendFacebookMessage(
   credentials: FacebookCredentials,
   recipientId: string,
-  message: { text?: string; attachment?: FacebookAttachment }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  message: Record<string, any>
 ): Promise<boolean> {
-  const res = await fetch(
-    `${META_GRAPH_BASE_URL}/me/messages?access_token=${credentials.pageAccessToken}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipient: { id: recipientId },
-        message,
-        messaging_type: "RESPONSE",
-      }),
+  try {
+    const res = await fetch(
+      `${META_GRAPH_BASE_URL}/me/messages?access_token=${credentials.pageAccessToken}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipient: { id: recipientId },
+          message,
+          messaging_type: "RESPONSE",
+        }),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[FB Send] ${res.status}: ${body}`);
     }
-  );
-  return res.ok;
+    return res.ok;
+  } catch (e) {
+    console.error(`[FB Send] Network error:`, e);
+    return false;
+  }
 }
 
 export function verifyFacebookWebhook(
