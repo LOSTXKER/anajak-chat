@@ -119,7 +119,7 @@ export function ConversationList({
   ];
 
   return (
-    <div className="flex h-full w-full lg:w-[340px] shrink-0 flex-col border-r bg-background">
+    <div className="flex h-full w-full lg:w-[360px] shrink-0 flex-col border-r bg-background">
       <div className="px-3 pt-2">
         <TabBar tabs={STATUS_TABS} value={mainTab} onChange={(v) => onMainTabChange(v)} />
       </div>
@@ -201,10 +201,10 @@ export function ConversationList({
                   key={conv.id}
                   onClick={() => onSelectConversation(conv.id)}
                   className={cn(
-                    "w-full rounded-lg p-3.5 text-left transition-colors border-l-[3px]",
+                    "w-full rounded-xl p-3.5 text-left transition-colors",
                     isSelected
-                      ? "bg-primary/10 border-l-primary shadow-sm"
-                      : "border-l-transparent hover:bg-muted/30 hover:shadow-sm"
+                      ? "bg-primary/8 ring-1 ring-primary/20"
+                      : "hover:bg-muted/50"
                   )}
                 >
                   <div className="flex gap-3">

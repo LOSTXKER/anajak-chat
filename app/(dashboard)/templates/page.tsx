@@ -1,5 +1,1 @@
-import TemplatesPage from "../settings/templates/page";
-
-export default function Templates() {
-  return <TemplatesPage />;
-}
+export { default } from "../settings/templates/page";

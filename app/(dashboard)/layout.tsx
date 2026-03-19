@@ -28,10 +28,9 @@ export default async function DashboardLayout({
     <div className="flex h-screen overflow-hidden">
       <NewMessageNotifier orgId={user.orgId} />
       <DesktopSidebar user={userInfo} />
-
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar user={userInfo} />
-        <main className="flex-1 overflow-hidden bg-muted/20 dark:bg-background">
+        <main className="flex-1 overflow-hidden bg-background">
           {children}
         </main>
       </div>

@@ -34,7 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface Channel {
@@ -84,7 +84,6 @@ const AVAILABLE_PLATFORMS = ["facebook", "instagram", "line", "whatsapp"] as con
 type ConnectablePlatform = typeof AVAILABLE_PLATFORMS[number];
 
 export default function ChannelsPage() {
-  const { toast } = useToast();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -112,18 +111,14 @@ export default function ChannelsPage() {
     const success = params.get("success");
     const error = params.get("error");
     if (success) {
-      toast({ title: "เชื่อมต่อสำเร็จ", description: getSuccessMessage(success) });
+      toast.success("เชื่อมต่อสำเร็จ", { description: getSuccessMessage(success) });
       window.history.replaceState({}, "", "/settings/channels");
     }
     if (error) {
-      toast({
-        title: "เชื่อมต่อไม่สำเร็จ",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
+      toast.error("เชื่อมต่อไม่สำเร็จ", { description: getErrorMessage(error) });
       window.history.replaceState({}, "", "/settings/channels");
     }
-  }, [toast]);
+  }, []);
 
   function getSuccessMessage(key: string) {
     const map: Record<string, string> = {
@@ -174,11 +169,11 @@ export default function ChannelsPage() {
         window.location.href = url;
       } else {
         const data = await res.json();
-        toast({ title: "เกิดข้อผิดพลาด", description: data.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: data.error });
         setOauthLoading(null);
       }
     } catch {
-      toast({ title: "เกิดข้อผิดพลาด", description: "เชื่อมต่อไม่สำเร็จ", variant: "destructive" });
+      toast.error("เกิดข้อผิดพลาด", { description: "เชื่อมต่อไม่สำเร็จ" });
       setOauthLoading(null);
     }
   }
@@ -193,12 +188,12 @@ export default function ChannelsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast({ title: "สำเร็จ", description: `เชื่อมต่อ LINE OA "${data.name}" สำเร็จแล้ว` });
+        toast.success("สำเร็จ", { description: `เชื่อมต่อ LINE OA "${data.name}" สำเร็จแล้ว` });
         setLineDialogOpen(false);
         setLineForm({ channelId: "", channelSecret: "", channelAccessToken: "", name: "" });
         fetchChannels();
       } else {
-        toast({ title: "เกิดข้อผิดพลาด", description: data.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: data.error });
       }
     } finally {
       setLineConnecting(false);
@@ -213,11 +208,11 @@ export default function ChannelsPage() {
       if (res.ok && data.url) {
         window.location.href = data.url;
       } else {
-        toast({ title: "Reconnect ไม่สำเร็จ", description: data.error, variant: "destructive" });
+        toast.error("Reconnect ไม่สำเร็จ", { description: data.error });
         setReconnectingId(null);
       }
     } catch {
-      toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+      toast.error("เกิดข้อผิดพลาด");
       setReconnectingId(null);
     }
   }
@@ -228,13 +223,13 @@ export default function ChannelsPage() {
       const res = await fetch(`/api/channels/${channel.id}/test`, { method: "POST" });
       const data = (await res.json()) as { ok: boolean; error?: string };
       setTestResults((prev) => ({ ...prev, [channel.id]: data }));
-      toast({
-        title: data.ok ? "การเชื่อมต่อปกติ" : "การเชื่อมต่อมีปัญหา",
-        description: data.ok ? `${channel.name} ทำงานปกติ` : data.error,
-        variant: data.ok ? "default" : "destructive",
-      });
+      if (data.ok) {
+        toast.success("การเชื่อมต่อปกติ", { description: `${channel.name} ทำงานปกติ` });
+      } else {
+        toast.error("การเชื่อมต่อมีปัญหา", { description: data.error });
+      }
     } catch {
-      toast({ title: "ทดสอบไม่สำเร็จ", variant: "destructive" });
+      toast.error("ทดสอบไม่สำเร็จ");
     } finally {
       setTestingId(null);
     }
@@ -246,11 +241,11 @@ export default function ChannelsPage() {
     try {
       const res = await fetch(`/api/channels/${channel.id}`, { method: "DELETE" });
       if (res.ok) {
-        toast({ title: "ยกเลิกการเชื่อมต่อแล้ว" });
+        toast.success("ยกเลิกการเชื่อมต่อแล้ว");
         setChannels((prev) => prev.filter((c) => c.id !== channel.id));
       } else {
         const data = await res.json();
-        toast({ title: "เกิดข้อผิดพลาด", description: data.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: data.error });
       }
     } finally {
       setDeletingId(null);

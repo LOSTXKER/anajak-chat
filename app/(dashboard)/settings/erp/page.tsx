@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Plug, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { ErpConfigForm, type ErpConfig } from "@/components/settings/erp-config-form";
 import { SyncLogTable, type SyncLogEntry } from "@/components/settings/sync-log-table";
 
 const PAGE_SIZE = 15;
 
 export default function ERPPage() {
-  const { toast } = useToast();
   const [config, setConfig] = useState<ErpConfig>({
     erpBaseUrl: "",
     erpApiKey: "",
@@ -67,11 +66,11 @@ export default function ERPPage() {
         body: JSON.stringify(config),
       });
       if (res.ok) {
-        toast({ title: "บันทึกการตั้งค่า ERP แล้ว" });
+        toast.success("บันทึกการตั้งค่า ERP แล้ว");
         setTestResult(null);
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setSaving(false);
@@ -93,7 +92,7 @@ export default function ERPPage() {
   function copyWebhookUrl(path: string) {
     const url = `${window.location.origin}/api/erp-webhooks/${path}`;
     navigator.clipboard.writeText(url);
-    toast({ title: "คัดลอก URL แล้ว" });
+    toast.success("คัดลอก URL แล้ว");
   }
 
   return (

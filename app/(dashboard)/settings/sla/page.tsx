@@ -5,7 +5,7 @@ import { Loader2, Save, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface SlaConfig {
@@ -14,7 +14,6 @@ interface SlaConfig {
 }
 
 export default function SLAPage() {
-  const { toast } = useToast();
   const [config, setConfig] = useState<SlaConfig>({
     firstResponseMinutes: 15,
     isActive: true,
@@ -56,10 +55,10 @@ export default function SLAPage() {
         const msg = data.appliedCount > 0
           ? `บันทึก SLA แล้ว (ตั้งเวลาให้แชท ${data.appliedCount} รายการที่เปิดอยู่)`
           : "บันทึก SLA แล้ว";
-        toast({ title: msg });
+        toast.success(msg);
       } else {
         const err = (await res.json()) as { error: string };
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setSaving(false);

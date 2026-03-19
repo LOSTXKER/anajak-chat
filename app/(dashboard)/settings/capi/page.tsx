@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { BarChart3 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { CapiDatasetList, type CapiDataset, type Channel } from "@/components/settings/capi-dataset-list";
 import { CapiEventLog, type CapiEvent } from "@/components/settings/capi-event-log";
 
 const PAGE_SIZE = 15;
 
 export default function CAPIPage() {
-  const { toast } = useToast();
   const [datasets, setDatasets] = useState<CapiDataset[]>([]);
   const [events, setEvents] = useState<CapiEvent[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -72,14 +71,13 @@ export default function CAPIPage() {
       });
       if (res.ok) {
         const data = await res.json() as { isNew: boolean; datasetId: string };
-        toast({
-          title: data.isNew ? "สร้าง Dataset สำเร็จ" : "Dataset มีอยู่แล้ว",
+        toast.success(data.isNew ? "สร้าง Dataset สำเร็จ" : "Dataset มีอยู่แล้ว", {
           description: `Dataset ID: ${data.datasetId}`,
         });
         fetchDatasets();
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setCreatingFor(null);
@@ -95,7 +93,8 @@ export default function CAPIPage() {
     const res = await fetch(`/api/capi/events/${id}/retry`, { method: "POST" });
     if (res.ok) {
       const { success } = await res.json() as { success: boolean };
-      toast({ title: success ? "ส่งสำเร็จ" : "ส่งไม่สำเร็จ" });
+      if (success) toast.success("ส่งสำเร็จ");
+      else toast.error("ส่งไม่สำเร็จ");
       fetchEvents();
     }
   }

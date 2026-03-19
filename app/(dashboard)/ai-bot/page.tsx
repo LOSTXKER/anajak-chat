@@ -2,15 +2,19 @@
 
 import { useEffect, useState, useCallback } from "react";
 import {
-  Plus, Trash2, Loader2, Search, Power, PowerOff, Clock,
-  AlertTriangle, X, ChevronRight,
+  Plus, Trash2, Loader2, Clock, Bot,
+  AlertTriangle, ChevronRight, Settings2,
+  Zap, Hash, MessageSquare, Info, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/empty-state";
+import { ChatPreview } from "@/components/chat-preview";
+import type { PreviewMessage, PreviewQuickReply } from "@/components/chat-preview";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -43,6 +47,12 @@ const TRIGGER_LABELS: Record<string, string> = {
   keyword: "คีย์เวิร์ด",
   first_message: "ข้อความแรก",
   postback: "Postback",
+};
+
+const TRIGGER_ICONS: Record<string, typeof Hash> = {
+  keyword: Hash,
+  first_message: MessageSquare,
+  postback: Zap,
 };
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
@@ -119,6 +129,7 @@ export default function IntentsPage() {
   };
 
   const filtered = intents.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
+  const activeCount = intents.filter((i) => i.isActive).length;
 
   if (loading) {
     return (
@@ -131,42 +142,91 @@ export default function IntentsPage() {
   return (
     <div className="flex h-full">
       {/* Left Panel */}
-      <div className="w-[300px] border-r flex flex-col shrink-0">
-        <div className="p-4 space-y-3 border-b">
-          <PageHeader title="อินเทนต์" subtitle="ตั้งกฎ trigger และเชื่อมกับชุดข้อความ" />
+      <div className="flex w-[320px] shrink-0 flex-col border-r">
+        <div className="space-y-3 border-b p-4">
+          <div>
+            <h1 className="heading-page">อินเทนต์</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {intents.length} อินเทนต์ · {activeCount} เปิดใช้งาน
+            </p>
+          </div>
           <Button className="w-full" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />สร้างอินเทนต์
           </Button>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="ค้นหา..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
+          <SearchInput value={search} onChange={setSearch} />
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-2">
           {filtered.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground text-center">ไม่มีอินเทนต์</p>
-          ) : filtered.map((intent) => (
-            <button
-              key={intent.id}
-              onClick={() => setSelectedId(intent.id)}
-              className={cn(
-                "w-full text-left px-4 py-3 border-b transition-colors hover:bg-accent/50 flex items-center gap-3",
-                selectedId === intent.id && "bg-accent"
-              )}
-            >
-              <div className={cn("w-2 h-2 rounded-full shrink-0", intent.isActive ? "bg-emerald-500" : "bg-muted-foreground/30")} />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{intent.name}</div>
-                <div className="text-xs text-muted-foreground mt-0.5">
-                  {TRIGGER_LABELS[intent.triggerType] ?? intent.triggerType}
-                  {intent.keywords.length > 0 && ` · ${intent.keywords.length} คีย์เวิร์ด`}
-                </div>
-              </div>
-              {!intent.isActive && (
-                <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
-              )}
-            </button>
-          ))}
+            <EmptyState
+              icon={Bot}
+              message="ยังไม่มีอินเทนต์"
+              description="สร้างอินเทนต์แรกเพื่อให้บอทตอบกลับอัตโนมัติ"
+              action={
+                <Button size="sm" onClick={() => setCreateOpen(true)}>
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />สร้างอินเทนต์
+                </Button>
+              }
+              className="py-12 border-0"
+            />
+          ) : (
+            <div className="space-y-1">
+              {filtered.map((intent) => {
+                const isSelected = selectedId === intent.id;
+                const TriggerIcon = TRIGGER_ICONS[intent.triggerType] ?? Zap;
+                const sessions = intent._count?.sessions ?? 0;
+
+                return (
+                  <button
+                    key={intent.id}
+                    onClick={() => setSelectedId(intent.id)}
+                    className={cn(
+                      "flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all",
+                      isSelected
+                        ? "bg-primary/8 ring-1 ring-primary/20"
+                        : "hover:bg-muted/50"
+                    )}
+                  >
+                    <div className={cn(
+                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors",
+                      isSelected ? "bg-primary/15" : "bg-muted"
+                    )}>
+                      <Bot className={cn("h-4 w-4", isSelected ? "text-primary" : "text-muted-foreground")} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-sm font-medium">{intent.name}</span>
+                        <span className={cn(
+                          "h-2 w-2 shrink-0 rounded-full",
+                          intent.isActive ? "bg-emerald-500" : "bg-muted-foreground/30"
+                        )} />
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          <TriggerIcon className="h-3 w-3" />
+                          {TRIGGER_LABELS[intent.triggerType] ?? intent.triggerType}
+                        </span>
+                        {intent.keywords.length > 0 && (
+                          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            {intent.keywords.length} คีย์เวิร์ด
+                          </span>
+                        )}
+                        {sessions > 0 && (
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
+                            {sessions} ครั้ง
+                          </span>
+                        )}
+                      </div>
+                      {!intent.isActive && (
+                        <div className="mt-1 flex items-center gap-1 text-[11px] text-amber-500">
+                          <AlertTriangle className="h-3 w-3" /> ปิดใช้งาน
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -181,9 +241,12 @@ export default function IntentsPage() {
             onDelete={() => handleDelete(selected.id)}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            เลือกอินเทนต์จากรายการด้านซ้าย
-          </div>
+          <EmptyState
+            icon={Bot}
+            message="เลือกอินเทนต์"
+            description="เลือกอินเทนต์จากรายการด้านซ้ายเพื่อแก้ไข หรือสร้างอินเทนต์ใหม่"
+            className="h-full border-0"
+          />
         )}
       </div>
 
@@ -215,6 +278,8 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
   const [kwInput, setKwInput] = useState("");
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [dirty, setDirty] = useState(false);
+  const [previewMessages, setPreviewMessages] = useState<PreviewMessage[]>([]);
+  const [previewQuickReplies, setPreviewQuickReplies] = useState<PreviewQuickReply[]>([]);
 
   useEffect(() => {
     setName(intent.name);
@@ -223,9 +288,28 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
     setPostbackData(intent.postbackData ?? "");
     setMessageSetId(intent.messageSetId);
     setDirty(false);
-    // Fetch activity
     fetch(`/api/bot-intents/${intent.id}/activity`).then((r) => r.ok ? r.json() : []).then(setActivity);
   }, [intent.id, intent.name, intent.triggerType, intent.keywords, intent.postbackData, intent.messageSetId]);
+
+  useEffect(() => {
+    if (!messageSetId) {
+      setPreviewMessages([]);
+      setPreviewQuickReplies([]);
+      return;
+    }
+    fetch(`/api/message-sets/${messageSetId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data?.messages?._default) {
+          setPreviewMessages([]);
+          setPreviewQuickReplies([]);
+          return;
+        }
+        const pattern = data.messages._default;
+        setPreviewMessages(pattern.messages ?? []);
+        setPreviewQuickReplies(pattern.quickReplies ?? []);
+      });
+  }, [messageSetId]);
 
   const save = () => {
     onUpdate({ name, triggerType, keywords, postbackData: postbackData || null, messageSetId });
@@ -246,35 +330,61 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
     setDirty(true);
   };
 
+  const userBubbleText = triggerType === "keyword" && keywords.length > 0
+    ? keywords[0]
+    : triggerType === "first_message"
+    ? "สวัสดีครับ"
+    : triggerType === "postback" && postbackData
+    ? `[postback: ${postbackData}]`
+    : undefined;
+
   return (
-    <div className="p-6 space-y-8 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 space-y-1">
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-muted-foreground">ชื่ออินเทนต์ *</label>
+    <div className="flex gap-6 p-6">
+      <div className="min-w-0 flex-1 space-y-6">
+      {/* Header Card */}
+      <div className="rounded-2xl border bg-card p-5">
+        <div className="flex items-start gap-4">
+          <div className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+            intent.isActive ? "bg-primary/10" : "bg-muted"
+          )}>
+            <Settings2 className={cn("h-5 w-5", intent.isActive ? "text-primary" : "text-muted-foreground")} />
           </div>
-          <Input
-            className="text-lg font-semibold h-11"
-            value={name}
-            onChange={(e) => { setName(e.target.value); setDirty(true); }}
-          />
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-sm text-muted-foreground">สถานะการใช้งาน</span>
-          <div className="flex items-center gap-2 cursor-pointer" onClick={onToggle}>
-            <Switch checked={intent.isActive} />
-            <span className={cn("text-sm font-medium", intent.isActive ? "text-emerald-600" : "text-muted-foreground")}>
-              {intent.isActive ? "On" : "Off"}
-            </span>
+          <div className="min-w-0 flex-1 space-y-3">
+            <div>
+              <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">ชื่ออินเทนต์</label>
+              <Input
+                className="mt-1 text-lg font-semibold h-11"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setDirty(true); }}
+              />
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={onToggle}>
+              <Switch checked={intent.isActive} />
+              <span className={cn(
+                "text-sm font-medium",
+                intent.isActive ? "text-primary" : "text-muted-foreground"
+              )}>
+                {intent.isActive ? "เปิด" : "ปิด"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Trigger Type */}
-      <div className="space-y-4">
-        <h3 className="heading-section">เทรนบอท</h3>
-        <p className="text-sm text-muted-foreground">เมื่อผู้ใช้ส่งข้อความ ที่ตรงกับคีย์เวิร์ดที่กำหนดไว้ บอทจะส่งข้อความตอบกลับอัตโนมัติ</p>
+      {/* Trigger Card */}
+      <div className="rounded-2xl border bg-card p-5 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+            <Zap className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="heading-section">เทรนบอท</h3>
+            <p className="text-xs text-muted-foreground">เมื่อผู้ใช้ส่งข้อความที่ตรงกับเงื่อนไข บอทจะตอบกลับอัตโนมัติ</p>
+          </div>
+        </div>
 
         <div>
           <label className="text-sm font-medium text-muted-foreground mb-1.5 block">ประเภท Trigger</label>
@@ -293,7 +403,7 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
             <div className="flex gap-2">
               <Input
                 className="flex-1"
-                placeholder="เพิ่มคีย์เวิร์ดบอท"
+                placeholder="พิมพ์คีย์เวิร์ดแล้ว Enter"
                 value={kwInput}
                 onChange={(e) => setKwInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && addKeyword()}
@@ -303,19 +413,29 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
               </Button>
             </div>
 
-            {keywords.length > 0 && (
-              <div className="border rounded-xl overflow-hidden">
-                <div className="px-4 py-2 bg-muted/50 text-xs text-muted-foreground flex justify-between">
-                  <span>แสดง {keywords.length} จาก {keywords.length} รายการ</span>
+            {keywords.length > 0 ? (
+              <div className="overflow-hidden rounded-xl ring-1 ring-border/30">
+                <div className="flex justify-between bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+                  <span>{keywords.length} คีย์เวิร์ด</span>
                 </div>
-                {keywords.map((kw) => (
-                  <div key={kw} className="flex items-center justify-between px-4 py-2.5 border-t">
-                    <span className="text-sm font-medium">/{kw}</span>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeKeyword(kw)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))}
+                <div className="divide-y divide-border/30">
+                  {keywords.map((kw) => (
+                    <div key={kw} className="flex items-center justify-between px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-3.5 w-3.5 text-muted-foreground/50" />
+                        <span className="text-sm font-medium">{kw}</span>
+                      </div>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-muted/50" onClick={() => removeKeyword(kw)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                <Info className="h-4 w-4 shrink-0" />
+                ยังไม่ได้เพิ่มคีย์เวิร์ด — พิมพ์คำแล้วกด Enter
               </div>
             )}
           </div>
@@ -331,14 +451,26 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
             />
           </div>
         )}
+
+        {triggerType === "first_message" && (
+          <div className="flex items-center gap-2 rounded-xl bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            <Info className="h-4 w-4 shrink-0" />
+            บอทจะตอบกลับทุกครั้งเมื่อผู้ใช้ส่งข้อความเข้ามาครั้งแรก
+          </div>
+        )}
       </div>
 
-      {/* Linked Message Set */}
-      <div className="space-y-4">
-        <h3 className="heading-section">ข้อความตอบกลับ</h3>
-        <p className="text-sm text-muted-foreground">
-          ข้อความที่บอทจะนำมาใช้ตอบกลับ เพื่อส่งไปยังผู้ใช้งาน
-        </p>
+      {/* Message Set Card */}
+      <div className="rounded-2xl border bg-card p-5 space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="heading-section">ข้อความตอบกลับ</h3>
+            <p className="text-xs text-muted-foreground">เลือกชุดข้อความที่บอทจะส่งไปยังผู้ใช้</p>
+          </div>
+        </div>
 
         <Select value={messageSetId} onValueChange={(v) => { setMessageSetId(v ?? ""); setDirty(true); }}>
           <SelectTrigger className="w-full"><SelectValue placeholder="เลือกชุดข้อความ" /></SelectTrigger>
@@ -350,33 +482,27 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
         </Select>
 
         {messageSetId && (
-          <div className="border rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead><tr className="bg-muted/50 text-xs text-muted-foreground">
-                <th className="text-left px-4 py-2 font-medium">ชื่อ</th>
-                <th className="text-left px-4 py-2 font-medium">ประเภท</th>
-                <th className="text-left px-4 py-2 font-medium">แอ็กชัน</th>
-              </tr></thead>
-              <tbody>
-                <tr className="border-t">
-                  <td className="px-4 py-3 text-sm font-medium">
-                    {messageSets.find((ms) => ms.id === messageSetId)?.name ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">Message</td>
-                  <td className="px-4 py-3">
-                    <a href="/auto-reply" className="text-primary text-sm hover:underline inline-flex items-center gap-1">
-                      แก้ไข <ChevronRight className="h-3 w-3" />
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="flex items-center justify-between rounded-xl bg-muted/30 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">
+                  {messageSets.find((ms) => ms.id === messageSetId)?.name ?? "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">ชุดข้อความตอบกลับ</p>
+              </div>
+            </div>
+            <a href="/auto-reply" className="text-primary text-sm hover:underline inline-flex items-center gap-1">
+              แก้ไข <ChevronRight className="h-3 w-3" />
+            </a>
           </div>
         )}
       </div>
 
       {/* Save / Delete */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex items-center gap-3">
         <Button onClick={save} disabled={!dirty}>บันทึก</Button>
         <Button variant="outline" className="text-destructive" onClick={onDelete}>
           <Trash2 className="h-4 w-4 mr-2" />ลบอินเทนต์
@@ -385,33 +511,76 @@ function IntentEditor({ intent, messageSets, onUpdate, onToggle, onDelete }: {
 
       {/* Activity Log */}
       {activity.length > 0 && (
-        <div className="space-y-3 pt-4 border-t">
-          <h3 className="heading-section flex items-center gap-2">
-            <Clock className="h-4 w-4" />กิจกรรมล่าสุด
-          </h3>
-          <div className="space-y-2">
-            {activity.map((entry) => (
-              <div key={entry.id} className="rounded-xl bg-card border p-3 space-y-1">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm text-muted-foreground shrink-0">{formatRelativeTime(entry.startedAt)}</span>
-                  <span className="font-medium truncate">{entry.conversation.contact.displayName || "ลูกค้า"}</span>
-                  <span className="text-sm text-muted-foreground/60 truncate">{entry.conversation.channel.name}</span>
-                  <span className="text-xs text-muted-foreground/50 shrink-0">{entry.sentCount}/{entry.totalMessages} sent</span>
-                  <span className={cn("ml-auto rounded-full px-2.5 py-1 text-xs font-medium shrink-0",
-                    entry.status === "completed" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
-                    : entry.status === "failed" ? "bg-red-50 text-red-600 dark:bg-red-950/30 dark:text-red-400"
-                    : "bg-muted text-muted-foreground"
-                  )}>{entry.status === "completed" ? "สำเร็จ" : entry.status === "failed" ? "ส่งไม่สำเร็จ" : entry.status}</span>
-                </div>
-                {entry.errors.length > 0 && (
-                  <div className="pl-7 text-xs text-red-500">{entry.errors.join(", ")}</div>
+        <div className="rounded-2xl border bg-card p-5 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="heading-section">กิจกรรมล่าสุด</h3>
+              <p className="text-xs text-muted-foreground">{activity.length} รายการ</p>
+            </div>
+          </div>
+
+          <div className="relative space-y-0">
+            {activity.map((entry, idx) => (
+              <div key={entry.id} className="relative flex gap-3 pb-4 last:pb-0">
+                {idx < activity.length - 1 && (
+                  <div className="absolute left-[11px] top-6 h-[calc(100%-12px)] w-px bg-border/50" />
                 )}
+                <div className={cn(
+                  "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full",
+                  entry.status === "completed" ? "bg-primary/10" : entry.status === "failed" ? "bg-destructive/10" : "bg-muted"
+                )}>
+                  <Clock className={cn(
+                    "h-3 w-3",
+                    entry.status === "completed" ? "text-primary" : entry.status === "failed" ? "text-destructive" : "text-muted-foreground"
+                  )} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">
+                      {entry.conversation.contact.displayName || "ลูกค้า"}
+                    </span>
+                    <span className={cn(
+                      "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                      entry.status === "completed" ? "bg-primary/10 text-primary"
+                      : entry.status === "failed" ? "bg-destructive/10 text-destructive"
+                      : "bg-muted text-muted-foreground"
+                    )}>
+                      {entry.status === "completed" ? "สำเร็จ" : entry.status === "failed" ? "ล้มเหลว" : entry.status}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>{entry.conversation.channel.name}</span>
+                    <span>·</span>
+                    <span>{entry.sentCount}/{entry.totalMessages} ข้อความ</span>
+                    <span>·</span>
+                    <span>{formatRelativeTime(entry.startedAt)}</span>
+                  </div>
+                  {entry.errors.length > 0 && (
+                    <div className="mt-1 text-xs text-destructive">{entry.errors.join(", ")}</div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
+      </div>
+
+      {/* Flow Preview Column */}
+      <div className="hidden w-[340px] shrink-0 xl:block">
+        <div className="sticky top-6">
+          <p className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">จำลองการสนทนา</p>
+          <ChatPreview
+            messages={previewMessages}
+            quickReplies={previewQuickReplies}
+            userMessage={userBubbleText}
+            botName={intent.name || "Bot"}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -456,7 +625,7 @@ function CreateIntentDialog({ open, onOpenChange, messageSets, onCreate }: {
           <div>
             <label className="text-sm font-medium mb-1.5 block">ชุดข้อความตอบกลับ</label>
             {messageSets.length === 0 ? (
-              <p className="text-sm text-muted-foreground">ยังไม่มีชุดข้อความ กรุณาสร้างที่หน้า "ชุดข้อความตอบกลับ" ก่อน</p>
+              <p className="text-sm text-muted-foreground">ยังไม่มีชุดข้อความ กรุณาสร้างที่หน้า &ldquo;ชุดข้อความตอบกลับ&rdquo; ก่อน</p>
             ) : (
               <Select value={messageSetId} onValueChange={(v) => setMessageSetId(v ?? "")}>
                 <SelectTrigger><SelectValue placeholder="เลือกชุดข้อความ" /></SelectTrigger>

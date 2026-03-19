@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/app/(dashboard)/inbox/types";
 
@@ -45,7 +45,6 @@ interface ChurnData {
 }
 
 export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelProps) {
-  const { toast } = useToast();
   const [suggestions, setSuggestions] = useState<SuggestedReply[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [expandedReply, setExpandedReply] = useState<number | null>(null);
@@ -94,11 +93,11 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "ไม่สามารถขอคำแนะนำได้";
-      toast({ title: "AI แนะนำล้มเหลว", description: msg, variant: "destructive" });
+      toast.error("AI แนะนำล้มเหลว", { description: msg });
     } finally {
       setLoadingSuggestions(false);
     }
-  }, [conversation.id, toast]);
+  }, [conversation.id]);
 
   async function refreshSuggestions() {
     setSuggestions([]);
@@ -117,7 +116,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
       const data = (await res.json()) as ChurnData;
       setChurnData(data);
     } catch {
-      toast({ title: "วิเคราะห์ความเสี่ยงล้มเหลว", description: "ลองอีกครั้งภายหลัง", variant: "destructive" });
+      toast.error("วิเคราะห์ความเสี่ยงล้มเหลว", { description: "ลองอีกครั้งภายหลัง" });
     } finally {
       setLoadingChurn(false);
     }
@@ -131,9 +130,9 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
       const data = (await res.json()) as { summary: string; sentiment: string; intent: string };
       setSummaryText(data.summary);
       setSentiment(data.sentiment);
-      toast({ title: "สรุปเสร็จแล้ว" });
+      toast.success("สรุปเสร็จแล้ว");
     } catch {
-      toast({ title: "สรุปบทสนทนาล้มเหลว", description: "ลองอีกครั้งภายหลัง", variant: "destructive" });
+      toast.error("สรุปบทสนทนาล้มเหลว", { description: "ลองอีกครั้งภายหลัง" });
     } finally {
       setRefreshingSummary(false);
     }
@@ -345,7 +344,7 @@ export function AiCopilotPanel({ conversation, onInsertReply }: AiCopilotPanelPr
                 <TooltipTrigger
                   render={
                     <Button variant="ghost" size="xs"
-                      onClick={() => { navigator.clipboard.writeText(sug.reply); toast({ title: "คัดลอกแล้ว" }); }}
+                      onClick={() => { navigator.clipboard.writeText(sug.reply); toast.success("คัดลอกแล้ว"); }}
                     />
                   }
                 >

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Send, Loader2, MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
@@ -120,35 +121,37 @@ function ChatWidget() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background font-sans text-sm rounded-xl overflow-hidden shadow-lg">
+    <div className="flex flex-col h-screen bg-background font-sans text-sm rounded-2xl overflow-hidden shadow-lg border border-border/40">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3 shrink-0">
-        <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary-foreground/20">
+      <div className="bg-primary text-primary-foreground px-5 py-4 flex items-center gap-3 shrink-0">
+        <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-primary-foreground/15">
           <MessageCircle className="h-4 w-4" />
         </div>
         <div>
           <p className="font-semibold text-sm">แชทกับเรา</p>
-          <p className="text-xs text-primary-foreground/80">ทีมงานพร้อมช่วยเหลือ</p>
+          <p className="text-xs text-primary-foreground/85 mt-0.5">ทีมงานพร้อมช่วยเหลือ</p>
         </div>
       </div>
 
       {!nameSet ? (
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-xs">
-            <h2 className="text-base font-semibold mb-1">สวัสดีครับ!</h2>
-            <p className="text-xs text-muted-foreground mb-4">กรุณาระบุชื่อก่อนเริ่มแชท</p>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="w-full max-w-xs space-y-5">
+            <div className="space-y-2">
+              <h2 className="text-base font-semibold">สวัสดีครับ!</h2>
+              <p className="text-sm text-muted-foreground">กรุณาระบุชื่อก่อนเริ่มแชท</p>
+            </div>
             <input
               type="text"
               placeholder="ชื่อของคุณ"
               value={visitorName}
               onChange={(e) => setVisitorName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleStartChat(); }}
-              className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full border border-border/80 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30"
             />
             <button
               onClick={handleStartChat}
               disabled={!visitorName.trim()}
-              className="w-full rounded-lg bg-primary text-primary-foreground py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+              className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
             >
               เริ่มแชท
             </button>
@@ -161,27 +164,33 @@ function ChatWidget() {
       ) : (
         <>
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto px-5 py-6 space-y-4">
             {messages.length === 0 && (
-              <div className="text-center text-xs text-muted-foreground pt-8">
-                <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <div className="text-center text-sm text-muted-foreground pt-12 px-4">
+                <MessageCircle className="h-9 w-9 mx-auto mb-3 opacity-25" />
                 ส่งข้อความเพื่อเริ่มการสนทนา
               </div>
             )}
             {messages.map((msg) => {
               const isMe = msg.senderType === "contact";
               return (
-                <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                <div
+                  key={msg.id}
+                  className={cn("flex gap-2.5", isMe ? "justify-end" : "justify-start")}
+                >
                   {!isMe && (
-                    <div className="h-6 w-6 flex items-center justify-center rounded-lg text-xs font-bold mr-2 shrink-0 mt-1 bg-muted text-muted-foreground">
+                    <div className="h-7 w-7 flex items-center justify-center rounded-xl text-[10px] font-semibold shrink-0 mt-0.5 bg-muted text-muted-foreground">
                       A
                     </div>
                   )}
-                  <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
-                    isMe
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-muted/50 text-foreground rounded-bl-sm"
-                  }`}>
+                  <div
+                    className={cn(
+                      "max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      isMe
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
+                    )}
+                  >
                     {msg.content}
                   </div>
                 </div>
@@ -191,25 +200,25 @@ function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t shrink-0">
-            <div className="flex gap-2 items-end">
+          <div className="p-4 pt-3 border-t border-border/60 shrink-0 bg-background">
+            <div className="flex gap-3 items-end">
               <textarea
                 rows={1}
                 placeholder="พิมพ์ข้อความ..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                className="flex-1 resize-none rounded-lg border px-3 py-2 text-sm leading-[1.4] focus:outline-none focus:ring-2 focus:ring-primary max-h-32"
+                className="flex-1 resize-none rounded-xl border border-border/80 px-4 py-2.5 text-sm leading-[1.45] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/25 max-h-32"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="h-9 w-9 rounded-full flex items-center justify-center disabled:opacity-50 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="h-10 w-10 rounded-xl flex items-center justify-center disabled:opacity-50 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="text-center text-xs text-muted-foreground mt-1.5">Powered by Anajak Chat</p>
+            <p className="text-center text-[11px] text-muted-foreground/90 mt-3">Powered by Anajak Chat</p>
           </div>
         </>
       )}

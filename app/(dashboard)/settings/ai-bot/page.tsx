@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { AIBotConfigForm, type BotConfig } from "@/components/settings/ai-bot-config-form";
 import { AIReplyLogTable, type ReplyLog } from "@/components/settings/ai-reply-log-table";
 
@@ -10,7 +10,6 @@ import { AIReplyLogTable, type ReplyLog } from "@/components/settings/ai-reply-l
 const PAGE_SIZE = 15;
 
 export default function AIBotPage() {
-  const { toast } = useToast();
   const [config, setConfig] = useState<BotConfig>({
     mode: "off",
     useBusinessHours: false,
@@ -66,10 +65,10 @@ export default function AIBotPage() {
         body: JSON.stringify(config),
       });
       if (res.ok) {
-        toast({ title: "บันทึกการตั้งค่า AI Bot แล้ว" });
+        toast.success("บันทึกการตั้งค่า AI Bot แล้ว");
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setSaving(false);
@@ -80,16 +79,16 @@ export default function AIBotPage() {
     setActionLoading(logId + "-approve");
     const res = await fetch(`/api/ai-bot/reply-log/${logId}/approve`, { method: "POST" });
     setActionLoading(null);
-    if (res.ok) { toast({ title: "ส่งข้อความแล้ว" }); fetchLogs(); }
-    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
+    if (res.ok) { toast.success("ส่งข้อความแล้ว"); fetchLogs(); }
+    else { toast.error("เกิดข้อผิดพลาด"); }
   }
 
   async function handleReject(logId: string) {
     setActionLoading(logId + "-reject");
     const res = await fetch(`/api/ai-bot/reply-log/${logId}/reject`, { method: "POST" });
     setActionLoading(null);
-    if (res.ok) { toast({ title: "ปฏิเสธแล้ว" }); fetchLogs(); }
-    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
+    if (res.ok) { toast.success("ปฏิเสธแล้ว"); fetchLogs(); }
+    else { toast.error("เกิดข้อผิดพลาด"); }
   }
 
   async function handleEditSend() {
@@ -101,8 +100,8 @@ export default function AIBotPage() {
       body: JSON.stringify({ content: editingLog.content }),
     });
     setActionLoading(null);
-    if (res.ok) { toast({ title: "ส่งข้อความที่แก้ไขแล้ว" }); setEditingLog(null); fetchLogs(); }
-    else { toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" }); }
+    if (res.ok) { toast.success("ส่งข้อความที่แก้ไขแล้ว"); setEditingLog(null); fetchLogs(); }
+    else { toast.error("เกิดข้อผิดพลาด"); }
   }
 
   return (

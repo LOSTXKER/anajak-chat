@@ -63,11 +63,11 @@ const DAYS_OPTIONS = [
 ];
 
 const SEGMENT_COLORS: Record<string, string> = {
-  VIP: "bg-foreground",
-  Regular: "bg-muted-foreground/40",
-  "Window Shopper": "bg-muted-foreground/60",
-  "One-timer": "bg-muted-foreground/40",
-  "At-risk": "bg-foreground/80",
+  VIP: "bg-primary",
+  Regular: "bg-primary/35",
+  "Window Shopper": "bg-primary/55",
+  "One-timer": "bg-primary/30",
+  "At-risk": "bg-primary/90",
 };
 
 const EXPORT_LABELS: Record<string, string> = {
@@ -204,13 +204,13 @@ export default function AnalyticsPage() {
             ส่งออก
           </Button>
           {exportOpen && (
-            <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-lg border bg-background py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-xl bg-popover py-1 shadow-lg ring-1 ring-border/50">
               {(["conversations", "orders", "contacts"] as const).map((t) => (
                 <a
                   key={t}
                   href={`/api/analytics/export?type=${t}&days=${days}`}
                   download
-                  className="block px-3 py-1.5 text-xs capitalize hover:bg-muted"
+                  className="block px-3 py-1.5 text-xs capitalize hover:bg-muted/50"
                   onClick={() => setExportOpen(false)}
                 >
                   {EXPORT_LABELS[t]}
@@ -231,33 +231,37 @@ export default function AnalyticsPage() {
       </PageToolbar>
 
       {loading && !overview ? (
-        <div className="space-y-6">
+        <div className="space-y-10">
           <SkeletonKpiRow />
           <SkeletonTable />
         </div>
       ) : (
-        <>
+        <div className="space-y-10">
           {overview && (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <KpiCard
+                variant="minimal"
                 icon={MessageSquare}
                 label="สนทนาทั้งหมด"
                 value={overview.totalConversations.toLocaleString()}
                 sub={`เปิดอยู่ ${overview.openConversations}`}
               />
               <KpiCard
+                variant="minimal"
                 icon={Users}
                 label="ลูกค้า"
                 value={overview.totalContacts.toLocaleString()}
                 sub={`resolve rate ${overview.resolveRate}%`}
               />
               <KpiCard
+                variant="minimal"
                 icon={Clock}
                 label="เวลาตอบเฉลี่ย"
                 value={formatMinutes(overview.avgFirstResponseMinutes)}
                 sub={`SLA breach ${overview.slaBreaches}`}
               />
               <KpiCard
+                variant="minimal"
                 icon={TrendingUp}
                 label="รายได้"
                 value={formatCurrency(overview.totalRevenue)}
@@ -266,8 +270,8 @@ export default function AnalyticsPage() {
             </div>
           )}
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border bg-card p-6">
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="rounded-2xl bg-card p-6 ring-1 ring-border/40">
               <h2 className="heading-section">Funnel การขาย</h2>
               {funnel.length === 0 ? (
                 <EmptyState
@@ -310,7 +314,7 @@ export default function AnalyticsPage() {
               )}
             </div>
 
-            <div className="rounded-xl border bg-card p-6">
+            <div className="rounded-2xl bg-card p-6 ring-1 ring-border/40">
               <h2 className="heading-section">กลุ่มลูกค้า</h2>
               {segments.length === 0 ? (
                 <EmptyState
@@ -327,7 +331,7 @@ export default function AnalyticsPage() {
                           <span
                             className={cn(
                               "h-2.5 w-2.5 rounded-full",
-                              SEGMENT_COLORS[s.name] ?? "bg-muted-foreground/40"
+                              SEGMENT_COLORS[s.name] ?? "bg-primary/35"
                             )}
                           />
                           {s.name}
@@ -336,11 +340,11 @@ export default function AnalyticsPage() {
                           {s.count.toLocaleString()} ({s.pct}%)
                         </span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className="h-2 overflow-hidden rounded-full bg-muted/60">
                         <div
                           className={cn(
                             "h-full rounded-full transition-all",
-                            SEGMENT_COLORS[s.name] ?? "bg-muted-foreground/40"
+                            SEGMENT_COLORS[s.name] ?? "bg-primary/35"
                           )}
                           style={{ width: `${s.pct}%` }}
                         />
@@ -352,8 +356,8 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border bg-card overflow-hidden">
-            <div className="flex items-center justify-between border-b bg-muted/30 px-6 py-4">
+          <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-border/40">
+            <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
               <h2 className="heading-section">ประสิทธิภาพทีม</h2>
               <span className="text-xs text-muted-foreground">
                 {agents.length} คน
@@ -387,7 +391,7 @@ export default function AnalyticsPage() {
               onExpandedRowKeyChange={setExpandedAgent}
             />
           </div>
-        </>
+        </div>
       )}
     </PageShell>
   );

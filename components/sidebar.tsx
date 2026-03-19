@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useSidebar } from "@/hooks/use-sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import {
   MessageCircle,
   LayoutGrid,
   Sparkles,
+  ChevronsLeft,
 } from "lucide-react";
 
 interface UserInfo {
@@ -46,28 +48,51 @@ interface NavItem {
   icon: typeof MessageSquare;
 }
 
-const MAIN_NAV: NavItem[] = [
-  { href: "/inbox", label: "แชท", icon: MessageSquare },
-  { href: "/contacts", label: "รายชื่อ", icon: Users },
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: "หลัก",
+    items: [
+      { href: "/inbox", label: "แชท", icon: MessageSquare },
+      { href: "/contacts", label: "รายชื่อ", icon: Users },
+    ],
+  },
+  {
+    title: "เนื้อหา",
+    items: [
+      { href: "/auto-reply", label: "ข้อความตอบกลับ", icon: Bot },
+      { href: "/ai-bot", label: "อินเทนต์", icon: Sparkles },
+      { href: "/templates", label: "ข้อความด่วน", icon: MessageCircle },
+      { href: "/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
+      { href: "/line-rich-menu", label: "ริชเมนู", icon: LayoutGrid },
+    ],
+  },
+  {
+    title: "เครื่องมือ",
+    items: [
+      { href: "/analytics", label: "วิเคราะห์", icon: BarChart3 },
+      { href: "/ads", label: "โฆษณา", icon: Megaphone },
+      { href: "/media-library", label: "คลังสื่อ", icon: ImageIcon },
+    ],
+  },
 ];
 
-const CONTENT_NAV: NavItem[] = [
-  { href: "/auto-reply", label: "ข้อความ", icon: Bot },
-  { href: "/ai-bot", label: "อินเทนต์", icon: Sparkles },
-  { href: "/templates", label: "ข้อความด่วน", icon: MessageCircle },
-  { href: "/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
-  { href: "/line-rich-menu", label: "เมนู", icon: LayoutGrid },
-];
-
-const TOOLS_NAV: NavItem[] = [
-  { href: "/analytics", label: "วิเคราะห์", icon: BarChart3 },
-  { href: "/ads", label: "โฆษณา", icon: Megaphone },
-  { href: "/media-library", label: "คลังสื่อ", icon: ImageIcon },
-];
-
-function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
+function NavLink({
+  item,
+  collapsed,
+  onClick,
+}: {
+  item: NavItem;
+  collapsed: boolean;
+  onClick?: () => void;
+}) {
   const pathname = usePathname();
-  const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+  const isActive =
+    pathname === item.href || pathname.startsWith(item.href + "/");
 
   return (
     <Link
@@ -75,29 +100,21 @@ function NavLink({ item, onClick }: { item: NavItem; onClick?: () => void }) {
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-xs font-medium transition-all duration-150",
+        "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors duration-150",
+        collapsed && "justify-center px-2",
         isActive
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+          ? "bg-primary/10 font-medium text-primary"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
+      title={collapsed ? item.label : undefined}
     >
-      <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary")} />
-      <span className="text-center leading-tight line-clamp-1">{item.label}</span>
+      <item.icon className="h-[18px] w-[18px] shrink-0" />
+      {!collapsed && <span className="truncate">{item.label}</span>}
     </Link>
   );
 }
 
-function NavGroup({ items, onClick }: { items: NavItem[]; onClick?: () => void }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      {items.map((item) => (
-        <NavLink key={item.href} item={item} onClick={onClick} />
-      ))}
-    </div>
-  );
-}
-
-function UserMenu({ user }: { user: UserInfo }) {
+function UserMenu({ user, collapsed }: { user: UserInfo; collapsed: boolean }) {
   async function handleLogout() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -113,16 +130,32 @@ function UserMenu({ user }: { user: UserInfo }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center justify-center rounded-lg p-1 transition-colors hover:bg-muted/80">
-        <Avatar className="h-8 w-8 rounded-lg ring-2 ring-border/50">
-          <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-primary text-xs font-bold">
+      <DropdownMenuTrigger
+        className={cn(
+          "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-muted",
+          collapsed && "justify-center px-2"
+        )}
+      >
+        <Avatar className="h-8 w-8 shrink-0 rounded-lg">
+          <AvatarFallback className="rounded-lg bg-primary/10 text-xs font-semibold text-primary">
             {initials}
           </AvatarFallback>
         </Avatar>
+        {!collapsed && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{user.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{user.orgName}</p>
+          </div>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="right" sideOffset={8} className="w-56">
+      <DropdownMenuContent
+        align={collapsed ? "center" : "start"}
+        side="right"
+        sideOffset={8}
+        className="w-56"
+      >
         <div className="px-2 py-2 text-sm">
-          <p className="font-semibold">{user.name}</p>
+          <p className="font-medium">{user.name}</p>
           <p className="text-xs text-muted-foreground">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
@@ -140,60 +173,115 @@ function UserMenu({ user }: { user: UserInfo }) {
   );
 }
 
-function SidebarContent({ user, onNavClick }: {
+function SidebarContent({
+  user,
+  collapsed,
+  onToggle,
+  onNavClick,
+}: {
   user: UserInfo;
+  collapsed: boolean;
+  onToggle?: () => void;
   onNavClick?: () => void;
 }) {
   const pathname = usePathname();
   const isSettingsActive = pathname.startsWith("/settings");
 
   return (
-    <div className="flex h-full flex-col bg-sidebar border-r border-sidebar-border">
-      {/* Logo */}
-      <div className="flex h-14 items-center justify-center shrink-0 border-b border-sidebar-border">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shadow-sm shadow-primary/25">
-          <MessageSquare className="h-4 w-4 text-primary-foreground" />
-        </div>
+    <div className="flex h-full flex-col border-r bg-sidebar">
+      {/* Header */}
+      <div className={cn(
+        "flex h-14 shrink-0 items-center border-b px-4",
+        collapsed ? "justify-center px-2" : "justify-between"
+      )}>
+        <Link href="/inbox" className="flex items-center gap-2.5" onClick={onNavClick}>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
+            <MessageSquare className="h-4 w-4 text-primary-foreground" />
+          </div>
+          {!collapsed && (
+            <span className="text-sm font-bold tracking-tight">Anajak</span>
+          )}
+        </Link>
+        {!collapsed && onToggle && (
+          <button
+            onClick={onToggle}
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-2 py-2">
-        <NavGroup items={MAIN_NAV} onClick={onNavClick} />
-        <div className="mx-auto my-2 h-px w-8 bg-border/60" />
-        <NavGroup items={CONTENT_NAV} onClick={onNavClick} />
-        <div className="mx-auto my-2 h-px w-8 bg-border/60" />
-        <NavGroup items={TOOLS_NAV} onClick={onNavClick} />
-        <div className="mx-auto my-2 h-px w-8 bg-border/60" />
+      <ScrollArea className="flex-1 px-3 py-3">
+        <div className="space-y-6">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.title}>
+              {!collapsed && (
+                <p className="mb-1.5 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                  {section.title}
+                </p>
+              )}
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    item={item}
+                    collapsed={collapsed}
+                    onClick={onNavClick}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
 
-        {/* Settings */}
-        <Link
-          href="/settings/general"
-          onClick={onNavClick}
-          aria-current={isSettingsActive ? "page" : undefined}
-          className={cn(
-            "flex flex-col items-center gap-1 rounded-xl px-1 py-2.5 text-xs font-medium transition-all duration-150",
-            isSettingsActive
-              ? "bg-primary/10 text-primary"
-              : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-          )}
-        >
-          <Settings className={cn("h-5 w-5 shrink-0", isSettingsActive && "text-primary")} />
-          <span className="text-center leading-tight">ตั้งค่า</span>
-        </Link>
+          {/* Settings */}
+          {collapsed && <div className="mx-auto h-px w-6 bg-border" />}
+          <Link
+            href="/settings/general"
+            onClick={onNavClick}
+            aria-current={isSettingsActive ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors duration-150",
+              collapsed && "justify-center px-2",
+              isSettingsActive
+                ? "bg-primary/10 font-medium text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+            title={collapsed ? "ตั้งค่า" : undefined}
+          >
+            <Settings className="h-[18px] w-[18px] shrink-0" />
+            {!collapsed && <span>ตั้งค่า</span>}
+          </Link>
+        </div>
       </ScrollArea>
 
       {/* User */}
-      <div className="shrink-0 border-t border-sidebar-border py-2 flex justify-center">
-        <UserMenu user={user} />
+      <div className="shrink-0 border-t p-3">
+        <UserMenu user={user} collapsed={collapsed} />
       </div>
     </div>
   );
 }
 
 export function DesktopSidebar({ user }: { user: UserInfo }) {
+  const { collapsed, hydrated, toggle } = useSidebar();
+
   return (
-    <aside className="hidden shrink-0 lg:block w-[76px]">
-      <SidebarContent user={user} />
+    <aside
+      className={cn(
+        "hidden shrink-0 lg:block",
+        hydrated
+          ? "transition-[width] duration-200 ease-in-out"
+          : "transition-none",
+        collapsed ? "w-16" : "w-60"
+      )}
+    >
+      <SidebarContent
+        user={user}
+        collapsed={collapsed}
+        onToggle={toggle}
+      />
     </aside>
   );
 }
@@ -205,8 +293,8 @@ export function MobileSidebar({ user }: { user: UserInfo }) {
         <Menu className="h-5 w-5" />
         <span className="sr-only">เมนู</span>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[76px] p-0">
-        <SidebarContent user={user} />
+      <SheetContent side="left" className="w-60 p-0">
+        <SidebarContent user={user} collapsed={false} />
       </SheetContent>
     </Sheet>
   );

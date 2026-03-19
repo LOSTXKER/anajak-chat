@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { BusinessHoursConfig, DaySchedule } from "@/lib/business-hours";
 import { DEFAULT_BUSINESS_HOURS } from "@/lib/business-hours";
 
@@ -24,7 +24,6 @@ const DAY_LABELS: Record<string, string> = {
 const DAY_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 export default function BusinessHoursPage() {
-  const { toast } = useToast();
   const [config, setConfig] = useState<BusinessHoursConfig>(DEFAULT_BUSINESS_HOURS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,7 +80,7 @@ export default function BusinessHoursPage() {
         body: JSON.stringify(config),
       });
       if (res.ok) {
-        toast({ title: "บันทึกเวลาทำการแล้ว" });
+        toast.success("บันทึกเวลาทำการแล้ว");
         // Refresh status
         const statusRes = await fetch("/api/settings/business-hours/status");
         if (statusRes.ok) {
@@ -90,7 +89,7 @@ export default function BusinessHoursPage() {
         }
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setSaving(false);

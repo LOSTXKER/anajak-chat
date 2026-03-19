@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
@@ -42,7 +42,6 @@ const PAGE_SIZE = 20;
 const EMPTY: Article = { id: "", title: "", content: "", category: "faq", tags: [], isActive: true, usageCount: 0, createdAt: "", updatedAt: "" };
 
 export default function KnowledgeBasePage() {
-  const { toast } = useToast();
   const [articles, setArticles] = useState<Article[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -99,13 +98,13 @@ export default function KnowledgeBasePage() {
         }),
       });
       if (res.ok) {
-        toast({ title: isNew ? "สร้างบทความแล้ว" : "บันทึกแล้ว" });
+        toast.success(isNew ? "สร้างบทความแล้ว" : "บันทึกแล้ว");
         setSelected(null);
         setEditing(EMPTY);
         fetchArticles();
       } else {
         const err = await res.json() as { error: string };
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setSaving(false);
@@ -116,7 +115,7 @@ export default function KnowledgeBasePage() {
     if (!confirm("ลบบทความนี้?")) return;
     const res = await fetch(`/api/knowledge-base/${id}`, { method: "DELETE" });
     if (res.ok) {
-      toast({ title: "ลบแล้ว" });
+      toast.success("ลบแล้ว");
       if (selected?.id === id) { setSelected(null); setEditing(EMPTY); }
       fetchArticles();
     }
@@ -126,8 +125,8 @@ export default function KnowledgeBasePage() {
     setEmbedding(id);
     const res = await fetch(`/api/knowledge-base/${id}/embed`, { method: "POST" });
     setEmbedding(null);
-    if (res.ok) toast({ title: "สร้าง embedding แล้ว" });
-    else toast({ title: "เกิดข้อผิดพลาด", variant: "destructive" });
+    if (res.ok) toast.success("สร้าง embedding แล้ว");
+    else toast.error("เกิดข้อผิดพลาด");
   }
 
   async function handleEmbedAll() {
@@ -136,7 +135,7 @@ export default function KnowledgeBasePage() {
     setEmbeddingAll(false);
     if (res.ok) {
       const data = await res.json() as { success: number; failed: number };
-      toast({ title: `Embed เสร็จ ${data.success} บทความ (failed: ${data.failed})` });
+      toast.success(`Embed เสร็จ ${data.success} บทความ (failed: ${data.failed})`);
     }
   }
 
@@ -148,10 +147,10 @@ export default function KnowledgeBasePage() {
     const res = await fetch("/api/knowledge-base/import", { method: "POST", body: fd });
     if (res.ok) {
       const data = await res.json() as { imported: number; skipped: number };
-      toast({ title: `Import สำเร็จ ${data.imported} บทความ (ข้าม ${data.skipped})` });
+      toast.success(`Import สำเร็จ ${data.imported} บทความ (ข้าม ${data.skipped})`);
       fetchArticles();
     } else {
-      toast({ title: "Import ล้มเหลว", variant: "destructive" });
+      toast.error("Import ล้มเหลว");
     }
     e.target.value = "";
   }

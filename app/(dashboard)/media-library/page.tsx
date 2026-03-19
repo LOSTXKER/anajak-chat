@@ -35,7 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PageShell } from "@/components/page-shell";
 import { PageHeader } from "@/components/page-header";
@@ -85,7 +85,6 @@ function getFileStyle(type: string) {
 }
 
 export default function MediaLibraryPage() {
-  const { toast } = useToast();
   const [folders, setFolders] = useState<MediaFolder[]>([]);
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +162,7 @@ export default function MediaLibraryPage() {
         setNewFolderDialog(false);
         setNewFolderName("");
         fetchData();
-        toast({ title: "สร้างโฟลเดอร์แล้ว" });
+        toast.success("สร้างโฟลเดอร์แล้ว");
       }
     } finally {
       setCreatingFolder(false);
@@ -176,7 +175,7 @@ export default function MediaLibraryPage() {
     try {
       await fetch(`/api/media/folders/${folder.id}`, { method: "DELETE" });
       setFolders((prev) => prev.filter((f) => f.id !== folder.id));
-      toast({ title: "ลบโฟลเดอร์แล้ว" });
+      toast.success("ลบโฟลเดอร์แล้ว");
     } finally {
       setDeletingId(null);
     }
@@ -198,7 +197,7 @@ export default function MediaLibraryPage() {
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
     fetchData();
-    toast({ title: `อัปโหลดแล้ว ${successCount}/${selectedFiles.length} ไฟล์` });
+    toast.success(`อัปโหลดแล้ว ${successCount}/${selectedFiles.length} ไฟล์`);
   }
 
   async function handleDeleteFile(file: MediaFile) {
@@ -209,7 +208,7 @@ export default function MediaLibraryPage() {
       if (res.ok) {
         setFiles((prev) => prev.filter((f) => f.id !== file.id));
         if (previewFile?.id === file.id) setPreviewFile(null);
-        toast({ title: "ลบไฟล์แล้ว" });
+        toast.success("ลบไฟล์แล้ว");
       }
     } finally {
       setDeletingId(null);
@@ -229,7 +228,7 @@ export default function MediaLibraryPage() {
       await navigator.clipboard.writeText(url);
       setCopiedId(file.id);
       setTimeout(() => setCopiedId(null), 2000);
-      toast({ title: "คัดลอก URL แล้ว" });
+      toast.success("คัดลอก URL แล้ว");
     }
   }
 
@@ -271,8 +270,8 @@ export default function MediaLibraryPage() {
   return (
     <PageShell className="flex flex-col p-0">
       {/* Header */}
-      <div className="shrink-0 border-b px-6 py-4">
-        <div className="flex items-center justify-between gap-2 mb-4">
+      <div className="shrink-0 px-6 py-6 ring-1 ring-border/40 ring-inset">
+        <div className="flex items-center justify-between gap-2 mb-6">
           <PageHeader title="คลังสื่อ" subtitle="จัดการรูปภาพ ไฟล์ และสื่อทั้งหมด" />
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => setNewFolderDialog(true)}>
@@ -299,25 +298,45 @@ export default function MediaLibraryPage() {
         </div>
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap mb-4">
-          {breadcrumb.map((crumb, i) => (
-            <span key={i} className="flex items-center gap-1">
-              {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40" />}
-              <button
-                onClick={() => navigateToBreadcrumb(i)}
-                className={cn(
-                  "rounded-md px-2 py-1 transition-colors hover:bg-muted hover:text-foreground",
-                  i === breadcrumb.length - 1 && "text-foreground font-medium"
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-6 flex flex-wrap items-center gap-1 text-sm"
+        >
+          {breadcrumb.map((crumb, i) => {
+            const isCurrent = i === breadcrumb.length - 1;
+            return (
+              <span key={i} className="flex items-center gap-1">
+                {i > 0 && (
+                  <ChevronRight className="mx-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/35" aria-hidden />
                 )}
-              >
-                {i === 0 ? <Home className="h-3.5 w-3.5" /> : crumb.name}
-              </button>
-            </span>
-          ))}
-        </div>
+                <button
+                  type="button"
+                  onClick={() => navigateToBreadcrumb(i)}
+                  className={cn(
+                    "max-w-[min(100%,14rem)] truncate rounded-full px-3 py-1.5 transition-colors",
+                    "hover:bg-muted/50 hover:text-foreground",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    isCurrent
+                      ? "bg-primary/8 font-medium text-foreground ring-1 ring-primary/20"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {i === 0 ? (
+                    <span className="inline-flex items-center">
+                      <Home className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                      <span className="sr-only">{crumb.name}</span>
+                    </span>
+                  ) : (
+                    crumb.name
+                  )}
+                </button>
+              </span>
+            );
+          })}
+        </nav>
 
         {/* Search + view toggle */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -339,7 +358,7 @@ export default function MediaLibraryPage() {
 
       {/* Content */}
       <div
-        className="relative flex-1 overflow-auto p-6"
+        className="relative flex-1 overflow-auto p-6 md:p-8"
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={(e) => e.preventDefault()}
@@ -347,7 +366,7 @@ export default function MediaLibraryPage() {
       >
         {/* Drag overlay */}
         {dragging && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm border-2 border-dashed border-primary rounded-2xl m-4">
+          <div className="absolute inset-0 z-50 m-4 flex items-center justify-center rounded-2xl bg-background/80 backdrop-blur-sm ring-2 ring-dashed ring-primary/50">
             <div className="flex flex-col items-center gap-3 text-primary">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                 <Upload className="h-8 w-8" />
@@ -373,26 +392,28 @@ export default function MediaLibraryPage() {
                 อัปโหลดไฟล์
               </Button>
             }
-            className="border border-dashed py-20"
+            className="rounded-2xl py-20 ring-1 ring-dashed ring-border/40"
           />
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {/* Folders */}
             {folders.length > 0 && (
               <div>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   โฟลเดอร์ ({folders.length})
                 </h2>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                   {folders.map((folder) => (
-                    <button
+                    <div
                       key={folder.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => navigateToFolder(folder)}
-                      className="group relative flex items-center gap-3 rounded-xl border bg-card p-3 text-left transition-all hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigateToFolder(folder); }}
+                      className="group relative flex cursor-pointer items-center gap-3 rounded-2xl bg-card p-3 text-left ring-1 ring-border/40 transition-all hover:bg-muted/50 hover:ring-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/30 group-hover:scale-105 transition-transform">
-                        <FolderOpen className="h-5 w-5 text-amber-500" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 transition-transform group-hover:scale-105">
+                        <FolderOpen className="h-5 w-5 text-primary" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{folder.name}</p>
@@ -416,7 +437,7 @@ export default function MediaLibraryPage() {
                           )}
                         </Button>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -425,7 +446,7 @@ export default function MediaLibraryPage() {
             {/* Files */}
             {files.length > 0 && (
               <div>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   ไฟล์ ({files.length})
                 </h2>
                 {viewMode === "grid" ? (
@@ -433,10 +454,14 @@ export default function MediaLibraryPage() {
                     {files.map((file) => {
                       const Icon = FILE_ICONS[file.fileType] ?? File;
                       const style = getFileStyle(file.fileType);
+                      const isPreviewing = previewFile?.id === file.id;
                       return (
                         <div
                           key={file.id}
-                          className="group relative rounded-xl border bg-card overflow-hidden transition-all hover:border-primary/30 hover:shadow-md cursor-pointer"
+                          className={cn(
+                            "group relative cursor-pointer overflow-hidden rounded-2xl bg-card ring-1 ring-border/40 transition-all hover:bg-muted/50 hover:ring-primary/25",
+                            isPreviewing && "bg-primary/8 ring-primary/20"
+                          )}
                           onClick={() => setPreviewFile(file)}
                         >
                           {/* Thumbnail */}
@@ -466,7 +491,7 @@ export default function MediaLibraryPage() {
                           </div>
 
                           {/* Hover actions */}
-                          <div className="absolute top-2 right-2 flex lg:opacity-0 lg:group-hover:opacity-100 transition-opacity gap-1 bg-background/90 backdrop-blur-sm rounded-lg p-1 shadow-sm">
+                          <div className="absolute right-2 top-2 flex gap-1 rounded-xl bg-background/90 p-1 ring-1 ring-border/40 backdrop-blur-sm transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
                             <Button
                               variant="ghost"
                               size="icon-sm"
@@ -497,14 +522,18 @@ export default function MediaLibraryPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="rounded-xl border bg-card divide-y">
+                  <div className="divide-y divide-border/40 overflow-hidden rounded-2xl bg-card ring-1 ring-border/40">
                     {files.map((file) => {
                       const Icon = FILE_ICONS[file.fileType] ?? File;
                       const style = getFileStyle(file.fileType);
+                      const isPreviewing = previewFile?.id === file.id;
                       return (
                         <div
                           key={file.id}
-                          className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/30 cursor-pointer"
+                          className={cn(
+                            "group flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50",
+                            isPreviewing && "bg-primary/8 ring-1 ring-inset ring-primary/20"
+                          )}
                           onClick={() => setPreviewFile(file)}
                         >
                           <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", style.bg)}>
@@ -571,7 +600,7 @@ export default function MediaLibraryPage() {
             <div className="space-y-4">
               {/* Preview area */}
               {previewFile.fileType === "image" && previewFile.url ? (
-                <div className="rounded-xl overflow-hidden bg-muted/30 flex items-center justify-center">
+                <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-muted/30 ring-1 ring-border/40">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={previewFile.url}
@@ -581,7 +610,7 @@ export default function MediaLibraryPage() {
                 </div>
               ) : (
                 <div className={cn(
-                  "rounded-xl flex flex-col items-center justify-center py-16",
+                  "flex flex-col items-center justify-center rounded-2xl py-16 ring-1 ring-border/40",
                   getFileStyle(previewFile.fileType).bg
                 )}>
                   {(() => {

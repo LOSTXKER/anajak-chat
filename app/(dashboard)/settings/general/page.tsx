@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 export default function GeneralSettingsPage() {
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -44,16 +43,19 @@ export default function GeneralSettingsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="mb-6">
-        <h1 className="heading-page">ทั่วไป</h1>
-        <p className="text-sm text-muted-foreground mt-1">ตั้งค่าองค์กร</p>
-      </div>
+    <div className="h-full overflow-y-auto p-6 md:p-8">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div className="space-y-2">
+          <h1 className="heading-page">ทั่วไป</h1>
+          <p className="text-sm text-muted-foreground">ตั้งค่าองค์กร</p>
+        </div>
 
-      <Card className="rounded-xl border p-6 [&>[data-slot=card-header]]:px-0 [&>[data-slot=card-header]]:pt-0 [&>[data-slot=card-content]]:px-0 [&>[data-slot=card-footer]]:px-0 [&>[data-slot=card-footer]]:pb-0">
-        <CardHeader>
-          <CardTitle>ข้อมูลองค์กร</CardTitle>
-          <CardDescription>ชื่อและข้อมูลพื้นฐานขององค์กร</CardDescription>
+      <Card className="rounded-xl border border-border/60 shadow-none p-6 md:p-8 [&>[data-slot=card-header]]:px-0 [&>[data-slot=card-header]]:pt-0 [&>[data-slot=card-content]]:px-0 [&>[data-slot=card-footer]]:px-0 [&>[data-slot=card-footer]]:pb-0">
+        <CardHeader className="space-y-2 pb-6">
+          <CardTitle className="heading-page">ข้อมูลองค์กร</CardTitle>
+          <CardDescription className="text-sm">
+            ชื่อและข้อมูลพื้นฐานขององค์กร
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
@@ -79,6 +81,7 @@ export default function GeneralSettingsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

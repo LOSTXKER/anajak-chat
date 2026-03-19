@@ -27,7 +27,6 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, orgName, email, password }),
       });
-
       const data = await res.json();
 
       if (!res.ok) {
@@ -35,7 +34,6 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
-
       router.push("/login?registered=true");
     } catch {
       toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
@@ -46,48 +44,35 @@ export default function RegisterPage() {
   return (
     <div>
       <div className="mb-8 text-center">
-        <h1 className="text-xl font-bold tracking-tight">สมัครใช้งาน</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">สร้างบัญชีใหม่เพื่อเริ่มใช้งาน</p>
+        <h1 className="text-2xl font-semibold tracking-tight">สมัครใช้งาน</h1>
+        <p className="mt-2 text-sm text-muted-foreground">สร้างบัญชีใหม่เพื่อเริ่มใช้งาน</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="orgName" className="text-sm font-medium">ชื่อองค์กร / ร้านค้า</Label>
-          <Input id="orgName" placeholder="My Shop" value={orgName} onChange={(e) => setOrgName(e.target.value)} required className="h-11" />
+          <Label htmlFor="orgName">ชื่อองค์กร / ร้านค้า</Label>
+          <Input id="orgName" placeholder="My Shop" value={orgName} onChange={(e) => setOrgName(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-medium">ชื่อผู้ใช้</Label>
-          <Input id="name" placeholder="สมชาย" value={name} onChange={(e) => setName(e.target.value)} required className="h-11" />
+          <Label htmlFor="name">ชื่อผู้ใช้</Label>
+          <Input id="name" placeholder="สมชาย" value={name} onChange={(e) => setName(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">อีเมล</Label>
-          <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
+          <Label htmlFor="email">อีเมล</Label>
+          <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-medium">รหัสผ่าน</Label>
-          <Input id="password" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required className="h-11" />
+          <Label htmlFor="password">รหัสผ่าน</Label>
+          <Input id="password" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
         </div>
-        <Button
-          type="submit"
-          className="w-full h-11 text-sm font-semibold shadow-sm shadow-primary/25"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              กำลังสร้างบัญชี...
-            </>
-          ) : (
-            "สมัครใช้งาน"
-          )}
+        <Button type="submit" className="w-full rounded-xl" disabled={loading}>
+          {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />กำลังสร้างบัญชี...</> : "สมัครใช้งาน"}
         </Button>
       </form>
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
         มีบัญชีอยู่แล้ว?{" "}
-        <Link href="/login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-          เข้าสู่ระบบ
-        </Link>
+        <Link href="/login" className="font-medium text-primary transition-colors hover:text-primary/80">เข้าสู่ระบบ</Link>
       </p>
     </div>
   );

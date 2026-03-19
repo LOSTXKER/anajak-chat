@@ -26,7 +26,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const SIZE_OPTIONS = [
@@ -58,7 +58,6 @@ type ViewMode = "list" | "editor";
 const AREA_LABELS = ["A", "B", "C", "D", "E", "F"];
 
 export default function LineRichMenuPage() {
-  const { toast } = useToast();
   const [menus, setMenus] = useState<RichMenu[]>([]);
   const [defaultId, setDefaultId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,9 +145,9 @@ export default function LineRichMenuPage() {
   }
 
   async function handleSave() {
-    if (!menuName.trim()) { toast({ title: "กรุณาใส่ชื่อ", variant: "destructive" }); return; }
-    if (!editingId && !imageFile) { toast({ title: "กรุณาเลือกรูปภาพ", variant: "destructive" }); return; }
-    if (editingId && !imageFile) { toast({ title: "LINE API ต้องอัปโหลดรูปใหม่ทุกครั้งที่แก้ไข", variant: "destructive" }); return; }
+    if (!menuName.trim()) { toast.error("กรุณาใส่ชื่อ"); return; }
+    if (!editingId && !imageFile) { toast.error("กรุณาเลือกรูปภาพ"); return; }
+    if (editingId && !imageFile) { toast.error("LINE API ต้องอัปโหลดรูปใหม่ทุกครั้งที่แก้ไข"); return; }
 
     setSaving(true);
     const height = menuSize === "full" ? 1686 : 843;
@@ -202,12 +201,12 @@ export default function LineRichMenuPage() {
             body: JSON.stringify({ richMenuId: data.richMenuId }),
           });
         }
-        toast({ title: "บันทึกสำเร็จ" });
+        toast.success("บันทึกสำเร็จ");
         setView("list");
         fetchMenus();
       } else {
         const err = await res.json();
-        toast({ title: "ไม่สำเร็จ", description: (err as { error?: string }).error, variant: "destructive" });
+        toast.error("ไม่สำเร็จ", { description: (err as { error?: string }).error });
       }
     } finally {
       setSaving(false);
@@ -225,7 +224,7 @@ export default function LineRichMenuPage() {
       });
       if (res.ok) {
         setDefaultId(isActive ? null : richMenuId);
-        toast({ title: isActive ? "ปิด Launch แล้ว" : "Launch สำเร็จ" });
+        toast.success(isActive ? "ปิด Launch แล้ว" : "Launch สำเร็จ");
       }
     } finally {
       setApplyingId(null);
@@ -244,7 +243,7 @@ export default function LineRichMenuPage() {
       if (res.ok) {
         setMenus((prev) => prev.filter((m) => m.richMenuId !== richMenuId));
         if (defaultId === richMenuId) setDefaultId(null);
-        toast({ title: "ลบสำเร็จ" });
+        toast.success("ลบสำเร็จ");
       }
     } finally {
       setDeletingId(null);
@@ -336,7 +335,7 @@ export default function LineRichMenuPage() {
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-0.5 justify-end">
                             <Button variant="ghost" size="icon-sm" onClick={() => openEdit(menu)}><Pencil className="h-3.5 w-3.5" /></Button>
-                            <Button variant="ghost" size="icon-sm" onClick={() => { navigator.clipboard.writeText(menu.richMenuId); toast({ title: "คัดลอก ID" }); }}><Copy className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon-sm" onClick={() => { navigator.clipboard.writeText(menu.richMenuId); toast.success("คัดลอก ID"); }}><Copy className="h-3.5 w-3.5" /></Button>
                             <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10" onClick={() => handleDelete(menu.richMenuId)} disabled={deletingId === menu.richMenuId}>
                               {deletingId === menu.richMenuId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                             </Button>

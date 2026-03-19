@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/empty-state";
 
@@ -40,7 +40,6 @@ const CATEGORIES = [
 const emptyForm = { name: "", content: "", category: "custom" as Template["category"], shortcut: "" };
 
 export default function TemplatesPage() {
-  const { toast } = useToast();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -82,7 +81,7 @@ export default function TemplatesPage() {
 
   async function handleSave() {
     if (!form.name.trim() || !form.content.trim()) {
-      toast({ title: "กรุณากรอก ชื่อ และ เนื้อหา", variant: "destructive" });
+      toast.error("กรุณากรอก ชื่อ และ เนื้อหา");
       return;
     }
     setSaving(true);
@@ -106,15 +105,15 @@ export default function TemplatesPage() {
         const data = await res.json();
         if (selected) {
           setTemplates((prev) => prev.map((t) => (t.id === selected.id ? data : t)));
-          toast({ title: "แก้ไข template สำเร็จ" });
+          toast.success("แก้ไข template สำเร็จ");
         } else {
           setTemplates((prev) => [data, ...prev]);
-          toast({ title: "สร้าง template สำเร็จ" });
+          toast.success("สร้าง template สำเร็จ");
         }
         closeEditor();
       } else {
         const err = await res.json();
-        toast({ title: "เกิดข้อผิดพลาด", description: err.error, variant: "destructive" });
+        toast.error("เกิดข้อผิดพลาด", { description: err.error });
       }
     } finally {
       setSaving(false);
@@ -129,7 +128,7 @@ export default function TemplatesPage() {
       if (res.ok) {
         setTemplates((prev) => prev.filter((x) => x.id !== t.id));
         if (selected?.id === t.id) closeEditor();
-        toast({ title: "ลบ template แล้ว" });
+        toast.success("ลบ template แล้ว");
       }
     } finally {
       setDeletingId(null);

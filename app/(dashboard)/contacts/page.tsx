@@ -141,13 +141,13 @@ export default function ContactsPage() {
         ) : contacts.length === 0 ? (
           <EmptyState icon={Users} message="ยังไม่มีข้อมูลลูกค้า" className="border-0" />
         ) : (
-          <div className="divide-y">
+          <div className="space-y-1 p-2">
             {contacts.map((c) => (
               <button
                 key={c.id}
                 className={cn(
-                  "flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
-                  selected?.id === c.id && "border-l-2 border-l-primary bg-primary/5"
+                  "flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-muted/50",
+                  selected?.id === c.id && "bg-primary/8 ring-1 ring-primary/20"
                 )}
                 onClick={() => openContact(c)}
               >
@@ -400,9 +400,9 @@ export default function ContactsPage() {
     <SplitLayout
       master={master}
       detail={detail}
-      masterWidth={340}
+      masterWidth={360}
       hideMasterOnMobile={!!selected}
-      masterClassName="bg-card"
+      masterClassName="bg-background"
     />
   );
 }
