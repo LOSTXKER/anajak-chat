@@ -2,6 +2,7 @@
 
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { OrgSwitcher } from "@/components/org-switcher";
 import { MobileSidebar } from "@/components/sidebar";
 
 interface NavbarProps {
@@ -20,6 +21,9 @@ export function Navbar({ user }: NavbarProps) {
     <header className="flex h-12 shrink-0 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-sm">
       <div className="lg:hidden">
         <MobileSidebar user={user} />
+      </div>
+      <div className="hidden lg:block">
+        <OrgSwitcher currentOrgId={user.orgId} currentOrgName={user.orgName} />
       </div>
       <div className="flex-1" />
       <div className="flex items-center gap-1">
