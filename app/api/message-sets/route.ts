@@ -9,7 +9,7 @@ export const GET = apiHandler(async () => {
     where: { orgId: user.orgId },
     orderBy: { createdAt: "desc" },
     include: {
-      _count: { select: { intents: true } },
+      _count: { select: { intentLinks: true } },
     },
   });
 

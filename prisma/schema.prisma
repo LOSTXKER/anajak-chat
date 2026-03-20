@@ -666,8 +666,8 @@ model MessageSet {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  intents      BotIntent[]
+  organization Organization          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  intentLinks  BotIntentMessageSet[]
 
   @@index([orgId])
   @@map("message_sets")
@@ -681,7 +681,6 @@ model BotIntent {
   triggerType   String   @map("trigger_type")
   keywords      String[] @default([])
   postbackData  String?  @map("postback_data")
-  messageSetId  String   @map("message_set_id") @db.Uuid
   channelId     String?  @map("channel_id") @db.Uuid
   priority      Int      @default(0)
   assignToHuman Boolean  @default(false) @map("assign_to_human")
@@ -689,13 +688,27 @@ model BotIntent {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  messageSet   MessageSet   @relation(fields: [messageSetId], references: [id])
-  channel      Channel?     @relation(fields: [channelId], references: [id])
+  organization Organization          @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  channel      Channel?              @relation(fields: [channelId], references: [id])
   sessions     IntentSession[]
+  messageSets  BotIntentMessageSet[]
 
   @@index([orgId, isActive])
   @@map("bot_intents")
+}
+
+model BotIntentMessageSet {
+  id           String @id @default(uuid()) @db.Uuid
+  intentId     String @map("intent_id") @db.Uuid
+  messageSetId String @map("message_set_id") @db.Uuid
+  order        Int    @default(0)
+
+  intent     BotIntent  @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  messageSet MessageSet @relation(fields: [messageSetId], references: [id], onDelete: Cascade)
+
+  @@unique([intentId, messageSetId])
+  @@index([intentId])
+  @@map("bot_intent_message_sets")
 }
 
 model IntentSession {

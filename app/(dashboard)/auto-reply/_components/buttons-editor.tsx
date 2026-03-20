@@ -30,16 +30,16 @@ export function ButtonsEditor({ buttons, onChange }: ButtonsEditorProps) {
       </div>
       {buttons.map((btn, idx) => (
         <div key={idx} className="flex items-center gap-2">
-          <Input className="flex-1" placeholder="Label" value={btn.label} onChange={(e) => update(idx, { label: e.target.value })} />
+          <Input className="flex-1" placeholder="ข้อความบนปุ่ม" value={btn.label} onChange={(e) => update(idx, { label: e.target.value })} />
           <Select value={btn.action} onValueChange={(v) => update(idx, { action: v as RichButton["action"] })}>
             <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="message">Message</SelectItem>
+              <SelectItem value="message">ข้อความ</SelectItem>
               <SelectItem value="postback">Postback</SelectItem>
               <SelectItem value="url">URL</SelectItem>
             </SelectContent>
           </Select>
-          <Input className="flex-1" placeholder="Value" value={btn.value} onChange={(e) => update(idx, { value: e.target.value })} />
+          <Input className="flex-1" placeholder="ค่าที่ส่ง" value={btn.value} onChange={(e) => update(idx, { value: e.target.value })} />
           <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => remove(idx)}>
             <X className="h-3.5 w-3.5" />
           </Button>

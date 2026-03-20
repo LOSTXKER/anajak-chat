@@ -79,9 +79,9 @@ export default function MessageSetsPage() {
       <div className="flex w-[320px] shrink-0 flex-col border-r">
         <div className="space-y-3 border-b p-4">
           <div>
-            <h1 className="heading-page">ชุดข้อความตอบกลับ</h1>
+            <h1 className="heading-page">ชุดข้อความ</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {sets.length} ชุดข้อความ
+              สร้างและจัดการข้อความสำหรับบอทหรือส่งให้ลูกค้า · {sets.length} ชุด
             </p>
           </div>
           <Button className="w-full" onClick={() => setCreateOpen(true)}>
@@ -94,7 +94,7 @@ export default function MessageSetsPage() {
             <EmptyState
               icon={Bot}
               message="ยังไม่มีชุดข้อความ"
-              description="สร้างชุดข้อความแรกเพื่อใช้กับอินเทนต์"
+              description="สร้างชุดข้อความแรกเพื่อใช้กับบอทหรือส่งให้ลูกค้า"
               action={
                 <Button size="sm" onClick={() => setCreateOpen(true)}>
                   <Plus className="mr-1.5 h-3.5 w-3.5" />สร้างชุดข้อความ
@@ -107,7 +107,7 @@ export default function MessageSetsPage() {
               {filtered.map((set) => {
                 const bubbles = countBubbles(set);
                 const platforms = hasPlatformOverride(set);
-                const intents = set._count?.intents ?? 0;
+                const intents = set._count?.intentLinks ?? 0;
                 const isSelected = effectiveId === set.id;
 
                 return (
@@ -136,7 +136,7 @@ export default function MessageSetsPage() {
                         </span>
                         {intents > 0 && (
                           <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">
-                            {intents} อินเทนต์
+                            {intents} บอทที่ใช้
                           </span>
                         )}
                         {platforms.map((p) => (

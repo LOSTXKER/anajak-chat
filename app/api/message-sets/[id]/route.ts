@@ -9,7 +9,9 @@ export const GET = apiHandler(async (_req, context) => {
   const set = await prisma.messageSet.findFirst({
     where: { id, orgId: user.orgId },
     include: {
-      intents: { select: { id: true, name: true, isActive: true } },
+      intentLinks: {
+        include: { intent: { select: { id: true, name: true, isActive: true } } },
+      },
     },
   });
 
@@ -46,12 +48,12 @@ export const DELETE = apiHandler(async (_req, context) => {
 
   const existing = await prisma.messageSet.findFirst({
     where: { id, orgId: user.orgId },
-    include: { _count: { select: { intents: true } } },
+    include: { _count: { select: { intentLinks: true } } },
   });
   if (!existing) return jsonError("Message set not found", 404);
 
-  if (existing._count.intents > 0) {
-    return jsonError("Cannot delete: message set is linked to intents", 400);
+  if (existing._count.intentLinks > 0) {
+    return jsonError("Cannot delete: message set is linked to bot rules", 400);
   }
 
   await prisma.messageSet.delete({ where: { id } });

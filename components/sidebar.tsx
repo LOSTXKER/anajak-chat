@@ -64,8 +64,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "เนื้อหา",
     items: [
-      { href: "/auto-reply", label: "ข้อความตอบกลับ", icon: Bot },
-      { href: "/ai-bot", label: "อินเทนต์", icon: Sparkles },
+      { href: "/auto-reply", label: "ชุดข้อความ", icon: Bot },
+      { href: "/ai-bot", label: "บอทตอบกลับ", icon: Sparkles },
       { href: "/templates", label: "ข้อความด่วน", icon: MessageCircle },
       { href: "/knowledge-base", label: "ฐานความรู้", icon: BookOpen },
       { href: "/line-rich-menu", label: "ริชเมนู", icon: LayoutGrid },

@@ -74,9 +74,9 @@ export function MessageSetEditor({ set, onUpdate, onDelete }: MessageSetEditorPr
   };
 
   return (
-    <div className="flex gap-6 p-6">
+    <div className="flex h-full">
       {/* Editor Column */}
-      <div className="min-w-0 flex-1 space-y-6">
+      <div className="min-w-0 flex-1 overflow-y-auto p-6 space-y-6">
         {/* Header Card */}
         <div className="rounded-2xl border bg-card p-5">
           <div className="flex items-start gap-4">
@@ -93,12 +93,11 @@ export function MessageSetEditor({ set, onUpdate, onDelete }: MessageSetEditorPr
                   placeholder="ชื่อชุดข้อความ"
                 />
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="rounded-md bg-muted px-2 py-0.5">ID: {set.id.slice(0, 8)}...</span>
-                {set._count?.intents ? (
-                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-primary">{set._count.intents} อินเทนต์ที่ใช้</span>
-                ) : null}
-              </div>
+              {set._count?.intentLinks ? (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="rounded-md bg-primary/10 px-2 py-0.5 text-primary">{set._count.intentLinks} บอทที่ใช้</span>
+                </div>
+              ) : null}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Button onClick={save} disabled={!dirty}>บันทึก</Button>
@@ -241,17 +240,14 @@ export function MessageSetEditor({ set, onUpdate, onDelete }: MessageSetEditorPr
         </div>
       </div>
 
-      {/* Preview Column */}
-      <div className="hidden w-[340px] shrink-0 xl:block">
-        <div className="sticky top-6">
-          <p className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">ตัวอย่าง</p>
-          <ChatPreview
-            messages={msgList}
-            quickReplies={pattern.quickReplies}
-            platform={platform}
-            botName={name || "Bot"}
-          />
-        </div>
+      {/* Preview Panel — 40% */}
+      <div className="hidden w-[40%] shrink-0 border-l lg:flex lg:flex-col">
+        <ChatPreview
+          messages={msgList}
+          quickReplies={pattern.quickReplies}
+          platform={platform}
+          botName={name || "Bot"}
+        />
       </div>
     </div>
   );

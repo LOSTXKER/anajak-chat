@@ -47,7 +47,7 @@ export interface MessageSetItem {
   messages: PlatformMessages;
   createdAt: string;
   updatedAt: string;
-  _count?: { intents: number };
+  _count?: { intentLinks: number };
 }
 
 export type PlatformKey = "_default" | "line" | "facebook" | "instagram";

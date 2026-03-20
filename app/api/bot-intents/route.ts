@@ -9,7 +9,10 @@ export const GET = apiHandler(async () => {
     where: { orgId: user.orgId },
     orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
     include: {
-      messageSet: { select: { id: true, name: true } },
+      messageSets: {
+        include: { messageSet: { select: { id: true, name: true } } },
+        orderBy: { order: "asc" },
+      },
       channel: { select: { id: true, name: true, platform: true } },
       _count: { select: { sessions: true } },
     },
@@ -25,7 +28,7 @@ export const POST = apiHandler(async (req) => {
     triggerType: string;
     keywords?: string[];
     postbackData?: string;
-    messageSetId: string;
+    messageSetIds: string[];
     channelId?: string;
     priority?: number;
     assignToHuman?: boolean;
@@ -33,12 +36,15 @@ export const POST = apiHandler(async (req) => {
 
   if (!body.name?.trim()) return jsonError("name is required", 400);
   if (!body.triggerType) return jsonError("triggerType is required", 400);
-  if (!body.messageSetId) return jsonError("messageSetId is required", 400);
+  if (!body.messageSetIds?.length) return jsonError("At least one messageSetId is required", 400);
 
-  const msExists = await prisma.messageSet.findFirst({
-    where: { id: body.messageSetId, orgId: user.orgId },
+  const validSets = await prisma.messageSet.findMany({
+    where: { id: { in: body.messageSetIds }, orgId: user.orgId },
+    select: { id: true },
   });
-  if (!msExists) return jsonError("Message set not found", 404);
+  if (validSets.length !== body.messageSetIds.length) {
+    return jsonError("One or more message sets not found", 404);
+  }
 
   const intent = await prisma.botIntent.create({
     data: {
@@ -47,14 +53,22 @@ export const POST = apiHandler(async (req) => {
       triggerType: body.triggerType,
       keywords: body.keywords ?? [],
       postbackData: body.postbackData ?? null,
-      messageSetId: body.messageSetId,
       channelId: body.channelId ?? null,
       priority: body.priority ?? 0,
       assignToHuman: body.assignToHuman ?? false,
       createdBy: user.id,
+      messageSets: {
+        create: body.messageSetIds.map((msId, idx) => ({
+          messageSetId: msId,
+          order: idx,
+        })),
+      },
     },
     include: {
-      messageSet: { select: { id: true, name: true } },
+      messageSets: {
+        include: { messageSet: { select: { id: true, name: true } } },
+        orderBy: { order: "asc" },
+      },
     },
   });
 

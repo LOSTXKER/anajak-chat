@@ -18,7 +18,7 @@ interface PlatformMessages {
 export interface IntentMatchResult {
   intentId: string;
   intentName: string;
-  messageSetId: string;
+  messageSetIds: string[];
   assignToHuman: boolean;
 }
 
@@ -46,7 +46,11 @@ export async function matchIntents(params: {
     orderBy: { priority: "desc" },
     select: {
       id: true, name: true, triggerType: true, keywords: true,
-      postbackData: true, messageSetId: true, channelId: true, assignToHuman: true,
+      postbackData: true, channelId: true, assignToHuman: true,
+      messageSets: {
+        select: { messageSetId: true },
+        orderBy: { order: "asc" },
+      },
     },
   });
 
@@ -81,7 +85,7 @@ export async function matchIntents(params: {
       return {
         intentId: intent.id,
         intentName: intent.name,
-        messageSetId: intent.messageSetId,
+        messageSetIds: intent.messageSets.map((ms) => ms.messageSetId),
         assignToHuman: intent.assignToHuman,
       };
     }
@@ -120,29 +124,39 @@ export async function executeIntent(params: {
 }): Promise<ExecuteResult> {
   const { match, platform, credentials, recipientId, conversationId, replyToken } = params;
 
-  const messageSet = await prisma.messageSet.findUnique({
-    where: { id: match.messageSetId },
-    select: { messages: true },
-  });
-
-  if (!messageSet) {
-    return { success: false, sentCount: 0, totalMessages: 0, errors: ["MessageSet not found"] };
+  if (match.messageSetIds.length === 0) {
+    return { success: false, sentCount: 0, totalMessages: 0, errors: ["No message sets linked"] };
   }
 
-  const pattern = resolvePlatformPattern(messageSet.messages, platform);
+  const messageSets = await prisma.messageSet.findMany({
+    where: { id: { in: match.messageSetIds } },
+    select: { id: true, messages: true },
+  });
 
-  if (!pattern.messages.length) {
+  const orderedSets = match.messageSetIds
+    .map((id) => messageSets.find((s) => s.id === id))
+    .filter(Boolean) as typeof messageSets;
+
+  const allMessages: { msg: AutoReplyMessage; setIndex: number }[] = [];
+  for (let si = 0; si < orderedSets.length; si++) {
+    const pattern = resolvePlatformPattern(orderedSets[si].messages, platform);
+    for (const msg of pattern.messages) {
+      allMessages.push({ msg, setIndex: si });
+    }
+  }
+
+  if (allMessages.length === 0) {
     return { success: false, sentCount: 0, totalMessages: 0, errors: ["No messages configured"] };
   }
 
-  console.log(`[FlowEngine] Sending ${pattern.messages.length} message(s) to ${recipientId} via ${platform}${replyToken ? " (replyToken available)" : ""}`);
+  console.log(`[FlowEngine] Sending ${allMessages.length} message(s) from ${orderedSets.length} set(s) to ${recipientId} via ${platform}${replyToken ? " (replyToken available)" : ""}`);
 
   let sentCount = 0;
   const errors: string[] = [];
   let usedReplyToken = false;
 
-  for (let i = 0; i < pattern.messages.length; i++) {
-    const msg = pattern.messages[i];
+  for (let i = 0; i < allMessages.length; i++) {
+    const { msg } = allMessages[i];
     const tokenForThis = (!usedReplyToken && platform === "line" && replyToken) ? replyToken : undefined;
 
     let result: SendResult;
@@ -189,7 +203,7 @@ export async function executeIntent(params: {
       conversationId,
       status: sentCount > 0 ? "completed" : "failed",
       sentCount,
-      totalMessages: pattern.messages.length,
+      totalMessages: allMessages.length,
       errors,
       completedAt: new Date(),
     },
@@ -198,9 +212,9 @@ export async function executeIntent(params: {
     return null;
   });
 
-  console.log(`[FlowEngine] ${session?.status ?? "error"}: sent ${sentCount}/${pattern.messages.length}${errors.length ? ` | ${errors.join("; ")}` : ""}`);
+  console.log(`[FlowEngine] ${session?.status ?? "error"}: sent ${sentCount}/${allMessages.length}${errors.length ? ` | ${errors.join("; ")}` : ""}`);
 
-  return { success: sentCount > 0, sentCount, totalMessages: pattern.messages.length, errors };
+  return { success: sentCount > 0, sentCount, totalMessages: allMessages.length, errors };
 }
 
 // ─── Convenience: Match + Execute ───────────────────────────────────────────

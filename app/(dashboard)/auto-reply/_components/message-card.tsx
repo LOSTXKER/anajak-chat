@@ -27,11 +27,16 @@ export function MessageCard({ msg, num, isEditing, onEdit, onChange, onDelete, o
   const TypeIcon = MSG_TYPES.find((t) => t.type === msg.type)?.icon ?? MessageSquare;
   const typeName = MSG_TYPES.find((t) => t.type === msg.type)?.label ?? msg.type;
 
-  const preview = msg.type === "text" ? msg.text
-    : msg.type === "card" ? msg.cardTitle
-    : msg.type === "image" ? msg.imageUrl
-    : msg.type === "sticker" ? `${msg.stickerPackageId}/${msg.stickerId}`
-    : msg.type === "video" ? msg.videoUrl
+  const preview = msg.type === "text"
+    ? (msg.text?.trim() || "(ว่าง)")
+    : msg.type === "card"
+    ? (msg.cardTitle?.trim() || "(ยังไม่มีหัวข้อ)")
+    : msg.type === "image"
+    ? (msg.imageUrl ? "รูปภาพที่อัปโหลด" : "(ยังไม่มีรูป)")
+    : msg.type === "sticker"
+    ? (msg.stickerPackageId ? `สติกเกอร์ ${msg.stickerPackageId}` : "(ยังไม่มีสติกเกอร์)")
+    : msg.type === "video"
+    ? (msg.videoUrl ? "วิดีโอที่แนบ" : "(ยังไม่มีวิดีโอ)")
     : "";
 
   return (
