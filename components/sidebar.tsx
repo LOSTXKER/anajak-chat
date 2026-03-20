@@ -192,29 +192,36 @@ function SidebarContent({
     <div className="flex h-full flex-col border-r bg-sidebar">
       {/* Header */}
       <div className={cn(
-        "flex h-14 shrink-0 items-center justify-between border-b",
-        collapsed ? "px-2" : "px-4"
+        "flex h-14 shrink-0 items-center border-b",
+        collapsed ? "justify-center px-2" : "justify-between px-4"
       )}>
-        <Link href="/inbox" className="flex items-center gap-2.5" onClick={onNavClick}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-            <MessageSquare className="h-4 w-4 text-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <span className="text-sm font-bold tracking-tight">Anajak</span>
-          )}
-        </Link>
-        {onToggle && (
+        {collapsed ? (
           <button
             onClick={onToggle}
-            className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            title={collapsed ? "ขยายเมนู" : "ย่อเมนู"}
+            className="group relative flex h-8 w-8 items-center justify-center rounded-lg bg-primary"
+            title="ขยายเมนู"
           >
-            {collapsed ? (
-              <ChevronsRight className="h-4 w-4" />
-            ) : (
-              <ChevronsLeft className="h-4 w-4" />
-            )}
+            <MessageSquare className="h-4 w-4 text-primary-foreground transition-opacity group-hover:opacity-0" />
+            <ChevronsRight className="absolute h-4 w-4 text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100" />
           </button>
+        ) : (
+          <>
+            <Link href="/inbox" className="flex items-center gap-2.5" onClick={onNavClick}>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
+                <MessageSquare className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="text-sm font-bold tracking-tight">Anajak</span>
+            </Link>
+            {onToggle && (
+              <button
+                onClick={onToggle}
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                title="ย่อเมนู"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </button>
+            )}
+          </>
         )}
       </div>
 
